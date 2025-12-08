@@ -1,0 +1,2 @@
+rootProject.name = 'BETA-Backend-Server'
+include('user-server', 'module-core', 'module-community', 'module-account')
