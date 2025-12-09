@@ -7,28 +7,28 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
-
     // Common
-    VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "C001", "Validation failed"),
-    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C002", "Method not allowed"),
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C003", "Internal server error"),
-    INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "C004", "Invalid type value"),
-    ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "C005", "Entity not found"),
-    ACCESS_DENIED(HttpStatus.FORBIDDEN, "C006", "Access denied"),
+    VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "VALIDATION001", "입력값 검증에 실패했습니다"),
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER001", "서버 내부 오류가 발생했습니다"),
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON001", "지원하지 않는 HTTP 메서드입니다"),
+    INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "COMMON002", "잘못된 타입 값입니다"),
+    ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON003", "요청한 리소스를 찾을 수 없습니다"),
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "COMMON004", "접근 권한이 없습니다"),
 
     // Authentication & Authorization
-    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "Unauthorized"),
-    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "A002", "Token expired"),
-    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A003", "Invalid token"),
+    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "JWT001", "토큰이 만료되었습니다"),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "JWT002", "유효하지 않은 토큰입니다"),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED,  "JWT003", "토큰 처리 중 오류가 발생했습니다"),
+
+    INVALID_SOCIAL_TOKEN(HttpStatus.UNAUTHORIZED, "SOCIAL001", "유효하지 않은 소셜 로그인 토큰입니다"),
+    SOCIAL_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SOCIAL002", "소셜 로그인 API 호출 중 오류가 발생했습니다"),
 
     // User
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "User not found"),
-    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U002", "Email already exists"),
-    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "U003", "Invalid password"),
-
-    // Community
-    POST_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "Post not found"),
-    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P002", "Comment not found");
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER001", "사용자를 찾을 수 없습니다"),
+    USER_WITHDRAWN(HttpStatus.FORBIDDEN, "USER002", "탈퇴한 사용자입니다"),
+    USER_SUSPENDED(HttpStatus.FORBIDDEN, "USER003", "정지된 사용자입니다"),
+    NAME_DUPLICATE(HttpStatus.CONFLICT, "USER004", "이미 존재하는 이름입니다"),
+    PERSONAL_INFO_AGREEMENT_REQUIRED(HttpStatus.BAD_REQUEST, "USER005", "개인정보 수집 및 이용에 대한 필수 동의가 필요합니다");
 
     private final HttpStatus status;
     private final String code;
