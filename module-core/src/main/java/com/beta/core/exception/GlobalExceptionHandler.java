@@ -17,6 +17,22 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /**
+     * 비즈니스 로직 예외 처리
+     * BaseException을 상속받은 모든 커스텀 예외 처리
+     */
+    @ExceptionHandler(BaseException.class)
+    public ResponseEntity<ErrorResponse> handleBaseException(BaseException e) {
+        ErrorCode errorCode = e.getErrorCode();
+        log.warn("Business exception occurred: code={}, message={}", errorCode.getCode(), e.getMessage());
+
+        ErrorResponse response = ErrorResponse.of(errorCode);
+        return ResponseEntity.status(errorCode.getStatus()).body(response);
+    }
+
+    /**
+     * Bean Validation 예외 처리
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.warn("Validation failed: {}", e.getMessage());
@@ -33,6 +49,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ErrorCode.VALIDATION_FAILED.getStatus()).body(errorResponse);
     }
 
+    /**
+     * Form 바인딩 예외 처리
+     */
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ErrorResponse> handleBindException(BindException e) {
         log.warn("Bind exception occurred: {}", e.getMessage());
@@ -49,6 +68,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ErrorCode.VALIDATION_FAILED.getStatus()).body(errorResponse);
     }
 
+    /**
+     * 타입 불일치 예외 처리
+     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
         log.warn("Type mismatch: field={}, rejectedValue={}", e.getName(), e.getValue());
@@ -56,6 +78,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    /**
+     * HTTP 메서드 불일치 예외 처리
+     */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         log.warn("Method not allowed: {}", e.getMethod());
@@ -63,6 +88,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
     }
 
+    /**
+     * 예상하지 못한 예외 처리 (Fallback)
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
         log.error("Unexpected exception occurred", e);
