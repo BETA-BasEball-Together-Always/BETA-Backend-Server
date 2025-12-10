@@ -23,12 +23,16 @@ public enum ErrorCode {
     INVALID_SOCIAL_TOKEN(HttpStatus.UNAUTHORIZED, "SOCIAL001", "유효하지 않은 소셜 로그인 토큰입니다"),
     SOCIAL_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SOCIAL002", "소셜 로그인 API 호출 중 오류가 발생했습니다"),
 
+    // Team
+    TEAM_NOT_FOUND(HttpStatus.NOT_FOUND, "TEAM001", "해당 구단은 존재하지 않습니다."),
+
     // User
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER001", "사용자를 찾을 수 없습니다"),
     USER_WITHDRAWN(HttpStatus.FORBIDDEN, "USER002", "탈퇴한 사용자입니다"),
     USER_SUSPENDED(HttpStatus.FORBIDDEN, "USER003", "정지된 사용자입니다"),
     NAME_DUPLICATE(HttpStatus.CONFLICT, "USER004", "이미 존재하는 이름입니다"),
-    PERSONAL_INFO_AGREEMENT_REQUIRED(HttpStatus.BAD_REQUEST, "USER005", "개인정보 수집 및 이용에 대한 필수 동의가 필요합니다");
+    PERSONAL_INFO_AGREEMENT_REQUIRED(HttpStatus.BAD_REQUEST, "USER005", "개인정보 수집 및 이용에 대한 필수 동의가 필요합니다"),
+    EMAIL_DUPLICATE(HttpStatus.CONFLICT,"USER006", "이미 존재하는 이메일입니다");
 
     private final HttpStatus status;
     private final String code;

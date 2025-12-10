@@ -1,7 +1,9 @@
 package com.beta.account.domain.service;
 
 import com.beta.account.domain.entity.User;
+import com.beta.account.infra.repository.UserJpaRepository;
 import com.beta.core.exception.ErrorCode;
+import com.beta.core.exception.account.EmailDuplicateException;
 import com.beta.core.exception.account.NameDuplicateException;
 import com.beta.core.exception.account.PersonalInfoAgreementRequiredException;
 import com.beta.core.exception.account.UserSuspendedException;
@@ -10,19 +12,22 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("SocialUserStatusService 단위 테스트")
-class SocialUserStatusServiceTest {
+@DisplayName("UserStatusService 단위 테스트")
+class UserStatusServiceTest {
+
+    @Mock
+    private UserJpaRepository userJpaRepository;
 
     @InjectMocks
-    private SocialUserStatusService socialUserStatusService;
+    private UserStatusService userStatusService;
 
     @Test
     @DisplayName("정상 상태의 사용자는 검증을 통과한다")
@@ -32,7 +37,7 @@ class SocialUserStatusServiceTest {
         when(user.getStatus()).thenReturn(User.UserStatus.ACTIVE);
 
         // when & then
-        assertDoesNotThrow(() -> socialUserStatusService.validateUserStatus(user));
+        assertDoesNotThrow(() -> userStatusService.validateUserStatus(user));
     }
 
     @Test
@@ -43,7 +48,7 @@ class SocialUserStatusServiceTest {
         when(user.getStatus()).thenReturn(User.UserStatus.WITHDRAWN);
 
         // when & then
-        assertThatThrownBy(() -> socialUserStatusService.validateUserStatus(user))
+        assertThatThrownBy(() -> userStatusService.validateUserStatus(user))
                 .isInstanceOf(UserWithdrawnException.class)
                 .hasMessage("탈퇴한 사용자입니다.")
                 .extracting("errorCode")
@@ -58,7 +63,7 @@ class SocialUserStatusServiceTest {
         when(user.getStatus()).thenReturn(User.UserStatus.SUSPENDED);
 
         // when & then
-        assertThatThrownBy(() -> socialUserStatusService.validateUserStatus(user))
+        assertThatThrownBy(() -> userStatusService.validateUserStatus(user))
                 .isInstanceOf(UserSuspendedException.class)
                 .hasMessage("정지된 사용자입니다. 관리자에게 문의 하세요.")
                 .extracting("errorCode")
@@ -69,14 +74,14 @@ class SocialUserStatusServiceTest {
     @DisplayName("개인정보 수집 동의가 true이면 검증을 통과한다")
     void validateAgreePersonalInfo_Success_WhenAgreed() {
         // when & then
-        assertDoesNotThrow(() -> socialUserStatusService.validateAgreePersonalInfo(true));
+        assertDoesNotThrow(() -> userStatusService.validateAgreePersonalInfo(true));
     }
 
     @Test
     @DisplayName("개인정보 수집 동의가 false이면 PersonalInfoAgreementRequiredException을 발생시킨다")
     void validateAgreePersonalInfo_ThrowsException_WhenNotAgreed() {
         // when & then
-        assertThatThrownBy(() -> socialUserStatusService.validateAgreePersonalInfo(false))
+        assertThatThrownBy(() -> userStatusService.validateAgreePersonalInfo(false))
                 .isInstanceOf(PersonalInfoAgreementRequiredException.class)
                 .hasMessage("개인정보 수집 및 이용에 동의하셔야 회원가입이 가능합니다.")
                 .extracting("errorCode")
@@ -87,7 +92,7 @@ class SocialUserStatusServiceTest {
     @DisplayName("개인정보 수집 동의가 null이면 PersonalInfoAgreementRequiredException을 발생시킨다")
     void validateAgreePersonalInfo_ThrowsException_WhenNull() {
         // when & then
-        assertThatThrownBy(() -> socialUserStatusService.validateAgreePersonalInfo(null))
+        assertThatThrownBy(() -> userStatusService.validateAgreePersonalInfo(null))
                 .isInstanceOf(PersonalInfoAgreementRequiredException.class)
                 .hasMessage("개인정보 수집 및 이용에 동의하셔야 회원가입이 가능합니다.")
                 .extracting("errorCode")
@@ -98,17 +103,75 @@ class SocialUserStatusServiceTest {
     @DisplayName("이름이 중복되지 않으면 검증을 통과한다")
     void validateNameDuplicate_Success_WhenNameIsUnique() {
         // when & then
-        assertDoesNotThrow(() -> socialUserStatusService.validateNameDuplicate(false));
+        assertDoesNotThrow(() -> userStatusService.validateNameDuplicate(false));
     }
 
     @Test
     @DisplayName("이름이 중복되면 NameDuplicateException을 발생시킨다")
     void validateNameDuplicate_ThrowsException_WhenNameIsDuplicated() {
         // when & then
-        assertThatThrownBy(() -> socialUserStatusService.validateNameDuplicate(true))
+        assertThatThrownBy(() -> userStatusService.validateNameDuplicate(true))
                 .isInstanceOf(NameDuplicateException.class)
                 .hasMessage("이미 존재하는 이름입니다.")
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.NAME_DUPLICATE);
+    }
+
+    @Test
+    @DisplayName("닉네임이 중복되지 않으면 검증을 통과한다")
+    void isNameDuplicate_Success_WhenNicknameIsUnique() {
+        // given
+        String nickname = "uniqueNickname";
+        when(userJpaRepository.existsByNickname(nickname)).thenReturn(false);
+
+        // when & then
+        assertDoesNotThrow(() -> userStatusService.isNameDuplicate(nickname));
+        verify(userJpaRepository).existsByNickname(nickname);
+    }
+
+    @Test
+    @DisplayName("닉네임이 중복되면 NameDuplicateException을 발생시킨다")
+    void isNameDuplicate_ThrowsException_WhenNicknameIsDuplicated() {
+        // given
+        String nickname = "duplicateNickname";
+        when(userJpaRepository.existsByNickname(nickname)).thenReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> userStatusService.isNameDuplicate(nickname))
+                .isInstanceOf(NameDuplicateException.class)
+                .hasMessage("이미 존재하는 닉네임입니다")
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.NAME_DUPLICATE);
+
+        verify(userJpaRepository).existsByNickname(nickname);
+    }
+
+    @Test
+    @DisplayName("이메일이 중복되지 않으면 검증을 통과한다")
+    void isEmailDuplicate_Success_WhenEmailIsUnique() {
+        // given
+        String email = "unique@example.com";
+        when(userJpaRepository.existsByEmail(email)).thenReturn(false);
+
+        // when & then
+        assertDoesNotThrow(() -> userStatusService.isEmailDuplicate(email));
+        verify(userJpaRepository).existsByEmail(email);
+    }
+
+    @Test
+    @DisplayName("이메일이 중복되면 EmailDuplicateException을 발생시킨다")
+    void isEmailDuplicate_ThrowsException_WhenEmailIsDuplicated() {
+        // given
+        String email = "duplicate@example.com";
+        when(userJpaRepository.existsByEmail(email)).thenReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> userStatusService.isEmailDuplicate(email))
+                .isInstanceOf(EmailDuplicateException.class)
+                .hasMessage("이미 존재하는 이메일입니다")
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.EMAIL_DUPLICATE);
+
+        verify(userJpaRepository).existsByEmail(email);
     }
 }
