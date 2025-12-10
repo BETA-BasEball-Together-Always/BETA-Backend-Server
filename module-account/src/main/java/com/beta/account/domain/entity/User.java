@@ -1,6 +1,7 @@
 package com.beta.account.domain.entity;
 
 import com.beta.account.application.dto.SocialProvider;
+import com.beta.account.application.dto.UserDto;
 import com.beta.core.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -65,6 +66,19 @@ public class User extends BaseEntity {
         this.gender = gender;
         this.age = age;
         this.bio = bio;
+    }
+
+    public static User createNewUser(UserDto userDto, String password, BaseballTeam baseballTeam, String socialId, SocialProvider socialProvider) {
+        return User.builder().socialId(socialId)
+                .email(userDto.getEmail())
+                .password(password)
+                .nickname(userDto.getNickname())
+                .socialProvider(socialProvider)
+                .baseballTeam(baseballTeam)
+                .gender(userDto.getGender() != null ? GenderType.valueOf(userDto.getGender()) : null)
+                .age(userDto.getAge())
+                .bio(userDto.getBio())
+                .build();
     }
 
     public enum UserStatus {
