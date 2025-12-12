@@ -4,6 +4,7 @@ import com.beta.account.domain.entity.User;
 import com.beta.account.infra.repository.UserJpaRepository;
 import com.beta.core.exception.ErrorCode;
 import com.beta.core.exception.account.EmailDuplicateException;
+import com.beta.core.exception.account.InvalidPasswordException;
 import com.beta.core.exception.account.NameDuplicateException;
 import com.beta.core.exception.account.PersonalInfoAgreementRequiredException;
 import com.beta.core.exception.account.UserSuspendedException;
@@ -14,7 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
@@ -25,6 +28,9 @@ class UserStatusServiceTest {
 
     @Mock
     private UserJpaRepository userJpaRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserStatusService userStatusService;
@@ -100,44 +106,26 @@ class UserStatusServiceTest {
     }
 
     @Test
-    @DisplayName("이름이 중복되지 않으면 검증을 통과한다")
-    void validateNameDuplicate_Success_WhenNameIsUnique() {
-        // when & then
-        assertDoesNotThrow(() -> userStatusService.validateNameDuplicate(false));
-    }
-
-    @Test
-    @DisplayName("이름이 중복되면 NameDuplicateException을 발생시킨다")
-    void validateNameDuplicate_ThrowsException_WhenNameIsDuplicated() {
-        // when & then
-        assertThatThrownBy(() -> userStatusService.validateNameDuplicate(true))
-                .isInstanceOf(NameDuplicateException.class)
-                .hasMessage("이미 존재하는 이름입니다.")
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.NAME_DUPLICATE);
-    }
-
-    @Test
     @DisplayName("닉네임이 중복되지 않으면 검증을 통과한다")
-    void isNameDuplicate_Success_WhenNicknameIsUnique() {
+    void validateNameDuplicate_Success_WhenNicknameIsUnique() {
         // given
         String nickname = "uniqueNickname";
         when(userJpaRepository.existsByNickname(nickname)).thenReturn(false);
 
         // when & then
-        assertDoesNotThrow(() -> userStatusService.isNameDuplicate(nickname));
+        assertDoesNotThrow(() -> userStatusService.validateNameDuplicate(nickname));
         verify(userJpaRepository).existsByNickname(nickname);
     }
 
     @Test
     @DisplayName("닉네임이 중복되면 NameDuplicateException을 발생시킨다")
-    void isNameDuplicate_ThrowsException_WhenNicknameIsDuplicated() {
+    void validateNameDuplicate_ThrowsException_WhenNicknameIsDuplicated() {
         // given
         String nickname = "duplicateNickname";
         when(userJpaRepository.existsByNickname(nickname)).thenReturn(true);
 
         // when & then
-        assertThatThrownBy(() -> userStatusService.isNameDuplicate(nickname))
+        assertThatThrownBy(() -> userStatusService.validateNameDuplicate(nickname))
                 .isInstanceOf(NameDuplicateException.class)
                 .hasMessage("이미 존재하는 닉네임입니다")
                 .extracting("errorCode")
@@ -148,30 +136,121 @@ class UserStatusServiceTest {
 
     @Test
     @DisplayName("이메일이 중복되지 않으면 검증을 통과한다")
-    void isEmailDuplicate_Success_WhenEmailIsUnique() {
+    void validateEmailDuplicate_Success_WhenEmailIsUnique() {
         // given
         String email = "unique@example.com";
         when(userJpaRepository.existsByEmail(email)).thenReturn(false);
 
         // when & then
-        assertDoesNotThrow(() -> userStatusService.isEmailDuplicate(email));
+        assertDoesNotThrow(() -> userStatusService.validateEmailDuplicate(email));
         verify(userJpaRepository).existsByEmail(email);
     }
 
     @Test
     @DisplayName("이메일이 중복되면 EmailDuplicateException을 발생시킨다")
-    void isEmailDuplicate_ThrowsException_WhenEmailIsDuplicated() {
+    void validateEmailDuplicate_ThrowsException_WhenEmailIsDuplicated() {
         // given
         String email = "duplicate@example.com";
         when(userJpaRepository.existsByEmail(email)).thenReturn(true);
 
         // when & then
-        assertThatThrownBy(() -> userStatusService.isEmailDuplicate(email))
+        assertThatThrownBy(() -> userStatusService.validateEmailDuplicate(email))
                 .isInstanceOf(EmailDuplicateException.class)
                 .hasMessage("이미 존재하는 이메일입니다")
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.EMAIL_DUPLICATE);
 
         verify(userJpaRepository).existsByEmail(email);
+    }
+
+    @Test
+    @DisplayName("닉네임이 중복되지 않으면 false를 반환한다")
+    void isNameDuplicate_ReturnsFalse_WhenNicknameIsUnique() {
+        // given
+        String nickname = "uniqueNickname";
+        when(userJpaRepository.existsByNickname(nickname)).thenReturn(false);
+
+        // when
+        boolean result = userStatusService.isNameDuplicate(nickname);
+
+        // then
+        assertThat(result).isFalse();
+        verify(userJpaRepository).existsByNickname(nickname);
+    }
+
+    @Test
+    @DisplayName("닉네임이 중복되면 true를 반환한다")
+    void isNameDuplicate_ReturnsTrue_WhenNicknameIsDuplicated() {
+        // given
+        String nickname = "duplicateNickname";
+        when(userJpaRepository.existsByNickname(nickname)).thenReturn(true);
+
+        // when
+        boolean result = userStatusService.isNameDuplicate(nickname);
+
+        // then
+        assertThat(result).isTrue();
+        verify(userJpaRepository).existsByNickname(nickname);
+    }
+
+    @Test
+    @DisplayName("이메일이 중복되지 않으면 false를 반환한다")
+    void isEmailDuplicate_ReturnsFalse_WhenEmailIsUnique() {
+        // given
+        String email = "unique@example.com";
+        when(userJpaRepository.existsByEmail(email)).thenReturn(false);
+
+        // when
+        boolean result = userStatusService.isEmailDuplicate(email);
+
+        // then
+        assertThat(result).isFalse();
+        verify(userJpaRepository).existsByEmail(email);
+    }
+
+    @Test
+    @DisplayName("이메일이 중복되면 true를 반환한다")
+    void isEmailDuplicate_ReturnsTrue_WhenEmailIsDuplicated() {
+        // given
+        String email = "duplicate@example.com";
+        when(userJpaRepository.existsByEmail(email)).thenReturn(true);
+
+        // when
+        boolean result = userStatusService.isEmailDuplicate(email);
+
+        // then
+        assertThat(result).isTrue();
+        verify(userJpaRepository).existsByEmail(email);
+    }
+
+    @Test
+    @DisplayName("비밀번호가 일치하면 검증을 통과한다")
+    void validatePasswordExistence_Success_WhenPasswordMatches() {
+        // given
+        String encodedPassword = "encodedPassword123";
+        String rawPassword = "rawPassword123";
+        when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(true);
+
+        // when & then
+        assertDoesNotThrow(() -> userStatusService.validatePasswordExistence(encodedPassword, rawPassword));
+        verify(passwordEncoder).matches(rawPassword, encodedPassword);
+    }
+
+    @Test
+    @DisplayName("비밀번호가 일치하지 않으면 InvalidPasswordException을 발생시킨다")
+    void validatePasswordExistence_ThrowsException_WhenPasswordDoesNotMatch() {
+        // given
+        String encodedPassword = "encodedPassword123";
+        String rawPassword = "wrongPassword";
+        when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(false);
+
+        // when & then
+        assertThatThrownBy(() -> userStatusService.validatePasswordExistence(encodedPassword, rawPassword))
+                .isInstanceOf(InvalidPasswordException.class)
+                .hasMessage("비밀번호가 일치하지 않습니다.")
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_PASSWORD);
+
+        verify(passwordEncoder).matches(rawPassword, encodedPassword);
     }
 }

@@ -4,6 +4,7 @@ import com.beta.account.application.dto.SocialProvider;
 import com.beta.account.domain.entity.BaseballTeam;
 import com.beta.account.domain.entity.User;
 import com.beta.account.infra.repository.UserJpaRepository;
+import com.beta.core.exception.account.UserNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -95,6 +97,84 @@ class UserReadServiceTest {
 
         verify(userJpaRepository).findBySocialIdAndSocialProvider(socialId, kakaoProvider);
         verify(userJpaRepository).findBySocialIdAndSocialProvider(socialId, naverProvider);
+    }
+
+    @Test
+    @DisplayName("이메일로 사용자를 조회한다")
+    void findUserByEmail_ReturnsUser_WhenUserExists() {
+        // given
+        String email = "test@example.com";
+        BaseballTeam team = createBaseballTeam("LG", "LG 트윈스");
+        User expectedUser = createUser(1L, email, "testNick", null, SocialProvider.EMAIL, team);
+
+        when(userJpaRepository.findByEmail(email))
+                .thenReturn(Optional.of(expectedUser));
+
+        // when
+        User result = userReadService.findUserByEmail(email);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getEmail()).isEqualTo(email);
+        assertThat(result.getNickname()).isEqualTo("testNick");
+
+        verify(userJpaRepository, times(1)).findByEmail(email);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이메일로 조회 시 UserNotFoundException을 발생시킨다")
+    void findUserByEmail_ThrowsException_WhenUserNotFound() {
+        // given
+        String email = "notfound@example.com";
+
+        when(userJpaRepository.findByEmail(email))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userReadService.findUserByEmail(email))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessage("해당 이메일로 가입된 사용자가 없습니다.");
+
+        verify(userJpaRepository, times(1)).findByEmail(email);
+    }
+
+    @Test
+    @DisplayName("ID로 사용자를 조회한다")
+    void findUserById_ReturnsUser_WhenUserExists() {
+        // given
+        Long userId = 1L;
+        BaseballTeam team = createBaseballTeam("DOOSAN", "두산 베어스");
+        User expectedUser = createUser(userId, "user@example.com", "userNick", null, SocialProvider.EMAIL, team);
+
+        when(userJpaRepository.findById(userId))
+                .thenReturn(Optional.of(expectedUser));
+
+        // when
+        User result = userReadService.findUserById(userId);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getEmail()).isEqualTo("user@example.com");
+        assertThat(result.getNickname()).isEqualTo("userNick");
+
+        verify(userJpaRepository, times(1)).findById(userId);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 ID로 조회 시 UserNotFoundException을 발생시킨다")
+    void findUserById_ThrowsException_WhenUserNotFound() {
+        // given
+        Long userId = 999L;
+
+        when(userJpaRepository.findById(userId))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userReadService.findUserById(userId))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessage("해당 ID의 사용자를 찾을 수 없습니다.");
+
+        verify(userJpaRepository, times(1)).findById(userId);
     }
 
     private BaseballTeam createBaseballTeam(String code, String name) {
