@@ -2,6 +2,7 @@ package com.beta.account.application;
 
 import com.beta.account.application.dto.LoginResult;
 import com.beta.account.application.dto.SocialProvider;
+import com.beta.account.application.dto.TokenDto;
 import com.beta.account.application.dto.UserDto;
 import com.beta.account.domain.entity.BaseballTeam;
 import com.beta.account.domain.entity.User;
@@ -11,6 +12,7 @@ import com.beta.core.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -47,6 +49,28 @@ public class AccountAppService {
         }
     }
 
+    public LoginResult processEmailLogin(String email, String password) {
+        User user = userReadService.findUserByEmail(email);
+        userStatusService.validateUserStatus(user);
+        userStatusService.validatePasswordExistence(user.getPassword(), password);
+
+        return createLoginResult(
+                user.getId(),
+                user.getBaseballTeam().getCode(),
+                user.getRole().name(),
+                UserDto.toDto(user),
+                "EMAIL"
+        );
+    }
+
+    public boolean isNameDuplicate(String nickName) {
+        return userStatusService.isNameDuplicate(nickName);
+    }
+
+    public boolean isEmailDuplicate(String email) {
+        return userStatusService.isEmailDuplicate(email);
+    }
+
     public LoginResult completeSignup(UserDto user, Boolean agreeMarketing, Boolean personalInfoRequired, String socialToken) {
         validateAccount(user, personalInfoRequired);
         UserDto saveUser = saveAccount(user, agreeMarketing, personalInfoRequired, socialToken);
@@ -57,6 +81,30 @@ public class AccountAppService {
                 saveUser,
                 saveUser.getSocialProvider().name()
         );
+    }
+
+    @Transactional
+    public TokenDto refreshTokens(String refreshToken) {
+        Long userId = refreshTokenService.findUserIdByToken(refreshToken);
+
+        User user = userReadService.findUserById(userId);
+        userStatusService.validateUserStatus(user);
+
+        String newAccessToken = jwtTokenProvider.generateAccessToken(
+                user.getId(),
+                user.getBaseballTeam().getCode(),
+                user.getRole().name()
+        );
+        String newRefreshToken = UUID.randomUUID().toString();
+        refreshTokenService.upsertRefreshToken(user.getId(), newRefreshToken);
+
+        return TokenDto.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken).build();
+    }
+
+    public void logout(Long userId) {
+        refreshTokenService.deleteByUserId(userId);
     }
 
     private UserDto saveAccount(UserDto user, Boolean agreeMarketing, Boolean personalInfoRequired, String socialToken) {
@@ -80,8 +128,8 @@ public class AccountAppService {
     }
 
     private void validateAccount(UserDto user, Boolean personalInfoRequired) {
-        userStatusService.isEmailDuplicate(user.getEmail());
-        userStatusService.isNameDuplicate(user.getNickname());
+        userStatusService.validateEmailDuplicate(user.getEmail());
+        userStatusService.validateNameDuplicate(user.getNickname());
         userStatusService.validateAgreePersonalInfo(personalInfoRequired);
     }
 
