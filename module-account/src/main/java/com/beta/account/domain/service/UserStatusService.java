@@ -4,6 +4,7 @@ import com.beta.account.domain.entity.User;
 import com.beta.account.infra.repository.UserJpaRepository;
 import com.beta.core.exception.account.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 public class UserStatusService {
 
     private final UserJpaRepository userJpaRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public void validateUserStatus(User user) {
         if (user.getStatus() == User.UserStatus.WITHDRAWN) {
@@ -28,21 +30,29 @@ public class UserStatusService {
         }
     }
 
-    public void validateNameDuplicate(boolean nameDuplicate) {
-        if(nameDuplicate){
-            throw new NameDuplicateException("이미 존재하는 이름입니다.");
-        }
-    }
-
-    public void isNameDuplicate(String nickName) {
+    public void validateNameDuplicate(String nickName) {
         if(userJpaRepository.existsByNickname(nickName)){
             throw new NameDuplicateException("이미 존재하는 닉네임입니다");
         }
     }
 
-    public void isEmailDuplicate(String email) {
+    public void validateEmailDuplicate(String email) {
         if(userJpaRepository.existsByEmail(email)){
             throw new EmailDuplicateException("이미 존재하는 이메일입니다");
         }
+    }
+
+    public void validatePasswordExistence(String password, String inputPassword) {
+        if (!passwordEncoder.matches(inputPassword, password)) {
+            throw new InvalidPasswordException("비밀번호가 일치하지 않습니다.");
+        }
+    }
+
+    public boolean isNameDuplicate(String nickName) {
+        return userJpaRepository.existsByNickname(nickName);
+    }
+
+    public boolean isEmailDuplicate(String email) {
+        return userJpaRepository.existsByEmail(email);
     }
 }

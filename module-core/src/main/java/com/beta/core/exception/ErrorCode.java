@@ -31,8 +31,9 @@ public enum ErrorCode {
     USER_WITHDRAWN(HttpStatus.FORBIDDEN, "USER002", "탈퇴한 사용자입니다"),
     USER_SUSPENDED(HttpStatus.FORBIDDEN, "USER003", "정지된 사용자입니다"),
     NAME_DUPLICATE(HttpStatus.CONFLICT, "USER004", "이미 존재하는 이름입니다"),
-    PERSONAL_INFO_AGREEMENT_REQUIRED(HttpStatus.BAD_REQUEST, "USER005", "개인정보 수집 및 이용에 대한 필수 동의가 필요합니다"),
-    EMAIL_DUPLICATE(HttpStatus.CONFLICT,"USER006", "이미 존재하는 이메일입니다");
+    INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "USER005", "비밀번호가 일치하지 않습니다"),
+    EMAIL_DUPLICATE(HttpStatus.CONFLICT,"USER006", "이미 존재하는 이메일입니다"),
+    PERSONAL_INFO_AGREEMENT_REQUIRED(HttpStatus.BAD_REQUEST, "USER007", "개인정보 수집 및 이용에 대한 필수 동의가 필요합니다");
 
     private final HttpStatus status;
     private final String code;
