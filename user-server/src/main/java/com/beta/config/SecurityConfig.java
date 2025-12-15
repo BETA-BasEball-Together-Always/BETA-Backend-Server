@@ -72,7 +72,8 @@ public class SecurityConfig {
                         "/api/v1/auth/signup/complete",   // 회원가입 완료
                         "/api/v1/auth/nickname/**",       // 닉네임 중복 체크
                         "/api/v1/auth/email/**",          // 이메일 중복 체크
-                        "/api/v1/auth/password/**"        // 비밀번호 찾기
+                        "/api/v1/password/**",            // 비밀번호 재설정
+                        "/docs/**"                        // REST Docs 문서
                 ).permitAll()
 
                 // 그 외 모든 요청은 인증 필요

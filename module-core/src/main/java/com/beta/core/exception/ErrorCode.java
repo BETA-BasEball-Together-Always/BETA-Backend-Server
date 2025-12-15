@@ -26,6 +26,12 @@ public enum ErrorCode {
     // Team
     TEAM_NOT_FOUND(HttpStatus.NOT_FOUND, "TEAM001", "해당 구단은 존재하지 않습니다."),
 
+    // Password
+    PASSWORD_CODE_COOLDOWN(HttpStatus.TOO_MANY_REQUESTS,"PASSWORD001", "인증코드 재전송은 1분 후에 가능합니다"),
+    SAME_PASSWORD(HttpStatus.BAD_REQUEST, "PASSWORD002", "기존 비밀번호와 동일한 비밀번호는 사용할 수 없습니다"),
+    INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "PASSWORD003", "인증코드가 일치하지 않습니다"),
+    VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "PASSWORD004", "인증코드가 만료되었습니다"),
+
     // User
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER001", "사용자를 찾을 수 없습니다"),
     USER_WITHDRAWN(HttpStatus.FORBIDDEN, "USER002", "탈퇴한 사용자입니다"),

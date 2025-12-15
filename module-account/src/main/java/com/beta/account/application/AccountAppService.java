@@ -8,7 +8,9 @@ import com.beta.account.domain.entity.BaseballTeam;
 import com.beta.account.domain.entity.User;
 import com.beta.account.domain.service.*;
 import com.beta.account.infra.client.SocialUserInfo;
+import com.beta.core.exception.account.SamePasswordException;
 import com.beta.core.security.JwtTokenProvider;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,8 +30,12 @@ public class AccountAppService {
     private final SocialUserInfoService socialUserInfoService;
     private final UserStatusService userStatusService;
     private final BaseballTeamReadService baseballTeamReadService;
+    private final WelcomeEmailService welcomeEmailService;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordCodeService passwordCodeService;
+    private final PasswordEmailService passwordEmailService;
 
+    /*====================AuthController======================*/
     public LoginResult processSocialLogin(String token, SocialProvider socialProvider) {
         SocialUserInfo socialUserInfo = socialUserInfoService.fetchSocialUserInfo(token, socialProvider);
         User user = userReadService.findUserBySocialId(socialUserInfo.getSocialId(), socialProvider);
@@ -74,6 +80,7 @@ public class AccountAppService {
     public LoginResult completeSignup(UserDto user, Boolean agreeMarketing, Boolean personalInfoRequired, String socialToken) {
         validateAccount(user, personalInfoRequired);
         UserDto saveUser = saveAccount(user, agreeMarketing, personalInfoRequired, socialToken);
+        welcomeEmailService.sendWelcomeEmail(saveUser.getEmail(), saveUser.getNickname());
         return createLoginResult(
                 saveUser.getId(),
                 saveUser.getFavoriteTeamCode(),
@@ -140,5 +147,39 @@ public class AccountAppService {
         return LoginResult.forExistingUser(
                 false, accessToken, refreshToken, user, social
         );
+    }
+
+    /*==============================PassController=======================================*/
+    public boolean sendPasswordResetCode(@NotBlank String email) {
+        User user = userReadService.findUserByEmail(email);
+        userStatusService.validateUserStatus(user);
+        String verificationCode = passwordCodeService.generateAndSaveVerificationCode(user.getId());
+        passwordEmailService.sendPasswordCord(user.getEmail(), user.getNickname(), verificationCode);
+        return true;
+    }
+
+    public boolean verifyPasswordResetCode(@NotBlank String email, @NotBlank String code) {
+        User user = userReadService.findUserByEmail(email);
+        userStatusService.validateUserStatus(user);
+        passwordCodeService.verifyCode(user.getId(), code);
+        return true;
+    }
+
+    @Transactional
+    public boolean resetPassword(@NotBlank String email, @NotBlank String code, @NotBlank String newPassword) {
+        User user = userReadService.findUserByEmail(email);
+        userStatusService.validateUserStatus(user);
+
+        passwordCodeService.verifyCode(user.getId(), code);
+        passwordCodeService.deleteCode(user.getId());
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new SamePasswordException("기존 비밀번호와 동일한 비밀번호는 사용할 수 없습니다");
+        }
+
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.updatePassword(encodedPassword);
+        userWriteService.saveUser(user);
+
+        return true;
     }
 }
