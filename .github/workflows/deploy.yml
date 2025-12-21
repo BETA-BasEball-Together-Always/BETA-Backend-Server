@@ -1,0 +1,60 @@
+name: Deploy BETA Services
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy-user:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # Docker Hub 로그인 (빌드 & push 용)
+      - name: Docker Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # user-server 이미지 빌드 & 푸시
+      - name: Build & Push User Image
+        run: |
+          docker build \
+            -f Dockerfile.user \
+            -t yeongo05/beta-user:latest \
+            -t yeongo05/beta-user:${{ github.sha }} \
+            .
+
+          docker push yeongo05/beta-user:latest
+          docker push yeongo05/beta-user:${{ github.sha }}
+
+      # proxy-vm에 SSH 접속 후, beta-user로 다시 SSH
+      - name: Deploy to beta-user via proxy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROXY_HOST }}
+          username: ubuntu
+          key: ${{ secrets.PROXY_SSH_KEY }}
+          script: |
+            ssh -o StrictHostKeyChecking=no ubuntu@10.0.1.240 << 'EOF'
+              docker pull yeongo05/beta-user:latest
+
+              docker stop beta-user || true
+              docker rm beta-user || true
+
+              docker run -d \
+                --name beta-user \
+                -p 8080:8080 \
+                --env-file /home/ubuntu/env/beta-user.env \
+                --restart always \
+                yeongo05/beta-user:latest
+            EOF
