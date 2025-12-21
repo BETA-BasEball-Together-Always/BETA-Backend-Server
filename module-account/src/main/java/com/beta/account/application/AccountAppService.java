@@ -35,6 +35,7 @@ public class AccountAppService {
     private final PasswordCodeService passwordCodeService;
     private final PasswordEmailService passwordEmailService;
     private final UserDeviceWriteService userDeviceWriteService;
+    private final DeviceAppService deviceAppService;
 
     /*====================AuthController======================*/
     public LoginResult processSocialLogin(String token, SocialProvider socialProvider) {
@@ -145,9 +146,11 @@ public class AccountAppService {
     private LoginResult createLoginResult(Long userId, String favoriteTeamCode, String role, UserDto user, String social) {
         String accessToken = jwtTokenProvider.generateAccessToken(userId, favoriteTeamCode, role);
         String refreshToken = UUID.randomUUID().toString();
+        String deviceId = UUID.randomUUID().toString();
         refreshTokenService.upsertRefreshToken(userId, refreshToken);
+
         return LoginResult.forExistingUser(
-                false, accessToken, refreshToken, user, social
+                false, accessToken, refreshToken, deviceId, user, social
         );
     }
 
