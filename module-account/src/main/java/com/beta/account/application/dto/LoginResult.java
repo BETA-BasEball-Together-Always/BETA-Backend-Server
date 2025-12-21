@@ -12,6 +12,7 @@ public class LoginResult {
     private final boolean isNewUser;
     private final String accessToken;
     private final String refreshToken;
+    private final String deviceId;
     private final UserDto userInfo;
     private final String social;
     private final List<TeamDto> teamList;
@@ -23,17 +24,19 @@ public class LoginResult {
                 .social(social)
                 .accessToken(null)
                 .refreshToken(null)
+                .deviceId(null)
                 .userInfo(null)
                 .build();
     }
 
-    public static LoginResult forExistingUser(boolean isNewUser, String accessToken, String refreshToken, UserDto user, String social) {
+    public static LoginResult forExistingUser(boolean isNewUser, String accessToken, String refreshToken, String deviceId, UserDto user, String social) {
         return LoginResult.builder()
                 .isNewUser(isNewUser)
                 .social(social)
                 .teamList(null)
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .deviceId(deviceId)
                 .userInfo(user)
                 .build();
     }

@@ -27,6 +27,7 @@ public class SocialLoginResponse {
                     .userResponse(new ExistingUserResponse(
                             loginResult.getAccessToken(),
                             loginResult.getRefreshToken(),
+                            loginResult.getDeviceId(),
                             loginResult.getUserInfo()
                     ))
                     .build();
@@ -35,5 +36,5 @@ public class SocialLoginResponse {
 
     private interface UserResponse {}
     private record NewUserResponse(String social, List<TeamDto> teamList) implements UserResponse {}
-    private record ExistingUserResponse(String accessToken, String refreshToken, UserDto user) implements UserResponse {}
+    private record ExistingUserResponse(String accessToken, String refreshToken, String deviceId, UserDto user) implements UserResponse {}
 }
