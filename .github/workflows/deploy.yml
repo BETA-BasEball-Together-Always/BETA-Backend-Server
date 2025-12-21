@@ -18,45 +18,59 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      # Docker Hub 로그인 (build & push 용)
       - name: Docker Login
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build & Push User Image
-        run: |
-          docker build \
-            -f Dockerfile.user \
-            -t yeongo05/beta-user:latest \
-            -t yeongo05/beta-user:${{ github.sha }} \
-            .
+      # 멀티 아키텍처 빌드를 위한 buildx 세팅
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-          docker push yeongo05/beta-user:latest
-          docker push yeongo05/beta-user:${{ github.sha }}
+      # user-server 멀티 아키텍처 이미지 빌드 & 푸시
+      - name: Build & Push User Image (multi-arch)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.user
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            yeongo05/beta-user:latest
+            yeongo05/beta-user:${{ github.sha }}
 
+      # proxy-vm 접속 → beta-user 로 점프 → 컨테이너 재기동
       - name: Deploy to beta-user via proxy
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.PROXY_HOST }}
+          host: ${{ secrets.PROXY_HOST }}      # proxy-vm Public IP
           username: ubuntu
           key: ${{ secrets.PROXY_SSH_KEY }}
           script: |
-            # safety check
+            echo ">>> check beta-user ssh key"
             ls -l /home/ubuntu/.ssh/beta_user_key
 
             ssh -i /home/ubuntu/.ssh/beta_user_key \
                 -o StrictHostKeyChecking=no \
                 ubuntu@10.0.1.240 << 'EOF'
+              set -e
+
+              echo ">>> pull image"
               docker pull yeongo05/beta-user:latest
 
+              echo ">>> stop & remove old container"
               docker stop beta-user || true
               docker rm beta-user || true
 
+              echo ">>> run new container"
               docker run -d \
                 --name beta-user \
                 -p 8080:8080 \
                 --env-file /home/ubuntu/env/beta-user.env \
                 --restart always \
                 yeongo05/beta-user:latest
+
+              echo ">>> deployment finished"
             EOF
