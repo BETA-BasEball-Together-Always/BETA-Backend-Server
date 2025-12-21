@@ -34,6 +34,7 @@ public class AccountAppService {
     private final PasswordEncoder passwordEncoder;
     private final PasswordCodeService passwordCodeService;
     private final PasswordEmailService passwordEmailService;
+    private final UserDeviceWriteService userDeviceWriteService;
 
     /*====================AuthController======================*/
     public LoginResult processSocialLogin(String token, SocialProvider socialProvider) {
@@ -110,8 +111,9 @@ public class AccountAppService {
                 .refreshToken(newRefreshToken).build();
     }
 
-    public void logout(Long userId) {
+    public void logout(Long userId, String deviceId) {
         refreshTokenService.deleteByUserId(userId);
+        userDeviceWriteService.deleteByDeviceId(userId, deviceId);
     }
 
     private UserDto saveAccount(UserDto user, Boolean agreeMarketing, Boolean personalInfoRequired, String socialToken) {

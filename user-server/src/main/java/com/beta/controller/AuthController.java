@@ -4,6 +4,7 @@ import com.beta.account.application.AccountAppService;
 import com.beta.account.application.dto.LoginResult;
 import com.beta.account.application.dto.SocialProvider;
 import com.beta.controller.request.EmailLoginRequest;
+import com.beta.controller.request.LogoutRequest;
 import com.beta.controller.request.RefreshTokenRequest;
 import com.beta.controller.request.SignupCompleteRequest;
 import com.beta.controller.request.SocialLoginRequest;
@@ -67,8 +68,10 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<LogoutResponse> logout(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        accountAppService.logout(userDetails.userId());
+    public ResponseEntity<LogoutResponse> logout(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody(required = false) LogoutRequest request) {
+        accountAppService.logout(userDetails.userId(), request.getDeviceId());
         return ResponseEntity.ok(LogoutResponse.success());
     }
 }
