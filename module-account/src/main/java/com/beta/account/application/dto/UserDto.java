@@ -23,12 +23,16 @@ public class UserDto {
     public static UserDto toDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
+                .email(user.getEmail())
                 .socialId(user.getSocialId())
                 .nickname(user.getNickname())
                 .socialProvider(user.getSocialProvider())
                 .favoriteTeamCode(user.getBaseballTeam().getCode())
                 .favoriteTeamName(user.getBaseballTeam().getTeamNameKr())
                 .role(user.getRole().name())
+                .gender(user.getGender() != null ? user.getGender().name() : null)
+                .age(user.getAge())
+                .bio(user.getBio())
                 .build();
     }
 }
