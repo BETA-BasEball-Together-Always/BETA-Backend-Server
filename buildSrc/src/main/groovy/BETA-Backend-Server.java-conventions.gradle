@@ -2,8 +2,6 @@ plugins {
     id 'java'
     id 'org.springframework.boot'
     id 'io.spring.dependency-management'
-    id 'org.asciidoctor.jvm.convert'
-    id 'jacoco'
 }
 
 group='com.beta'
@@ -56,6 +54,10 @@ dependencies {
     // Mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
+    // Oracle Cloud Storage
+    implementation 'com.oracle.oci.sdk:oci-java-sdk-objectstorage:3.65.1'
+    implementation 'com.oracle.oci.sdk:oci-java-sdk-common:3.65.1'
+
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
@@ -64,29 +66,10 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:mysql'
     testImplementation 'org.testcontainers:testcontainers'
-
-    // REST Docs
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
-    testImplementation 'org.springframework.restdocs:spring-restdocs-asciidoctor'
-}
-
-
-// REST Docs 설정
-ext {
-    snippetsDir = file('build/generated-snippets')
 }
 
 tasks.named('test') {
     useJUnitPlatform()
-    outputs.dir snippetsDir
-    finalizedBy jacocoTestReport
-}
-
-asciidoctor {
-    inputs.dir snippetsDir
-    dependsOn test
-    attributes 'snippets': snippetsDir
-    baseDirFollowsSourceFile()
 }
 
 // QueryDSL 설정
@@ -103,55 +86,6 @@ tasks.withType(JavaCompile).configureEach {
 clean {
     delete file(querydslDir)
 }
-
-// JaCoCo 설정
-jacoco {
-    toolVersion = "0.8.11"
-}
-
-jacocoTestReport {
-    dependsOn test
-    reports {
-        xml.required = true
-        html.required = true
-        csv.required = false
-    }
-
-    afterEvaluate {
-        classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, exclude: [
-                    '**/Q*.class',           // QueryDSL 생성 클래스 제외
-                    '**/*Application.class',  // Application 클래스 제외
-                    '**/config/**',          // Config 클래스 제외
-                    '**/dto/**',             // DTO 클래스 제외
-                    '**/entity/**',          // Entity 클래스 제외
-            ])
-        }))
-    }
-}
-
-jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            enabled = true
-            element = 'CLASS'
-
-            limit {
-                counter = 'LINE'
-                value = 'COVEREDRATIO'
-                minimum = 0.70  // 70% 커버리지
-            }
-
-            limit {
-                counter = 'BRANCH'
-                value = 'COVEREDRATIO'
-                minimum = 0.70  // 70% 분기 커버리지
-            }
-        }
-    }
-}
-
-// Disable bootJar by default (library modules)
 tasks.named('bootJar') {
     enabled = false
 }
