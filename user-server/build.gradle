@@ -14,12 +14,6 @@ tasks.named('test') {
 
 tasks.named('bootJar') {
     enabled = true
-    if (!project.hasProperty("ci")) {
-        dependsOn asciidoctor
-        from("${asciidoctor.outputDir}") {
-            into 'static/docs'
-        }
-    }
 }
 
 tasks.named('jar') {
