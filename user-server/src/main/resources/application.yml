@@ -22,6 +22,13 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  transaction:
+    default-timeout: 30
 
   # Redis Configuration
   data:
@@ -47,6 +54,19 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
+
+# Oracle Cloud Storage Configuration
+oracle:
+  cloud:
+    storage:
+      namespace: ${OCI_NAMESPACE}
+      bucket-name: ${OCI_BUCKET_NAME}
+      region: ${OCI_REGION:ap-seoul-1}
+      auth:
+        tenancy-ocid: ${OCI_TENANCY_OCID}
+        user-ocid: ${OCI_USER_OCID}
+        fingerprint: ${OCI_FINGERPRINT}
+        private-key-path: ${OCI_PRIVATE_KEY_PATH}
 
 # JWT Configuration
 jwt:

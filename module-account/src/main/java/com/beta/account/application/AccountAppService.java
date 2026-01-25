@@ -35,7 +35,6 @@ public class AccountAppService {
     private final PasswordCodeService passwordCodeService;
     private final PasswordEmailService passwordEmailService;
     private final UserDeviceWriteService userDeviceWriteService;
-    private final DeviceAppService deviceAppService;
 
     /*====================AuthController======================*/
     public LoginResult processSocialLogin(String token, SocialProvider socialProvider) {
