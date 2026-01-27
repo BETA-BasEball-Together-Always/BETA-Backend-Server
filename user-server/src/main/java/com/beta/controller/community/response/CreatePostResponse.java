@@ -1,4 +1,4 @@
-package com.beta.controller.response;
+package com.beta.controller.community.response;
 
 import com.beta.community.application.dto.PostDto;
 import lombok.Builder;

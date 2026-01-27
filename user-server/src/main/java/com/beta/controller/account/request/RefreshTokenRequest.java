@@ -1,4 +1,4 @@
-package com.beta.controller.request;
+package com.beta.controller.account.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;

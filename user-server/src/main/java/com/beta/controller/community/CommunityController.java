@@ -1,9 +1,9 @@
-package com.beta.controller;
+package com.beta.controller.community;
 
 import com.beta.community.application.CommunityAppService;
 import com.beta.community.application.dto.PostDto;
-import com.beta.controller.request.CreatePostRequest;
-import com.beta.controller.response.CreatePostResponse;
+import com.beta.controller.community.request.CreatePostRequest;
+import com.beta.controller.community.response.CreatePostResponse;
 import com.beta.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

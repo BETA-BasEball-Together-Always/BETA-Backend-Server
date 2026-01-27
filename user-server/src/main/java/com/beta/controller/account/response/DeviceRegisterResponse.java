@@ -1,4 +1,4 @@
-package com.beta.controller.response;
+package com.beta.controller.account.response;
 
 import com.beta.account.application.dto.DeviceRegisterResult;
 import lombok.Builder;

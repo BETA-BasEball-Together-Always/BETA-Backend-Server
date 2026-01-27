@@ -1,4 +1,4 @@
-package com.beta.controller.response;
+package com.beta.controller.account.response;
 
 import lombok.Builder;
 import lombok.Getter;

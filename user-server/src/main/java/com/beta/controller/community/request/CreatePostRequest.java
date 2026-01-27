@@ -1,4 +1,4 @@
-package com.beta.controller.request;
+package com.beta.controller.community.request;
 
 import com.beta.community.application.dto.CreatePostDto;
 import jakarta.validation.constraints.*;

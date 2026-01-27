@@ -1,10 +1,10 @@
-package com.beta.controller;
+package com.beta.controller.account;
 
 import com.beta.account.application.DeviceAppService;
 import com.beta.account.application.dto.DeviceRegisterResult;
-import com.beta.controller.request.DeviceRegisterRequest;
-import com.beta.controller.response.DeviceRegisterResponse;
-import com.beta.controller.response.FcmTokenUpdateResponse;
+import com.beta.controller.account.request.DeviceRegisterRequest;
+import com.beta.controller.account.response.DeviceRegisterResponse;
+import com.beta.controller.account.response.FcmTokenUpdateResponse;
 import com.beta.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
