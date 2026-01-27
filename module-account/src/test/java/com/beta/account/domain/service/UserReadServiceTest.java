@@ -105,7 +105,7 @@ class UserReadServiceTest {
         // given
         String email = "test@example.com";
         BaseballTeam team = createBaseballTeam("LG", "LG 트윈스");
-        User expectedUser = createUser(1L, email, "testNick", null, SocialProvider.EMAIL, team);
+        User expectedUser = createUser(1L, email, "testNick", null, SocialProvider.KAKAO, team);
 
         when(userJpaRepository.findByEmail(email))
                 .thenReturn(Optional.of(expectedUser));
@@ -144,7 +144,7 @@ class UserReadServiceTest {
         // given
         Long userId = 1L;
         BaseballTeam team = createBaseballTeam("DOOSAN", "두산 베어스");
-        User expectedUser = createUser(userId, "user@example.com", "userNick", null, SocialProvider.EMAIL, team);
+        User expectedUser = createUser(userId, "user@example.com", "userNick", null, SocialProvider.NAVER, team);
 
         when(userJpaRepository.findById(userId))
                 .thenReturn(Optional.of(expectedUser));
@@ -187,7 +187,6 @@ class UserReadServiceTest {
     private User createUser(Long id, String email, String nickname, String socialId, SocialProvider provider, BaseballTeam team) {
         return User.builder()
                 .email(email)
-                .password("encodedPassword")
                 .nickname(nickname)
                 .socialId(socialId)
                 .socialProvider(provider)

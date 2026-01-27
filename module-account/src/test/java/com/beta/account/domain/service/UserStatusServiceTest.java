@@ -4,7 +4,6 @@ import com.beta.account.domain.entity.User;
 import com.beta.account.infra.repository.UserJpaRepository;
 import com.beta.core.exception.ErrorCode;
 import com.beta.core.exception.account.EmailDuplicateException;
-import com.beta.core.exception.account.InvalidPasswordException;
 import com.beta.core.exception.account.NameDuplicateException;
 import com.beta.core.exception.account.PersonalInfoAgreementRequiredException;
 import com.beta.core.exception.account.UserSuspendedException;
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,9 +26,6 @@ class UserStatusServiceTest {
 
     @Mock
     private UserJpaRepository userJpaRepository;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserStatusService userStatusService;
@@ -223,34 +218,4 @@ class UserStatusServiceTest {
         verify(userJpaRepository).existsByEmail(email);
     }
 
-    @Test
-    @DisplayName("비밀번호가 일치하면 검증을 통과한다")
-    void validatePasswordExistence_Success_WhenPasswordMatches() {
-        // given
-        String encodedPassword = "encodedPassword123";
-        String rawPassword = "rawPassword123";
-        when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(true);
-
-        // when & then
-        assertDoesNotThrow(() -> userStatusService.validatePasswordExistence(encodedPassword, rawPassword));
-        verify(passwordEncoder).matches(rawPassword, encodedPassword);
-    }
-
-    @Test
-    @DisplayName("비밀번호가 일치하지 않으면 InvalidPasswordException을 발생시킨다")
-    void validatePasswordExistence_ThrowsException_WhenPasswordDoesNotMatch() {
-        // given
-        String encodedPassword = "encodedPassword123";
-        String rawPassword = "wrongPassword";
-        when(passwordEncoder.matches(rawPassword, encodedPassword)).thenReturn(false);
-
-        // when & then
-        assertThatThrownBy(() -> userStatusService.validatePasswordExistence(encodedPassword, rawPassword))
-                .isInstanceOf(InvalidPasswordException.class)
-                .hasMessage("비밀번호가 일치하지 않습니다.")
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.INVALID_PASSWORD);
-
-        verify(passwordEncoder).matches(rawPassword, encodedPassword);
-    }
 }

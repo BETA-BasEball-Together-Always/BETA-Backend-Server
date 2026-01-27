@@ -1,10 +1,10 @@
 package com.beta.account.domain.service;
 
+import com.beta.account.domain.entity.SignupStep;
 import com.beta.account.domain.entity.User;
 import com.beta.account.infra.repository.UserJpaRepository;
 import com.beta.core.exception.account.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 public class UserStatusService {
 
     private final UserJpaRepository userJpaRepository;
-    private final PasswordEncoder passwordEncoder;
+
+    private static final int MIN_NICKNAME_LENGTH = 2;
+    private static final int MAX_NICKNAME_LENGTH = 13;
 
     public void validateUserStatus(User user) {
         if (user.getStatus() == User.UserStatus.WITHDRAWN) {
@@ -42,17 +44,26 @@ public class UserStatusService {
         }
     }
 
-    public void validatePasswordExistence(String password, String inputPassword) {
-        if (!passwordEncoder.matches(inputPassword, password)) {
-            throw new InvalidPasswordException("비밀번호가 일치하지 않습니다.");
-        }
-    }
-
     public boolean isNameDuplicate(String nickName) {
         return userJpaRepository.existsByNickname(nickName);
     }
 
     public boolean isEmailDuplicate(String email) {
         return userJpaRepository.existsByEmail(email);
+    }
+
+    public void validateSignupStep(User user, SignupStep expectedStep) {
+        if (user.getSignupStep() != expectedStep) {
+            throw new InvalidSignupStepException(
+                    String.format("현재 회원가입 단계(%s)에서 진행할 수 없는 요청입니다. 기대 단계: %s",
+                            user.getSignupStep(), expectedStep));
+        }
+    }
+
+    public void validateNicknameLength(String nickname) {
+        if (nickname == null || nickname.length() < MIN_NICKNAME_LENGTH || nickname.length() > MAX_NICKNAME_LENGTH) {
+            throw new NicknameLengthException(
+                    String.format("닉네임은 %d~%d자 사이여야 합니다", MIN_NICKNAME_LENGTH, MAX_NICKNAME_LENGTH));
+        }
     }
 }
