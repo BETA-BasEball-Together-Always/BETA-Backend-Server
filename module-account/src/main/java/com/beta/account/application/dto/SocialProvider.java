@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum SocialProvider {
-    EMAIL,
     NAVER,
-    KAKAO;
+    KAKAO,
+    APPLE;
 }

@@ -9,7 +9,6 @@ import lombok.Getter;
 public class UserDto {
     private Long id;
     private String email;
-    private String password;
     private String socialId;
     private String nickname;
     private SocialProvider socialProvider;
