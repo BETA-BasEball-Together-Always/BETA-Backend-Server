@@ -18,13 +18,10 @@ public class User extends BaseEntity {
     @Column(name = "social_id")
     private String socialId;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email")
     private String email;
 
-    @Column(name = "password", nullable = false)
-    private String password;
-
-    @Column(name = "nickname", nullable = false)
+    @Column(name = "nickname")
     private String nickname;
 
     @Enumerated(EnumType.STRING)
@@ -32,15 +29,19 @@ public class User extends BaseEntity {
     private SocialProvider socialProvider;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 10)
     private UserStatus status;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private UserRole role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "signup_step", nullable = false, length = 30)
+    private SignupStep signupStep;
+
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "favorite_team_code", referencedColumnName = "code", nullable = false)
+    @JoinColumn(name = "favorite_team_code", referencedColumnName = "code")
     private BaseballTeam baseballTeam;
 
     @Enumerated(EnumType.STRING)
@@ -54,30 +55,29 @@ public class User extends BaseEntity {
     private String bio;
 
     @Builder
-    public User(String socialId, String email, String password, String nickname, SocialProvider socialProvider, UserStatus status, UserRole role, BaseballTeam baseballTeam, GenderType gender, Integer age, String bio) {
+    public User(String socialId, String email, String nickname, SocialProvider socialProvider,
+                UserStatus status, UserRole role, SignupStep signupStep, BaseballTeam baseballTeam,
+                GenderType gender, Integer age, String bio) {
         this.socialId = socialId;
         this.email = email;
-        this.password = password;
         this.nickname = nickname;
         this.socialProvider = socialProvider;
         this.status = status != null ? status : UserStatus.ACTIVE;
         this.role = role != null ? role : UserRole.USER;
+        this.signupStep = signupStep != null ? signupStep : SignupStep.COMPLETED;
         this.baseballTeam = baseballTeam;
         this.gender = gender;
         this.age = age;
         this.bio = bio;
     }
 
-    public static User createNewUser(UserDto userDto, String password, BaseballTeam baseballTeam, String socialId, SocialProvider socialProvider) {
-        return User.builder().socialId(socialId)
-                .email(userDto.getEmail())
-                .password(password)
-                .nickname(userDto.getNickname())
+    public static User createNewSocialUser(String socialId, SocialProvider socialProvider) {
+        return User.builder()
+                .socialId(socialId)
                 .socialProvider(socialProvider)
-                .baseballTeam(baseballTeam)
-                .gender(userDto.getGender() != null ? GenderType.valueOf(userDto.getGender()) : null)
-                .age(userDto.getAge())
-                .bio(userDto.getBio())
+                .signupStep(SignupStep.SOCIAL_AUTHENTICATED)
+                .status(UserStatus.ACTIVE)
+                .role(UserRole.USER)
                 .build();
     }
 
@@ -95,7 +95,31 @@ public class User extends BaseEntity {
         M, F;
     }
 
-    public void updatePassword(String newPassword) {
-        this.password = newPassword;
+    public void agreeConsent() {
+        this.signupStep = SignupStep.CONSENT_AGREED;
+    }
+
+    public void updateProfile(String email, String nickname) {
+        this.email = email;
+        this.nickname = nickname;
+        this.signupStep = SignupStep.PROFILE_COMPLETED;
+    }
+
+    public void updateTeam(BaseballTeam baseballTeam) {
+        this.baseballTeam = baseballTeam;
+        this.signupStep = SignupStep.TEAM_SELECTED;
+    }
+
+    public void updateOptionalInfo(GenderType gender, Integer age) {
+        this.gender = gender;
+        this.age = age;
+    }
+
+    public void completeSignup() {
+        this.signupStep = SignupStep.COMPLETED;
+    }
+
+    public boolean isSignupCompleted() {
+        return this.signupStep == SignupStep.COMPLETED;
     }
 }
