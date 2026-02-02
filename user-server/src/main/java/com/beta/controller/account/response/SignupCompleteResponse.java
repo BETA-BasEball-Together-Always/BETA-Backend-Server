@@ -11,14 +11,12 @@ public class SignupCompleteResponse {
 
     private String accessToken;
     private String refreshToken;
-    private String deviceId;
     private UserDto user;
 
     public static SignupCompleteResponse from(LoginResult result) {
         return SignupCompleteResponse.builder()
                 .accessToken(result.getAccessToken())
                 .refreshToken(result.getRefreshToken())
-                .deviceId(result.getDeviceId())
                 .user(result.getUserInfo())
                 .build();
     }
