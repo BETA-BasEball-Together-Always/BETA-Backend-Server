@@ -13,6 +13,7 @@ public class SignupStepResult {
     private final Long userId;
     private final SignupStep signupStep;
     private final List<TeamDto> teamList;
+    private final String accessToken;
 
     public static SignupStepResult of(Long userId, SignupStep signupStep) {
         return SignupStepResult.builder()
@@ -26,6 +27,14 @@ public class SignupStepResult {
                 .userId(userId)
                 .signupStep(signupStep)
                 .teamList(TeamDto.fromList(teamList))
+                .build();
+    }
+
+    public static SignupStepResult withAccessToken(Long userId, SignupStep signupStep, String accessToken) {
+        return SignupStepResult.builder()
+                .userId(userId)
+                .signupStep(signupStep)
+                .accessToken(accessToken)
                 .build();
     }
 }
