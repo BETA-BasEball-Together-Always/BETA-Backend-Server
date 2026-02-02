@@ -45,6 +45,9 @@ claude.md
 **/application-secret.yml
 .env
 
+### Claude ###
+claude/
+
 ### Logs ###
 logs/
 *.log
