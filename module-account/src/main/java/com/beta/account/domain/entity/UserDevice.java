@@ -32,6 +32,8 @@ public class UserDevice extends BaseEntity {
     @Column(nullable = false)
     private Boolean isActive = true;
 
+    private Boolean pushEnabled;
+
     @Builder
     public UserDevice(Long userId, String deviceId, String fcmToken) {
         this.userId = userId;
@@ -39,6 +41,7 @@ public class UserDevice extends BaseEntity {
         this.fcmToken = fcmToken;
         this.lastUsedAt = LocalDateTime.now();
         this.isActive = true;
+        this.pushEnabled = null;
     }
 
     public void updateFcmToken(String fcmToken) {
@@ -51,5 +54,14 @@ public class UserDevice extends BaseEntity {
 
     public void activate() {
         this.isActive = true;
+    }
+
+    public void updatePushSettings(String fcmToken, Boolean pushEnabled) {
+        this.fcmToken = fcmToken;
+        this.pushEnabled = pushEnabled;
+    }
+
+    public void updatePushEnabled(Boolean pushEnabled) {
+        this.pushEnabled = pushEnabled;
     }
 }

@@ -48,4 +48,15 @@ public class UserDeviceWriteService {
         device.updateLastUsedAt();
         save(device);
     }
+
+    public void updatePushSettings(UserDevice device, String fcmToken, Boolean pushEnabled) {
+        device.updatePushSettings(fcmToken, pushEnabled);
+        device.updateLastUsedAt();
+        save(device);
+    }
+
+    public void updatePushEnabled(UserDevice device, Boolean pushEnabled) {
+        device.updatePushEnabled(pushEnabled);
+        save(device);
+    }
 }

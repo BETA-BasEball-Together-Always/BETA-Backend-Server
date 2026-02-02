@@ -1,6 +1,5 @@
 package com.beta.account.application;
 
-import com.beta.account.application.dto.DeviceRegisterResult;
 import com.beta.account.domain.entity.UserDevice;
 import com.beta.account.domain.service.UserDeviceReadService;
 import com.beta.account.domain.service.UserDeviceWriteService;
@@ -17,27 +16,33 @@ public class DeviceAppService {
     private final UserDeviceReadService userDeviceReadService;
     private final UserDeviceWriteService userDeviceWriteService;
 
-    /*====================DeviceController======================*/
-
     @Transactional
-    public DeviceRegisterResult registerOrUpdateDevice(Long userId, String deviceId, String fcmToken) {
+    public boolean registerOrUpdateDevice(Long userId, String deviceId, String fcmToken) {
         Optional<UserDevice> existingDevice = userDeviceReadService.findByUserIdAndDeviceId(userId, deviceId);
 
-        if (existingDevice.isPresent()) { // 기존 디바이스 업데이트
+        if (existingDevice.isPresent()) {
             UserDevice device = existingDevice.get();
             userDeviceWriteService.updateExistingDevice(device, fcmToken);
-            return DeviceRegisterResult.of(device.getId(), deviceId, false);
-        } else { // 새 디바이스 생성
-            UserDevice newDevice = userDeviceWriteService.createNewDevice(userId, deviceId, fcmToken);
-            return DeviceRegisterResult.of(newDevice.getId(), deviceId, true);
+            return false;
+        } else {
+            userDeviceWriteService.createNewDevice(userId, deviceId, fcmToken);
+            return true;
         }
     }
 
     @Transactional
-    public void updateFcmToken(Long userId, String deviceId, String fcmToken) {
+    public void updatePushSettings(Long userId, String deviceId, String fcmToken, Boolean pushEnabled) {
         UserDevice device = userDeviceReadService.findByUserIdAndDeviceId(userId, deviceId)
                 .orElseThrow(() -> new IllegalArgumentException("디바이스를 찾을 수 없습니다"));
 
-        userDeviceWriteService.updateDeviceFcmToken(device, fcmToken);
+        userDeviceWriteService.updatePushSettings(device, fcmToken, pushEnabled);
+    }
+
+    @Transactional
+    public void updatePushEnabled(Long userId, String deviceId, Boolean pushEnabled) {
+        UserDevice device = userDeviceReadService.findByUserIdAndDeviceId(userId, deviceId)
+                .orElseThrow(() -> new IllegalArgumentException("디바이스를 찾을 수 없습니다"));
+
+        userDeviceWriteService.updatePushEnabled(device, pushEnabled);
     }
 }

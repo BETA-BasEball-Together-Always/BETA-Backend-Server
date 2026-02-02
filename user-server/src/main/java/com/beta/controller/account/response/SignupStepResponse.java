@@ -11,15 +11,15 @@ import java.util.List;
 @Builder
 public class SignupStepResponse {
 
-    private Long userId;
     private String signupStep;
     private List<TeamDto> teamList;
+    private String accessToken;
 
     public static SignupStepResponse from(SignupStepResult result) {
         return SignupStepResponse.builder()
-                .userId(result.getUserId())
                 .signupStep(result.getSignupStep().name())
                 .teamList(result.getTeamList())
+                .accessToken(result.getAccessToken())
                 .build();
     }
 }

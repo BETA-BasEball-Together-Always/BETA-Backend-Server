@@ -1,13 +1,19 @@
 package com.beta.config;
 
+import com.beta.core.exception.ErrorCode;
+import com.beta.core.response.ErrorResponse;
 import com.beta.filter.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -22,6 +28,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -56,15 +63,17 @@ public class SecurityConfig {
             // JWT 인증 필터 추가 (UsernamePasswordAuthenticationFilter 전에 실행)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
+            // 인증 실패 시 401 반환 (Spring Security 기본 403 방지)
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint(unauthorizedEntryPoint())
+            )
+
             // 요청별 인증 설정
             .authorizeHttpRequests(auth -> auth
                 // 인증 없이 접근 가능한 엔드포인트
                 .requestMatchers(
                         "/api/v1/auth/login/**",          // 소셜 로그인
                         "/api/v1/auth/refresh",           // 토큰 리프레시
-                        "/api/v1/auth/signup/**",         // 회원가입 단계별 엔드포인트
-                        "/api/v1/auth/nickname/**",       // 닉네임 중복 체크
-                        "/api/v1/auth/email/**",          // 이메일 중복 체크
                         "/swagger-ui/**",                 // Swagger UI
                         "/v3/api-docs/**"                 // OpenAPI docs
                 ).permitAll()
@@ -78,5 +87,19 @@ public class SecurityConfig {
             .httpBasic(AbstractHttpConfigurer::disable);
 
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationEntryPoint unauthorizedEntryPoint() {
+        return (request, response, authException) -> {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setCharacterEncoding("UTF-8");
+
+            var errorResponse = ErrorResponse.of(
+                    ErrorCode.INVALID_TOKEN
+            );
+            response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+        };
     }
 }

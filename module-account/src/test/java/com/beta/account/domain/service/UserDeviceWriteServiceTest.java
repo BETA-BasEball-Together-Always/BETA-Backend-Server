@@ -74,6 +74,47 @@ class UserDeviceWriteServiceTest {
         verify(userDeviceJpaRepository, times(1)).deleteByUserIdAndDeviceId(userId, deviceId);
     }
 
+    @Test
+    @DisplayName("디바이스 푸시 설정을 업데이트한다")
+    void updatePushSettings_UpdatesFcmTokenAndPushEnabled() {
+        // given
+        UserDevice device = createUserDevice(1L, "old-token");
+        String newFcmToken = "new-fcm-token";
+        Boolean pushEnabled = true;
+
+        when(userDeviceJpaRepository.save(any(UserDevice.class)))
+                .thenReturn(device);
+
+        // when
+        userDeviceWriteService.updatePushSettings(device, newFcmToken, pushEnabled);
+
+        // then
+        assertThat(device.getFcmToken()).isEqualTo(newFcmToken);
+        assertThat(device.getPushEnabled()).isTrue();
+        assertThat(device.getLastUsedAt()).isNotNull();
+
+        verify(userDeviceJpaRepository, times(1)).save(device);
+    }
+
+    @Test
+    @DisplayName("디바이스 푸시 활성화 상태만 변경한다")
+    void updatePushEnabled_UpdatesOnlyPushEnabled() {
+        // given
+        UserDevice device = createUserDevice(1L, "token123");
+        Boolean pushEnabled = false;
+
+        when(userDeviceJpaRepository.save(any(UserDevice.class)))
+                .thenReturn(device);
+
+        // when
+        userDeviceWriteService.updatePushEnabled(device, pushEnabled);
+
+        // then
+        assertThat(device.getPushEnabled()).isFalse();
+
+        verify(userDeviceJpaRepository, times(1)).save(device);
+    }
+
     private UserDevice createUserDevice(Long userId, String fcmToken) {
         return UserDevice.builder()
                 .userId(userId)

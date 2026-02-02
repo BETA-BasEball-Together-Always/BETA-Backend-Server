@@ -1,10 +1,9 @@
 package com.beta.controller.account;
 
 import com.beta.account.application.DeviceAppService;
-import com.beta.account.application.dto.DeviceRegisterResult;
-import com.beta.controller.account.request.DeviceRegisterRequest;
-import com.beta.controller.account.response.DeviceRegisterResponse;
-import com.beta.controller.account.response.FcmTokenUpdateResponse;
+import com.beta.controller.account.request.PushEnabledRequest;
+import com.beta.controller.account.request.PushSettingsRequest;
+import com.beta.controller.account.response.PushSettingsResponse;
 import com.beta.core.response.ErrorResponse;
 import com.beta.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,43 +26,44 @@ public class DeviceController {
 
     private final DeviceAppService deviceAppService;
 
-    @Operation(summary = "디바이스 등록")
+    @Operation(summary = "푸시 알림 설정 (FCM 토큰 + 푸시 활성화)")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "등록 성공"),
+            @ApiResponse(responseCode = "200", description = "설정 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패 (JWT001, JWT002)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PostMapping("/register")
-    public ResponseEntity<DeviceRegisterResponse> registerDevice(
+    @PutMapping("/push-settings")
+    public ResponseEntity<PushSettingsResponse> updatePushSettings(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody DeviceRegisterRequest request) {
+            @Valid @RequestBody PushSettingsRequest request) {
 
-        DeviceRegisterResult result = deviceAppService.registerOrUpdateDevice(
+        deviceAppService.updatePushSettings(
                 userDetails.userId(),
                 request.getDeviceId(),
-                request.getFcmToken()
+                request.getFcmToken(),
+                request.getPushEnabled()
         );
 
-        return ResponseEntity.ok(DeviceRegisterResponse.of(result));
+        return ResponseEntity.ok(PushSettingsResponse.success("푸시 알림 설정이 업데이트되었습니다."));
     }
 
-    @Operation(summary = "FCM 토큰 갱신")
+    @Operation(summary = "푸시 알림 활성화/비활성화 토글")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "갱신 성공"),
+            @ApiResponse(responseCode = "200", description = "설정 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패 (JWT001, JWT002)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PutMapping("/fcm-token")
-    public ResponseEntity<FcmTokenUpdateResponse> updateFcmToken(
+    @PatchMapping("/push-enabled")
+    public ResponseEntity<PushSettingsResponse> updatePushEnabled(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody DeviceRegisterRequest request) {
+            @Valid @RequestBody PushEnabledRequest request) {
 
-        deviceAppService.updateFcmToken(
+        deviceAppService.updatePushEnabled(
                 userDetails.userId(),
                 request.getDeviceId(),
-                request.getFcmToken()
+                request.getPushEnabled()
         );
 
-        return ResponseEntity.ok(FcmTokenUpdateResponse.success());
+        return ResponseEntity.ok(PushSettingsResponse.success("푸시 알림 설정이 변경되었습니다."));
     }
 }
