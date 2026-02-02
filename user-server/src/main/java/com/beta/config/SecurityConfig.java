@@ -74,8 +74,8 @@ public class SecurityConfig {
                 .requestMatchers(
                         "/api/v1/auth/login/**",          // 소셜 로그인
                         "/api/v1/auth/refresh",           // 토큰 리프레시
-                        "/swagger-ui/**",                 // Swagger UI
-                        "/v3/api-docs/**"                 // OpenAPI docs
+                        "/api/swagger-ui/**",             // Swagger UI
+                        "/api/v3/api-docs/**"             // OpenAPI docs
                 ).permitAll()
 
                 // 그 외 모든 요청은 인증 필요
