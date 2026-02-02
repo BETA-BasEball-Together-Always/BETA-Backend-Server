@@ -60,6 +60,7 @@ dependencies {
     // Oracle Cloud Storage
     implementation 'com.oracle.oci.sdk:oci-java-sdk-objectstorage:3.65.1'
     implementation 'com.oracle.oci.sdk:oci-java-sdk-common:3.65.1'
+    runtimeOnly 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3:3.65.1'
 
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
