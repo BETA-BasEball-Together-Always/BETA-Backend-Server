@@ -67,6 +67,14 @@ public class Post extends BaseEntity {
         this.status = Status.ACTIVE;
     }
 
+    public boolean isOwnedBy(Long userId) {
+        return this.userId.equals(userId);
+    }
+
+    public boolean isActive() {
+        return this.status == Status.ACTIVE;
+    }
+
     public void softDelete() {
         this.status = Status.DELETED;
         this.deletedAt = LocalDateTime.now();
