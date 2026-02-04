@@ -1,7 +1,8 @@
 package com.beta.controller.community;
 
-import com.beta.community.application.CommunityAppService;
+import com.beta.community.application.CommunityFacadeService;
 import com.beta.community.application.dto.PostDto;
+import com.beta.community.application.dto.UpdatePostDto;
 import com.beta.controller.community.request.*;
 import com.beta.controller.community.response.*;
 import com.beta.core.response.ErrorResponse;
@@ -29,7 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CommunityController {
 
-    private final CommunityAppService communityAppService;
+    private final CommunityFacadeService communityFacadeService;
 
     // ==================== 게시글 API ====================
 
@@ -105,7 +106,7 @@ public class CommunityController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @ModelAttribute CreatePostRequest request) {
 
-        PostDto postDto = communityAppService.createPost(
+        PostDto postDto = communityFacadeService.createPost(
                 userDetails.userId(),
                 userDetails.teamCode(),
                 request.toDto()
@@ -117,27 +118,40 @@ public class CommunityController {
     @Operation(summary = "게시글 수정")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
-            @ApiResponse(responseCode = "403", description = "권한 없음",
+            @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 이미지 검증 실패 (COMMUNITY002)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "게시글 없음",
+            @ApiResponse(responseCode = "403", description = "권한 없음 (COMMUNITY006)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "게시글 없음 (COMMUNITY004)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "이미지 업로드 실패 (COMMUNITY003)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PutMapping("/posts/{postId}")
-    public ResponseEntity<MessageResponse> updatePost(
+    @PutMapping(value = "/posts/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CreatePostResponse> updatePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId,
-            @Valid @RequestBody UpdatePostRequest request) {
+            @Valid @ModelAttribute UpdatePostRequest request) {
 
-        // TODO: 실제 구현 예정 (Step 2)
-        return ResponseEntity.ok(MessageResponse.of("게시글이 수정되었습니다."));
+        PostDto postDto = communityFacadeService.updatePost(
+                userDetails.userId(),
+                postId,
+                UpdatePostDto.builder()
+                        .content(request.getContent())
+                        .hashtags(request.getHashtags())
+                        .deletedImageIds(request.getDeletedImageIds())
+                        .newImages(request.getNewImages())
+                        .build()
+        );
+        return ResponseEntity.ok(CreatePostResponse.from(postDto));
     }
 
     @Operation(summary = "게시글 삭제 (소프트)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "삭제 성공"),
-            @ApiResponse(responseCode = "403", description = "권한 없음",
+            @ApiResponse(responseCode = "403", description = "권한 없음 (COMMUNITY006)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "게시글 없음",
+            @ApiResponse(responseCode = "404", description = "게시글 없음 (COMMUNITY004)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/posts/{postId}")
@@ -145,7 +159,7 @@ public class CommunityController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId) {
 
-        // TODO: 실제 구현 예정 (Step 3)
+        communityFacadeService.deletePost(userDetails.userId(), postId);
         return ResponseEntity.ok(MessageResponse.of("게시글이 삭제되었습니다."));
     }
 
@@ -154,7 +168,9 @@ public class CommunityController {
     @Operation(summary = "감정표현 토글")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "토글 성공"),
-            @ApiResponse(responseCode = "404", description = "게시글 없음",
+            @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "게시글 없음 (COMMUNITY004)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/posts/{postId}/emotions")
@@ -180,9 +196,11 @@ public class CommunityController {
     @Operation(summary = "댓글/답글 작성")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "작성 성공"),
-            @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
+            @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 답글 깊이 초과 (COMMUNITY011)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "게시글 없음",
+            @ApiResponse(responseCode = "404", description = "게시글 없음 (COMMUNITY004)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "중복 댓글 (COMMUNITY012)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/posts/{postId}/comments")
@@ -207,9 +225,11 @@ public class CommunityController {
     @Operation(summary = "댓글 수정")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
-            @ApiResponse(responseCode = "403", description = "권한 없음",
+            @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "댓글 없음",
+            @ApiResponse(responseCode = "403", description = "권한 없음 (COMMUNITY009)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "댓글 없음 (COMMUNITY008)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PutMapping("/comments/{commentId}")
@@ -225,9 +245,9 @@ public class CommunityController {
     @Operation(summary = "댓글 삭제 (소프트)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "삭제 성공"),
-            @ApiResponse(responseCode = "403", description = "권한 없음",
+            @ApiResponse(responseCode = "403", description = "권한 없음 (COMMUNITY009)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "댓글 없음",
+            @ApiResponse(responseCode = "404", description = "댓글 없음 (COMMUNITY008)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/comments/{commentId}")
@@ -242,7 +262,7 @@ public class CommunityController {
     @Operation(summary = "댓글 좋아요 토글")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "토글 성공"),
-            @ApiResponse(responseCode = "404", description = "댓글 없음",
+            @ApiResponse(responseCode = "404", description = "댓글 없음 (COMMUNITY008)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/comments/{commentId}/like")
@@ -264,7 +284,11 @@ public class CommunityController {
     @Operation(summary = "사용자 차단")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "차단 성공"),
+            @ApiResponse(responseCode = "400", description = "자기 자신 차단 불가 (COMMUNITY013)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "사용자 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "이미 차단됨 (COMMUNITY014)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/users/{userId}/block")
@@ -284,7 +308,7 @@ public class CommunityController {
     @Operation(summary = "사용자 차단 해제")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "차단 해제 성공"),
-            @ApiResponse(responseCode = "404", description = "차단 정보 없음",
+            @ApiResponse(responseCode = "404", description = "차단 정보 없음 (COMMUNITY015)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/users/{userId}/block")
