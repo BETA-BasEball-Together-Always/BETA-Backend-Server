@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
@@ -69,7 +68,6 @@ public class PostImageService {
         }
     }
 
-    @Transactional
     public List<String> uploadAndSaveImages(Long postId, Long userId, List<MultipartFile> images) {
         if (images == null || images.isEmpty()) {
             return List.of();
@@ -122,6 +120,34 @@ public class PostImageService {
                     e
             );
         }
+    }
+
+    public List<String> softDeleteImages(List<Long> imageIds, Long userId) {
+        if (imageIds == null || imageIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> deletedUrls = new ArrayList<>();
+        List<PostImage> images = postImageJpaRepository.findAllById(imageIds);
+        for (PostImage image : images) {
+            if (image.getUserId().equals(userId) && image.getStatus() == Status.ACTIVE) {
+                image.softDelete();
+                deletedUrls.add(image.getImgUrl());
+            }
+        }
+        return deletedUrls;
+    }
+
+    public void softDeleteAllByPostId(Long postId) {
+        List<PostImage> images = postImageJpaRepository.findByPostIdAndStatusOrderBySortAsc(postId, Status.ACTIVE);
+        images.forEach(PostImage::softDelete);
+    }
+
+    public List<String> findActiveImageUrlsByPostId(Long postId) {
+        return postImageJpaRepository.findByPostIdAndStatusOrderBySortAsc(postId, Status.ACTIVE)
+                .stream()
+                .map(PostImage::getImgUrl)
+                .toList();
     }
 
     @Async("fileCleanupExecutor")
