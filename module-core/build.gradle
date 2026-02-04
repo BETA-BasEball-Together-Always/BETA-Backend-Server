@@ -1,3 +1,13 @@
 plugins {
     id 'BETA-Backend-Server.java-conventions'
+    id 'java-test-fixtures'
+}
+
+dependencies {
+    // testFixtures 의존성
+    testFixturesImplementation 'org.springframework:spring-test'
+    testFixturesImplementation 'org.testcontainers:junit-jupiter'
+    testFixturesImplementation 'org.testcontainers:mysql'
+    testFixturesImplementation 'org.testcontainers:elasticsearch'
+    testFixturesImplementation 'org.testcontainers:testcontainers'
 }

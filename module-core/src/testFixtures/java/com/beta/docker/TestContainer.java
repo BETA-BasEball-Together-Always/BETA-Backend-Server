@@ -5,11 +5,13 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 @ActiveProfiles("test")
 public class TestContainer {
     protected static MySQLContainer<?> mysql;
     protected static GenericContainer<?> redis;
+    protected static ElasticsearchContainer elasticsearch;
 
     static {
         mysql = new MySQLContainer<>("mysql:8.4.5")
@@ -21,8 +23,13 @@ public class TestContainer {
                 .withExposedPorts(6379)
                 .withCommand("redis-server");
 
+        elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:8.11.0")
+                .withEnv("discovery.type", "single-node")
+                .withEnv("xpack.security.enabled", "false");
+
         mysql.start();
         redis.start();
+        elasticsearch.start();
     }
 
     @DynamicPropertySource
@@ -35,5 +42,8 @@ public class TestContainer {
         // Redis TestContainer 설정
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
+
+        // Elasticsearch TestContainer 설정
+        registry.add("spring.elasticsearch.uris", elasticsearch::getHttpHostAddress);
     }
 }

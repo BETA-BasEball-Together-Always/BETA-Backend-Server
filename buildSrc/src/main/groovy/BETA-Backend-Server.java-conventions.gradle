@@ -69,6 +69,7 @@ dependencies {
     // TestContainers
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:mysql'
+    testImplementation 'org.testcontainers:elasticsearch'
     testImplementation 'org.testcontainers:testcontainers'
 }
 
