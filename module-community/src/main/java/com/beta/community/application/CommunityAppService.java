@@ -4,6 +4,7 @@ import com.beta.community.application.dto.CreatePostDto;
 import com.beta.community.application.dto.PostDto;
 import com.beta.community.domain.entity.Post;
 import com.beta.community.domain.service.*;
+import com.beta.core.exception.community.DuplicatePostException;
 import com.beta.core.exception.community.ImageUploadException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +21,13 @@ public class CommunityAppService {
     private final PostImageService postImageService;
     private final HashtagService hashtagService;
     private final ChannelValidationService channelValidationService;
+    private final IdempotencyService idempotencyService;
 
     public PostDto createPost(Long userId, String userTeamCode, CreatePostDto dto) {
+
+        if (idempotencyService.isDuplicatePost(userId, dto.getContent())) {
+            throw new DuplicatePostException();
+        }
 
         String targetChannel = channelValidationService.validateAndResolveChannel(
                 dto.getChannel(),
