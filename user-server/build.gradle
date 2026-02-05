@@ -6,6 +6,10 @@ dependencies {
     implementation project(':module-core')
     implementation project(':module-account')
     implementation project(':module-community')
+
+    // Monitoring
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 }
 
 tasks.named('test') {
