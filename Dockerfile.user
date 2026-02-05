@@ -1,18 +1,8 @@
-# ---------- Build Stage ----------
-FROM eclipse-temurin:21-jdk AS builder
-WORKDIR /app
-
-# Gradle Wrapper
-COPY . .
-RUN chmod +x gradlew
-RUN ./gradlew clean :user-server:bootJar -x test
-
-# ---------- Runtime Stage ----------
+# Runtime Stage (JAR는 GitHub Actions에서 빌드)
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# user-server bootJar만 복사
-COPY --from=builder /app/user-server/build/libs/*.jar app.jar
+COPY user-server/build/libs/*.jar app.jar
 
 EXPOSE 8080
 

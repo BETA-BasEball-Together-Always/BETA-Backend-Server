@@ -17,26 +17,32 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: gradle
 
-      # Docker Hub 로그인 (build & push 용)
+      - name: Build JAR
+        run: ./gradlew :user-server:bootJar -x test
+
       - name: Docker Login
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 멀티 아키텍처 빌드를 위한 buildx 세팅
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # user-server 멀티 아키텍처 이미지 빌드 & 푸시
-      - name: Build & Push User Image (multi-arch)
+      - name: Build & Push User Image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile.user
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: |
             yeongo05/beta-user:latest
             yeongo05/beta-user:${{ github.sha }}
