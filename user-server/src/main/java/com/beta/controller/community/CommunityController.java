@@ -9,6 +9,7 @@ import com.beta.core.response.ErrorResponse;
 import com.beta.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -38,7 +39,14 @@ public class CommunityController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            }))
     })
     @GetMapping("/posts")
     public ResponseEntity<PostListResponse> getPostList(
@@ -58,8 +66,11 @@ public class CommunityController {
     @Operation(summary = "게시글 상세 조회")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "404", description = "게시글 없음 (COMMUNITY004)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "게시글 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY004", "message": "게시글을 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @GetMapping("/posts/{postId}")
     public ResponseEntity<PostDetailResponse> getPostDetail(
@@ -92,14 +103,30 @@ public class CommunityController {
     @Operation(summary = "게시글 작성")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "작성 성공"),
-            @ApiResponse(responseCode = "400", description = "유효성 검증 실패 (COMMUNITY002)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "403", description = "권한 없음 (COMMUNITY001)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "409", description = "중복 게시글 (COMMUNITY005)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "500", description = "서버 오류 (COMMUNITY003)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 이미지 검증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "이미지 검증 실패", value = """
+                                            {"code": "COMMUNITY002", "message": "유효하지 않은 이미지입니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "입력값 검증 실패", value = """
+                                            {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "403", description = "채널 접근 권한 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY001", "message": "채널 접근 권한이 없습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "409", description = "중복 게시글",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY005", "message": "동일한 내용의 게시글이 최근에 작성되었습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "500", description = "이미지 업로드 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY003", "message": "이미지 업로드에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CreatePostResponse> createPost(
@@ -118,14 +145,30 @@ public class CommunityController {
     @Operation(summary = "게시글 수정")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
-            @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 이미지 검증 실패 (COMMUNITY002)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "403", description = "권한 없음 (COMMUNITY006)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "게시글 없음 (COMMUNITY004)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "500", description = "이미지 업로드 실패 (COMMUNITY003)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 이미지 검증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "이미지 검증 실패", value = """
+                                            {"code": "COMMUNITY002", "message": "유효하지 않은 이미지입니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "입력값 검증 실패", value = """
+                                            {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "403", description = "게시글 권한 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY006", "message": "게시글에 대한 권한이 없습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "404", description = "게시글 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY004", "message": "게시글을 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "500", description = "이미지 업로드 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY003", "message": "이미지 업로드에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PutMapping(value = "/posts/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CreatePostResponse> updatePost(
@@ -149,10 +192,16 @@ public class CommunityController {
     @Operation(summary = "게시글 삭제 (소프트)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "삭제 성공"),
-            @ApiResponse(responseCode = "403", description = "권한 없음 (COMMUNITY006)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "게시글 없음 (COMMUNITY004)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "403", description = "게시글 권한 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY006", "message": "게시글에 대한 권한이 없습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "404", description = "게시글 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY004", "message": "게시글을 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @DeleteMapping("/posts/{postId}")
     public ResponseEntity<MessageResponse> deletePost(
@@ -169,9 +218,15 @@ public class CommunityController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "토글 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "게시글 없음 (COMMUNITY004)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "404", description = "게시글 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY004", "message": "게시글을 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PostMapping("/posts/{postId}/emotions")
     public ResponseEntity<EmotionResponse> toggleEmotion(
@@ -196,12 +251,25 @@ public class CommunityController {
     @Operation(summary = "댓글/답글 작성")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "작성 성공"),
-            @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 답글 깊이 초과 (COMMUNITY011)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "게시글 없음 (COMMUNITY004)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "409", description = "중복 댓글 (COMMUNITY012)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 답글 깊이 초과",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "답글 깊이 초과", value = """
+                                            {"code": "COMMUNITY011", "message": "답글은 1단계까지만 가능합니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "입력값 검증 실패", value = """
+                                            {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "404", description = "게시글 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY004", "message": "게시글을 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "409", description = "중복 댓글",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY012", "message": "동일한 내용의 댓글이 최근에 작성되었습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PostMapping("/posts/{postId}/comments")
     public ResponseEntity<CommentCreateResponse> createComment(
@@ -226,11 +294,20 @@ public class CommunityController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "403", description = "권한 없음 (COMMUNITY009)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "댓글 없음 (COMMUNITY008)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "403", description = "댓글 권한 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY009", "message": "댓글에 대한 권한이 없습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "404", description = "댓글 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY008", "message": "댓글을 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PutMapping("/comments/{commentId}")
     public ResponseEntity<MessageResponse> updateComment(
@@ -245,10 +322,16 @@ public class CommunityController {
     @Operation(summary = "댓글 삭제 (소프트)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "삭제 성공"),
-            @ApiResponse(responseCode = "403", description = "권한 없음 (COMMUNITY009)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "댓글 없음 (COMMUNITY008)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "403", description = "댓글 권한 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY009", "message": "댓글에 대한 권한이 없습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "404", description = "댓글 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY008", "message": "댓글을 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<MessageResponse> deleteComment(
@@ -262,8 +345,11 @@ public class CommunityController {
     @Operation(summary = "댓글 좋아요 토글")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "토글 성공"),
-            @ApiResponse(responseCode = "404", description = "댓글 없음 (COMMUNITY008)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "댓글 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY008", "message": "댓글을 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PostMapping("/comments/{commentId}/like")
     public ResponseEntity<CommentLikeResponse> toggleCommentLike(
@@ -284,12 +370,16 @@ public class CommunityController {
     @Operation(summary = "사용자 차단")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "차단 성공"),
-            @ApiResponse(responseCode = "400", description = "자기 자신 차단 불가 (COMMUNITY013)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "사용자 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "409", description = "이미 차단됨 (COMMUNITY014)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "자기 자신 차단 불가",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY013", "message": "자기 자신을 차단할 수 없습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "409", description = "이미 차단됨",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY014", "message": "이미 차단된 사용자입니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PostMapping("/users/{userId}/block")
     public ResponseEntity<BlockResponse> blockUser(
@@ -308,8 +398,11 @@ public class CommunityController {
     @Operation(summary = "사용자 차단 해제")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "차단 해제 성공"),
-            @ApiResponse(responseCode = "404", description = "차단 정보 없음 (COMMUNITY015)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", description = "차단 정보 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY015", "message": "차단 정보를 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @DeleteMapping("/users/{userId}/block")
     public ResponseEntity<BlockResponse> unblockUser(

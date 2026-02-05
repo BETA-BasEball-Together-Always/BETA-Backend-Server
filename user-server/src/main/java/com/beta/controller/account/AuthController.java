@@ -10,6 +10,7 @@ import com.beta.core.response.ErrorResponse;
 import com.beta.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -32,10 +33,34 @@ public class AuthController {
     @Operation(summary = "소셜 로그인")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
-            @ApiResponse(responseCode = "401", description = "소셜 인증 실패 (SOCIAL001, SOCIAL003)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "403", description = "정지/탈퇴 회원 (USER002, USER003)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "401", description = "소셜 인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "소셜 토큰 무효", value = """
+                                            {"code": "SOCIAL001", "message": "유효하지 않은 소셜 로그인 토큰입니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "Apple IdToken 무효", value = """
+                                            {"code": "SOCIAL003", "message": "유효하지 않은 Apple IdToken입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "403", description = "정지/탈퇴 회원",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "탈퇴한 사용자", value = """
+                                            {"code": "USER002", "message": "탈퇴한 사용자입니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "정지된 사용자", value = """
+                                            {"code": "USER003", "message": "정지된 사용자입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "500", description = "소셜 로그인 API 오류",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "SOCIAL002", "message": "소셜 로그인 API 호출 중 오류가 발생했습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PostMapping("/login/{provider}")
     public ResponseEntity<SocialLoginResponse> socialLogin(
@@ -50,10 +75,20 @@ public class AuthController {
     @Operation(summary = "닉네임 중복 체크")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "400", description = "유효성 검증 실패 (VALIDATION001)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패 (JWT001, JWT002)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            }))
     })
     @GetMapping("/nickname/duplicate-check")
     public ResponseEntity<DuplicateResponse> checkNicknameDuplicate(
@@ -66,10 +101,20 @@ public class AuthController {
     @Operation(summary = "이메일 중복 체크")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
-            @ApiResponse(responseCode = "400", description = "유효성 검증 실패 (VALIDATION001)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패 (JWT001, JWT002)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            }))
     })
     @GetMapping("/email/duplicate-check")
     public ResponseEntity<DuplicateResponse> checkEmailDuplicate(
@@ -82,8 +127,20 @@ public class AuthController {
     @Operation(summary = "액세스 토큰 갱신")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "갱신 성공"),
-            @ApiResponse(responseCode = "401", description = "토큰 만료/무효 (JWT001, JWT002)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "401", description = "토큰 만료/무효",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            }))
     })
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponse> refreshAccessToken(@Valid @RequestBody RefreshTokenRequest request) {
@@ -94,8 +151,15 @@ public class AuthController {
     @Operation(summary = "로그아웃")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "로그아웃 성공"),
-            @ApiResponse(responseCode = "401", description = "토큰 만료/무효 (JWT001, JWT002)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            }))
     })
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponse> logout(
@@ -108,12 +172,31 @@ public class AuthController {
     @Operation(summary = "회원가입 - 약관 동의")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "처리 성공"),
-            @ApiResponse(responseCode = "400", description = "필수 약관 미동의 또는 잘못된 단계 (USER007, USER008)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패 (JWT001, JWT002)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "사용자 없음 (USER001)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "필수 약관 미동의 / 잘못된 단계 / 유효성 검증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "필수 약관 미동의", value = """
+                                            {"code": "USER007", "message": "개인정보 수집 및 이용에 대한 필수 동의가 필요합니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "잘못된 단계", value = """
+                                            {"code": "USER008", "message": "잘못된 회원가입 단계입니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "입력값 검증 실패", value = """
+                                            {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "404", description = "사용자 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "USER001", "message": "사용자를 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PostMapping("/signup/consent")
     public ResponseEntity<SignupStepResponse> processConsent(
@@ -130,14 +213,40 @@ public class AuthController {
     @Operation(summary = "회원가입 - 프로필 설정")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "처리 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 단계 또는 유효성 오류 (USER008, USER009)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패 (JWT001, JWT002)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "사용자 없음 (USER001)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "409", description = "닉네임/이메일 중복 (USER004, USER006)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "잘못된 단계 / 닉네임 길이 오류 / 유효성 검증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "잘못된 단계", value = """
+                                            {"code": "USER008", "message": "잘못된 회원가입 단계입니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "닉네임 길이 오류", value = """
+                                            {"code": "USER009", "message": "닉네임은 2-13자 사이여야 합니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "입력값 검증 실패", value = """
+                                            {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "404", description = "사용자 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "USER001", "message": "사용자를 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "409", description = "닉네임/이메일 중복",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "닉네임 중복", value = """
+                                            {"code": "USER004", "message": "이미 존재하는 이름입니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "이메일 중복", value = """
+                                            {"code": "USER006", "message": "이미 존재하는 이메일입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            }))
     })
     @PostMapping("/signup/profile")
     public ResponseEntity<SignupStepResponse> processProfile(
@@ -154,12 +263,33 @@ public class AuthController {
     @Operation(summary = "회원가입 - 팀 선택")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "처리 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 단계 (USER008)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패 (JWT001, JWT002)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "사용자 또는 팀 없음 (USER001, TEAM001)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "잘못된 단계 / 유효성 검증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "잘못된 단계", value = """
+                                            {"code": "USER008", "message": "잘못된 회원가입 단계입니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "입력값 검증 실패", value = """
+                                            {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "404", description = "사용자 또는 팀 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "사용자 없음", value = """
+                                            {"code": "USER001", "message": "사용자를 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "팀 없음", value = """
+                                            {"code": "TEAM001", "message": "해당 구단은 존재하지 않습니다.", "timestamp": "2025-01-01T00:00:00"}""")
+                            }))
     })
     @PostMapping("/signup/team")
     public ResponseEntity<SignupStepResponse> processTeamSelection(
@@ -175,12 +305,25 @@ public class AuthController {
     @Operation(summary = "회원가입 완료 (추가 정보 없이)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "회원가입 완료"),
-            @ApiResponse(responseCode = "400", description = "잘못된 단계 (USER008)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패 (JWT001, JWT002)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "사용자 없음 (USER001)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "잘못된 단계",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "USER008", "message": "잘못된 회원가입 단계입니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "404", description = "사용자 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "USER001", "message": "사용자를 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PostMapping("/signup/complete")
     public ResponseEntity<SignupCompleteResponse> completeSignup(
@@ -192,12 +335,29 @@ public class AuthController {
     @Operation(summary = "회원가입 완료 (추가 정보 포함)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "회원가입 완료"),
-            @ApiResponse(responseCode = "400", description = "잘못된 단계 (USER008)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패 (JWT001, JWT002)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "사용자 없음 (USER001)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "400", description = "잘못된 단계 / 유효성 검증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "잘못된 단계", value = """
+                                            {"code": "USER008", "message": "잘못된 회원가입 단계입니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "입력값 검증 실패", value = """
+                                            {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "404", description = "사용자 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "USER001", "message": "사용자를 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PostMapping("/signup/complete-with-info")
     public ResponseEntity<SignupCompleteResponse> completeSignupWithInfo(
