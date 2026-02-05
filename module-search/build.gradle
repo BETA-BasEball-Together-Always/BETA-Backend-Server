@@ -6,17 +6,8 @@ dependencies {
     implementation project(':module-core')
     implementation project(':module-account')
     implementation project(':module-community')
-    implementation project(':module-search')
-}
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 
-tasks.named('bootJar') {
-    enabled = true
-}
-
-tasks.named('jar') {
-    enabled = false
+    testImplementation testFixtures(project(':module-core'))
 }
