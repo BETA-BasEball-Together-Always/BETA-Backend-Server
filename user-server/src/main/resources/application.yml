@@ -93,3 +93,23 @@ logging:
   level:
     com.beta: DEBUG
     org.springframework.security: INFO
+
+# Actuator & Prometheus Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    health:
+      show-details: never
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: beta-user-server
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      sla:
+        http.server.requests: 50ms, 100ms, 200ms, 500ms, 1s

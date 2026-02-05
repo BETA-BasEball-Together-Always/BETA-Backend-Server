@@ -70,6 +70,10 @@ jobs:
                 -p 8080:8080 \
                 --env-file /home/ubuntu/env/beta-user.env \
                 --restart always \
+                --health-cmd="curl -f http://localhost:8080/actuator/health || exit 1" \
+                --health-interval=30s \
+                --health-timeout=10s \
+                --health-retries=3 \
                 yeongo05/beta-user:latest
 
               echo ">>> deployment finished"

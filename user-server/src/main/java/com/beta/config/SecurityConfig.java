@@ -75,7 +75,8 @@ public class SecurityConfig {
                         "/api/v1/auth/login/**",          // 소셜 로그인
                         "/api/v1/auth/refresh",           // 토큰 리프레시
                         "/api/swagger-ui/**",             // Swagger UI
-                        "/api/v3/api-docs/**"             // OpenAPI docs
+                        "/api/v3/api-docs/**",            // OpenAPI docs
+                        "/actuator/**"                    // 모니터링 (내부망 전용)
                 ).permitAll()
 
                 // 그 외 모든 요청은 인증 필요
