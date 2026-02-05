@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'beta-user-server'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['localhost:8080']
+        labels:
+          application: 'beta-user-server'
+          environment: 'production'
+
+  # admin-server 배포 시 추가
+  # - job_name: 'beta-admin-server'
+  #   metrics_path: '/actuator/prometheus'
+  #   static_configs:
+  #     - targets: ['10.0.1.205:8080']
+  #       labels:
+  #         application: 'beta-admin-server'
