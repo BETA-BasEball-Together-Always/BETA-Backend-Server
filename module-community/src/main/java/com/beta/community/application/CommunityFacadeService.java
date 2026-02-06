@@ -4,10 +4,13 @@ import com.beta.community.application.dto.CreatePostDto;
 import com.beta.community.application.dto.PostDto;
 import com.beta.community.application.dto.UpdatePostDto;
 import com.beta.community.domain.entity.Post;
+import com.beta.community.domain.entity.UserBlock;
 import com.beta.community.domain.service.*;
+import com.beta.core.exception.community.AlreadyBlockedException;
 import com.beta.core.exception.community.DuplicatePostException;
 import com.beta.core.exception.community.InvalidImageException;
 import com.beta.core.exception.community.PostAccessDeniedException;
+import com.beta.core.exception.community.SelfBlockNotAllowedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +28,8 @@ public class CommunityFacadeService {
     private final HashtagService hashtagService;
     private final ChannelValidationService channelValidationService;
     private final IdempotencyService idempotencyService;
+    private final UserBlockReadService userBlockReadService;
+    private final UserBlockWriteService userBlockWriteService;
 
     @Transactional
     public PostDto createPost(Long userId, String userTeamCode, CreatePostDto dto) {
@@ -126,5 +131,25 @@ public class CommunityFacadeService {
                 .status(post.getStatus().name())
                 .createdAt(post.getCreatedAt())
                 .build();
+    }
+
+    @Transactional
+    public void blockUser(Long blockerId, Long blockedId) {
+        if (blockerId.equals(blockedId)) {
+            throw new SelfBlockNotAllowedException();
+        }
+        if (userBlockReadService.isBlocked(blockerId, blockedId)) {
+            throw new AlreadyBlockedException();
+        }
+        userBlockWriteService.save(UserBlock.builder()
+                .blockerId(blockerId)
+                .blockedId(blockedId)
+                .build());
+    }
+
+    @Transactional
+    public void unblockUser(Long blockerId, Long blockedId) {
+        UserBlock userBlock = userBlockReadService.findByBlockerAndBlocked(blockerId, blockedId);
+        userBlockWriteService.delete(userBlock);
     }
 }
