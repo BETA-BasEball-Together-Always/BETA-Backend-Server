@@ -386,13 +386,12 @@ public class CommunityController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long userId) {
 
-        // TODO: 실제 구현 예정 (Step 4)
-        BlockResponse mock = BlockResponse.builder()
+        communityFacadeService.blockUser(userDetails.userId(), userId);
+        return ResponseEntity.ok(BlockResponse.builder()
                 .userId(userDetails.userId())
                 .blockedUserId(userId)
                 .blocked(true)
-                .build();
-        return ResponseEntity.ok(mock);
+                .build());
     }
 
     @Operation(summary = "사용자 차단 해제")
@@ -409,12 +408,11 @@ public class CommunityController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long userId) {
 
-        // TODO: 실제 구현 예정 (Step 4)
-        BlockResponse mock = BlockResponse.builder()
+        communityFacadeService.unblockUser(userDetails.userId(), userId);
+        return ResponseEntity.ok(BlockResponse.builder()
                 .userId(userDetails.userId())
                 .blockedUserId(userId)
                 .blocked(false)
-                .build();
-        return ResponseEntity.ok(mock);
+                .build());
     }
 }
