@@ -9,4 +9,6 @@ import java.util.List;
 public interface PostImageJpaRepository extends JpaRepository<PostImage, Long> {
 
     List<PostImage> findByPostIdAndStatusOrderBySortAsc(Long postId, Status status);
+
+    List<PostImage> findByPostIdInAndStatusOrderByPostIdAscSortAsc(List<Long> postIds, Status status);
 }

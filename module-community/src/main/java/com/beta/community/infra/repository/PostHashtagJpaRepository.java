@@ -9,5 +9,7 @@ import java.util.List;
 public interface PostHashtagJpaRepository extends JpaRepository<PostHashtag, Long> {
     List<PostHashtag> findByPostId(Long postId);
 
+    List<PostHashtag> findByPost_IdIn(List<Long> postIds);
+
     void deleteAllByPostIdAndHashtagIn(Long postId, List<Hashtag> hashtags);
 }
