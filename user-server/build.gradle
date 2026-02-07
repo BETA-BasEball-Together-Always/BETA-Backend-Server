@@ -10,6 +10,9 @@ dependencies {
     // Monitoring
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    // Test
+    testImplementation testFixtures(project(':module-core'))
 }
 
 tasks.named('test') {
