@@ -1,7 +1,10 @@
 package com.beta.controller.community;
 
+import com.beta.account.domain.entity.User;
+import com.beta.account.domain.service.UserReadService;
 import com.beta.community.application.CommunityFacadeService;
 import com.beta.community.application.dto.PostDto;
+import com.beta.community.application.dto.PostListDto;
 import com.beta.community.application.dto.UpdatePostDto;
 import com.beta.controller.community.request.*;
 import com.beta.controller.community.response.*;
@@ -24,6 +27,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Tag(name = "Community", description = "커뮤니티 관련 API")
 @RestController
@@ -32,6 +38,7 @@ import java.util.List;
 public class CommunityController {
 
     private final CommunityFacadeService communityFacadeService;
+    private final UserReadService userReadService;
 
     // ==================== 게시글 API ====================
 
@@ -54,13 +61,51 @@ public class CommunityController {
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "ALL") String channel) {
 
-        // TODO: 실제 구현 예정 (Step 5)
-        PostListResponse mock = PostListResponse.builder()
-                .posts(List.of())
-                .hasNext(false)
-                .nextCursor(null)
-                .build();
-        return ResponseEntity.ok(mock);
+        PostListDto postListDto = communityFacadeService.getPostList(
+                userDetails.userId(),
+                cursor,
+                channel
+        );
+
+        List<Long> userIds = postListDto.getPosts().stream()
+                .map(PostListDto.PostSummaryDto::getUserId)
+                .distinct()
+                .toList();
+
+        Map<Long, User> userMap = userReadService.findUsersByIds(userIds).stream()
+                .collect(Collectors.toMap(User::getId, Function.identity()));
+
+        List<PostListResponse.PostSummary> posts = postListDto.getPosts().stream()
+                .map(dto -> {
+                    User author = userMap.get(dto.getUserId());
+                    return PostListResponse.PostSummary.builder()
+                            .postId(dto.getPostId())
+                            .content(dto.getContent())
+                            .channel(dto.getChannel())
+                            .imageUrls(dto.getImageUrls())
+                            .hashtags(dto.getHashtags())
+                            .author(PostListResponse.AuthorInfo.builder()
+                                    .userId(dto.getUserId())
+                                    .nickname(author != null ? author.getNickname() : "알 수 없음")
+                                    .teamCode(author != null && author.getBaseballTeam() != null ? author.getBaseballTeam().getCode() : null)
+                                    .build())
+                            .emotions(PostListResponse.EmotionCount.builder()
+                                    .likeCount(dto.getLikeCount())
+                                    .sadCount(dto.getSadCount())
+                                    .funCount(dto.getFunCount())
+                                    .hypeCount(dto.getHypeCount())
+                                    .build())
+                            .commentCount(dto.getCommentCount())
+                            .createdAt(dto.getCreatedAt())
+                            .build();
+                })
+                .toList();
+
+        return ResponseEntity.ok(PostListResponse.builder()
+                .posts(posts)
+                .hasNext(postListDto.isHasNext())
+                .nextCursor(postListDto.getNextCursor())
+                .build());
     }
 
     @Operation(summary = "게시글 상세 조회")
