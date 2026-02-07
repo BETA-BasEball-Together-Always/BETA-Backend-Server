@@ -42,7 +42,7 @@ public class PostQueryRepository {
     }
 
     private BooleanExpression channelCondition(String channel) {
-        if (channel == null || channel.equals("ALL")) {
+        if (channel == null) {
             return null;
         }
         return QPost.post.channel.eq(Post.Channel.valueOf(channel));

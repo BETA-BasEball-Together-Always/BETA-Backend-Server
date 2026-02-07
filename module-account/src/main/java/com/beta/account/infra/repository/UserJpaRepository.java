@@ -13,7 +13,8 @@ import java.util.Optional;
 
 public interface UserJpaRepository extends JpaRepository<User, Long> {
 
-    List<User> findByIdIn(List<Long> ids);
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.baseballTeam WHERE u.id IN :ids")
+    List<User> findByIdIn(@Param("ids") List<Long> ids);
     Optional<User> findBySocialIdAndSocialProvider(String socialId, SocialProvider socialProvider);
 
     Optional<User> findByEmail(String email);
