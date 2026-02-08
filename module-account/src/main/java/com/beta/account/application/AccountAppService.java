@@ -6,6 +6,7 @@ import com.beta.account.domain.entity.SignupStep;
 import com.beta.account.domain.entity.User;
 import com.beta.account.domain.service.*;
 import com.beta.account.infra.client.SocialUserInfo;
+import com.beta.core.exception.account.SocialEmailNotProvidedException;
 import com.beta.core.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,13 @@ public class AccountAppService {
         User user = userReadService.findUserBySocialId(socialUserInfo.getSocialId(), socialProvider);
 
         if (user == null) {
-            User newUser = userWriteService.createSocialUser(socialUserInfo.getSocialId(), socialProvider);
+            String email = socialUserInfo.getEmail();
+            if (email == null || email.isBlank()) {
+                throw new SocialEmailNotProvidedException("소셜 계정에 등록된 이메일이 없습니다. 이메일이 등록된 계정으로 시도해주세요.");
+            }
+            userStatusService.validateEmailDuplicate(email);
+
+            User newUser = userWriteService.createSocialUser(socialUserInfo.getSocialId(), socialProvider, email);
             boolean isNewDevice = deviceAppService.registerOrUpdateDevice(newUser.getId(), deviceId, null);
             String accessToken = jwtTokenProvider.generateAccessToken(newUser.getId(), null, "USER");
             String refreshToken = UUID.randomUUID().toString();
@@ -73,10 +80,6 @@ public class AccountAppService {
         return userStatusService.isNameDuplicate(nickName);
     }
 
-    public boolean isEmailDuplicate(String email) {
-        return userStatusService.isEmailDuplicate(email);
-    }
-
     public TokenDto refreshTokens(String refreshToken) {
         Long userId = refreshTokenService.findUserIdByToken(refreshToken);
 
@@ -107,17 +110,16 @@ public class AccountAppService {
         userStatusService.validateAgreePersonalInfo(personalInfoRequired);
 
         userWriteService.processConsent(userId, agreeMarketing, personalInfoRequired);
-        return SignupStepResult.of(userId, SignupStep.CONSENT_AGREED);
+        return SignupStepResult.withEmail(userId, SignupStep.CONSENT_AGREED, user.getEmail());
     }
 
-    public SignupStepResult processProfile(Long userId, String email, String nickname) {
+    public SignupStepResult processProfile(Long userId, String nickname) {
         User user = userReadService.findUserById(userId);
         userStatusService.validateSignupStep(user, SignupStep.CONSENT_AGREED);
         userStatusService.validateNicknameLength(nickname);
         userStatusService.validateNameDuplicate(nickname);
-        userStatusService.validateEmailDuplicate(email);
 
-        userWriteService.updateProfile(userId, email, nickname);
+        userWriteService.updateProfile(userId, nickname);
         List<BaseballTeam> teamList = baseballTeamReadService.getAllBaseballTeams();
         return SignupStepResult.withTeamList(userId, SignupStep.PROFILE_COMPLETED, teamList);
     }

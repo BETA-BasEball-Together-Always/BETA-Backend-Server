@@ -25,8 +25,8 @@ public class UserWriteService {
     }
 
     @Transactional
-    public User createSocialUser(String socialId, SocialProvider socialProvider) {
-        User user = User.createNewSocialUser(socialId, socialProvider);
+    public User createSocialUser(String socialId, SocialProvider socialProvider, String email) {
+        User user = User.createNewSocialUser(socialId, socialProvider, email);
         return userJpaRepository.save(user);
     }
 
@@ -44,10 +44,10 @@ public class UserWriteService {
     }
 
     @Transactional
-    public User updateProfile(Long userId, String email, String nickname) {
+    public User updateProfile(Long userId, String nickname) {
         User user = userJpaRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new UserNotFoundException("해당 ID의 사용자를 찾을 수 없습니다."));
-        user.updateProfile(email, nickname);
+        user.updateProfile(nickname);
         return user;
     }
 
