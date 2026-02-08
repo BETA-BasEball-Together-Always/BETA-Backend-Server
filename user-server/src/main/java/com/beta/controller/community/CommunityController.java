@@ -2,6 +2,7 @@ package com.beta.controller.community;
 
 import com.beta.community.application.CommunityFacadeService;
 import com.beta.community.application.dto.PostDto;
+import com.beta.community.application.dto.PostListDto;
 import com.beta.community.application.dto.UpdatePostDto;
 import com.beta.controller.community.request.*;
 import com.beta.controller.community.response.*;
@@ -35,7 +36,10 @@ public class CommunityController {
 
     // ==================== 게시글 API ====================
 
-    @Operation(summary = "게시글 리스트 조회")
+    @Operation(summary = "게시글 리스트 조회", description = """
+            channel 미지정 시 내 팀 채널, 지정 시 ALL 채널 조회.
+            - sort=latest (기본값): 최신순, cursor 파라미터 사용
+            - sort=popular: 인기순, offset 파라미터 사용""")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패",
@@ -52,15 +56,21 @@ public class CommunityController {
     public ResponseEntity<PostListResponse> getPostList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "ALL") String channel) {
+            @RequestParam(required = false) Integer offset,
+            @RequestParam(required = false) String channel,
+            @RequestParam(defaultValue = "latest") String sort) {
 
-        // TODO: 실제 구현 예정 (Step 5)
-        PostListResponse mock = PostListResponse.builder()
-                .posts(List.of())
-                .hasNext(false)
-                .nextCursor(null)
-                .build();
-        return ResponseEntity.ok(mock);
+        String effectiveChannel = (channel != null) ? "ALL" : userDetails.teamCode();
+
+        PostListDto postListDto = communityFacadeService.getPostList(
+                userDetails.userId(),
+                cursor,
+                offset,
+                effectiveChannel,
+                sort
+        );
+
+        return ResponseEntity.ok(PostListResponse.from(postListDto));
     }
 
     @Operation(summary = "게시글 상세 조회")
@@ -415,4 +425,5 @@ public class CommunityController {
                 .blocked(false)
                 .build());
     }
+
 }

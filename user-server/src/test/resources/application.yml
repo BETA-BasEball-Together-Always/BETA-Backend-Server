@@ -33,6 +33,18 @@ jwt:
   secret: test-secret-key-for-testing-at-least-256-bits-long
   access-token-expiration: 3600000
 
+oracle:
+  cloud:
+    storage:
+      namespace: test-namespace
+      bucket-name: test-bucket
+      region: ap-seoul-1
+
+oauth:
+  apple:
+    client-id: com.test.app
+    jwks-url: https://appleid.apple.com/auth/keys
+
 logging:
   level:
     com.beta: DEBUG
