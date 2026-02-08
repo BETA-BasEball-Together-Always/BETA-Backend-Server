@@ -4,6 +4,8 @@ import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.AbstractAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.SimplePrivateKeySupplier;
+import com.oracle.bmc.objectstorage.ObjectStorage;
+import com.oracle.bmc.objectstorage.ObjectStorageClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -47,5 +49,14 @@ public class OracleCloudConfig {
                 .privateKeySupplier(new SimplePrivateKeySupplier(privateKeyContent))
                 .region(Region.fromRegionCodeOrId(region))
                 .build();
+    }
+
+    @Bean
+    public ObjectStorage objectStorage(AbstractAuthenticationDetailsProvider authProvider) {
+        log.info("Oracle Cloud ObjectStorage 클라이언트 초기화");
+
+        return ObjectStorageClient.builder()
+                .region(Region.fromRegionCodeOrId(region))
+                .build(authProvider);
     }
 }
