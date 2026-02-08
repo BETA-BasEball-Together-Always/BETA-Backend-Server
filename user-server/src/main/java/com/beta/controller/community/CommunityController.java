@@ -36,7 +36,10 @@ public class CommunityController {
 
     // ==================== 게시글 API ====================
 
-    @Operation(summary = "게시글 리스트 조회", description = "channel 미지정 시 내 팀 채널, 지정 시 ALL 채널 조회. sort: latest(최신순, 기본값), popular(인기순)")
+    @Operation(summary = "게시글 리스트 조회", description = """
+            channel 미지정 시 내 팀 채널, 지정 시 ALL 채널 조회.
+            - sort=latest (기본값): 최신순, cursor 파라미터 사용
+            - sort=popular: 인기순, offset 파라미터 사용""")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패",
@@ -53,6 +56,7 @@ public class CommunityController {
     public ResponseEntity<PostListResponse> getPostList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) Long cursor,
+            @RequestParam(required = false) Integer offset,
             @RequestParam(required = false) String channel,
             @RequestParam(defaultValue = "latest") String sort) {
 
@@ -61,6 +65,7 @@ public class CommunityController {
         PostListDto postListDto = communityFacadeService.getPostList(
                 userDetails.userId(),
                 cursor,
+                offset,
                 effectiveChannel,
                 sort
         );

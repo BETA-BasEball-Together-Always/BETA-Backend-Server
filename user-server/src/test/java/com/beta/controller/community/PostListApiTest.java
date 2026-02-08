@@ -312,6 +312,28 @@ class PostListApiTest extends ApiTestBase {
             // 인기순 정렬 확인: post 100(총합 11) > post 101(총합 3)
             assertThat(response.getBody().getPosts().get(0).getPostId()).isEqualTo(100L);
             assertThat(response.getBody().getPosts().get(1).getPostId()).isEqualTo(101L);
+
+            // 인기순은 nextCursor가 null (offset 방식 사용)
+            assertThat(response.getBody().getNextCursor()).isNull();
+        }
+
+        @Test
+        @DisplayName("인기순 offset 페이징이 동작한다")
+        void getPostList_popularOffsetPaging() {
+            // when - offset=1로 요청 (두 번째 게시글부터)
+            ResponseEntity<PostListResponse> response = restTemplate.exchange(
+                    "/api/v1/community/posts?sort=popular&offset=1",
+                    HttpMethod.GET,
+                    new HttpEntity<>(createAuthHeaders()),
+                    PostListResponse.class
+            );
+
+            // then - post 101만 조회 (post 100은 offset으로 스킵)
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getPosts()).hasSize(1);
+            assertThat(response.getBody().getPosts().get(0).getPostId()).isEqualTo(101L);
+            assertThat(response.getBody().isHasNext()).isFalse();
         }
 
         @Test
@@ -333,6 +355,23 @@ class PostListApiTest extends ApiTestBase {
             // 최신순 정렬 확인: post 101(id 높음) > post 100
             assertThat(response.getBody().getPosts().get(0).getPostId()).isEqualTo(101L);
             assertThat(response.getBody().getPosts().get(1).getPostId()).isEqualTo(100L);
+        }
+
+        @Test
+        @DisplayName("최신순은 cursor를 사용하고 nextCursor를 반환한다")
+        void getPostList_latestUsesCursor() {
+            // when
+            ResponseEntity<PostListResponse> response = restTemplate.exchange(
+                    "/api/v1/community/posts?sort=latest",
+                    HttpMethod.GET,
+                    new HttpEntity<>(createAuthHeaders()),
+                    PostListResponse.class
+            );
+
+            // then - 데이터가 2개뿐이라 hasNext는 false, nextCursor도 null
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody().isHasNext()).isFalse();
+            assertThat(response.getBody().getNextCursor()).isNull();
         }
     }
 }

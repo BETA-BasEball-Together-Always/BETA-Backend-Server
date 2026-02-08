@@ -171,17 +171,25 @@ public class CommunityFacadeService {
     }
 
     @Transactional(readOnly = true)
-    public PostListDto getPostList(Long userId, Long cursor, String channel, String sort) {
+    public PostListDto getPostList(Long userId, Long cursor, Integer offset, String channel, String sort) {
         List<Long> blockedUserIds = userBlockReadService.findBlockedUserIds(userId);
 
-        List<Post> posts = postQueryRepository.findPostsWithCursor(cursor, channel, blockedUserIds, sort);
+        boolean isPopular = "popular".equalsIgnoreCase(sort);
+        List<Post> posts;
+
+        if (isPopular) {
+            int effectiveOffset = (offset != null) ? offset : 0;
+            posts = postQueryRepository.findPostsWithOffset(effectiveOffset, channel, blockedUserIds);
+        } else {
+            posts = postQueryRepository.findPostsWithCursor(cursor, channel, blockedUserIds);
+        }
 
         boolean hasNext = posts.size() > PAGE_SIZE;
         if (hasNext) {
             posts = posts.subList(0, PAGE_SIZE);
         }
 
-        Long nextCursor = hasNext && !posts.isEmpty() ? posts.getLast().getId() : null;
+        Long nextCursor = (!isPopular && hasNext && !posts.isEmpty()) ? posts.getLast().getId() : null;
 
         List<Long> postIds = posts.stream().map(Post::getId).toList();
         List<Long> userIds = posts.stream().map(Post::getUserId).distinct().toList();
