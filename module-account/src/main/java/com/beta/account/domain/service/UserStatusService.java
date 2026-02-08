@@ -39,17 +39,13 @@ public class UserStatusService {
     }
 
     public void validateEmailDuplicate(String email) {
-        if(userJpaRepository.existsByEmail(email)){
-            throw new EmailDuplicateException("이미 존재하는 이메일입니다");
-        }
+        userJpaRepository.findByEmail(email).ifPresent(existingUser -> {
+            throw EmailDuplicateException.withSocialProvider(existingUser.getSocialProvider().name());
+        });
     }
 
     public boolean isNameDuplicate(String nickName) {
         return userJpaRepository.existsByNickname(nickName);
-    }
-
-    public boolean isEmailDuplicate(String email) {
-        return userJpaRepository.existsByEmail(email);
     }
 
     public void validateSignupStep(User user, SignupStep expectedStep) {

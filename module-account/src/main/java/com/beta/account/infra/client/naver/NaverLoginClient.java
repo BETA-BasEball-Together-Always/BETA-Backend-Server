@@ -47,6 +47,7 @@ public class NaverLoginClient implements SocialLoginClient {
 
             return SocialUserInfo.builder()
                     .socialId(socialId)
+                    .email(response.getEmail())
                     .build();
 
         } catch (WebClientResponseException.Unauthorized e) {

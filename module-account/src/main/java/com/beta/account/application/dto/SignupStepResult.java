@@ -14,11 +14,20 @@ public class SignupStepResult {
     private final SignupStep signupStep;
     private final List<TeamDto> teamList;
     private final String accessToken;
+    private final String email;
 
     public static SignupStepResult of(Long userId, SignupStep signupStep) {
         return SignupStepResult.builder()
                 .userId(userId)
                 .signupStep(signupStep)
+                .build();
+    }
+
+    public static SignupStepResult withEmail(Long userId, SignupStep signupStep, String email) {
+        return SignupStepResult.builder()
+                .userId(userId)
+                .signupStep(signupStep)
+                .email(email)
                 .build();
     }
 

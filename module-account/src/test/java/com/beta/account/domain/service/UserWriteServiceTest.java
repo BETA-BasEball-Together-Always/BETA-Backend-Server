@@ -70,18 +70,20 @@ class UserWriteServiceTest {
     void createSocialUser_Success() {
         // given
         String socialId = "apple_123";
+        String email = "test@example.com";
         SocialProvider provider = SocialProvider.APPLE;
-        User newUser = User.createNewSocialUser(socialId, provider);
+        User newUser = User.createNewSocialUser(socialId, provider, email);
 
         when(userJpaRepository.save(any(User.class))).thenReturn(newUser);
 
         // when
-        User result = userWriteService.createSocialUser(socialId, provider);
+        User result = userWriteService.createSocialUser(socialId, provider, email);
 
         // then
         assertThat(result).isNotNull();
         assertThat(result.getSocialId()).isEqualTo(socialId);
         assertThat(result.getSocialProvider()).isEqualTo(provider);
+        assertThat(result.getEmail()).isEqualTo(email);
         assertThat(result.getSignupStep()).isEqualTo(SignupStep.SOCIAL_AUTHENTICATED);
         verify(userJpaRepository).save(any(User.class));
     }
@@ -118,18 +120,17 @@ class UserWriteServiceTest {
         void updateProfile_Success() {
             // given
             Long userId = 1L;
-            String email = "test@example.com";
             String nickname = "테스터";
             User user = mock(User.class);
 
             when(userJpaRepository.findByIdForUpdate(userId)).thenReturn(Optional.of(user));
 
             // when
-            User result = userWriteService.updateProfile(userId, email, nickname);
+            User result = userWriteService.updateProfile(userId, nickname);
 
             // then
             assertThat(result).isEqualTo(user);
-            verify(user).updateProfile(email, nickname);
+            verify(user).updateProfile(nickname);
         }
     }
 

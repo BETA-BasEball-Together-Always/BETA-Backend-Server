@@ -1,5 +1,6 @@
 package com.beta.account.domain.service;
 
+import com.beta.account.application.dto.SocialProvider;
 import com.beta.account.domain.entity.User;
 import com.beta.account.infra.repository.UserJpaRepository;
 import com.beta.core.exception.ErrorCode;
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -134,11 +137,11 @@ class UserStatusServiceTest {
     void validateEmailDuplicate_Success_WhenEmailIsUnique() {
         // given
         String email = "unique@example.com";
-        when(userJpaRepository.existsByEmail(email)).thenReturn(false);
+        when(userJpaRepository.findByEmail(email)).thenReturn(Optional.empty());
 
         // when & then
         assertDoesNotThrow(() -> userStatusService.validateEmailDuplicate(email));
-        verify(userJpaRepository).existsByEmail(email);
+        verify(userJpaRepository).findByEmail(email);
     }
 
     @Test
@@ -146,16 +149,18 @@ class UserStatusServiceTest {
     void validateEmailDuplicate_ThrowsException_WhenEmailIsDuplicated() {
         // given
         String email = "duplicate@example.com";
-        when(userJpaRepository.existsByEmail(email)).thenReturn(true);
+        User existingUser = mock(User.class);
+        when(existingUser.getSocialProvider()).thenReturn(SocialProvider.KAKAO);
+        when(userJpaRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
 
         // when & then
         assertThatThrownBy(() -> userStatusService.validateEmailDuplicate(email))
                 .isInstanceOf(EmailDuplicateException.class)
-                .hasMessage("이미 존재하는 이메일입니다")
+                .hasMessage("이미 KAKAO로 가입된 이메일입니다.")
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.EMAIL_DUPLICATE);
 
-        verify(userJpaRepository).existsByEmail(email);
+        verify(userJpaRepository).findByEmail(email);
     }
 
     @Test
@@ -186,36 +191,6 @@ class UserStatusServiceTest {
         // then
         assertThat(result).isTrue();
         verify(userJpaRepository).existsByNickname(nickname);
-    }
-
-    @Test
-    @DisplayName("이메일이 중복되지 않으면 false를 반환한다")
-    void isEmailDuplicate_ReturnsFalse_WhenEmailIsUnique() {
-        // given
-        String email = "unique@example.com";
-        when(userJpaRepository.existsByEmail(email)).thenReturn(false);
-
-        // when
-        boolean result = userStatusService.isEmailDuplicate(email);
-
-        // then
-        assertThat(result).isFalse();
-        verify(userJpaRepository).existsByEmail(email);
-    }
-
-    @Test
-    @DisplayName("이메일이 중복되면 true를 반환한다")
-    void isEmailDuplicate_ReturnsTrue_WhenEmailIsDuplicated() {
-        // given
-        String email = "duplicate@example.com";
-        when(userJpaRepository.existsByEmail(email)).thenReturn(true);
-
-        // when
-        boolean result = userStatusService.isEmailDuplicate(email);
-
-        // then
-        assertThat(result).isTrue();
-        verify(userJpaRepository).existsByEmail(email);
     }
 
 }

@@ -21,6 +21,7 @@ public enum ErrorCode {
     INVALID_SOCIAL_TOKEN(HttpStatus.UNAUTHORIZED, "SOCIAL001", "유효하지 않은 소셜 로그인 토큰입니다"),
     SOCIAL_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SOCIAL002", "소셜 로그인 API 호출 중 오류가 발생했습니다"),
     INVALID_APPLE_TOKEN(HttpStatus.UNAUTHORIZED, "SOCIAL003", "유효하지 않은 Apple IdToken입니다"),
+    SOCIAL_EMAIL_NOT_PROVIDED(HttpStatus.BAD_REQUEST, "SOCIAL004", "소셜 계정에 등록된 이메일이 없습니다"),
 
     TEAM_NOT_FOUND(HttpStatus.NOT_FOUND, "TEAM001", "해당 구단은 존재하지 않습니다."),
 

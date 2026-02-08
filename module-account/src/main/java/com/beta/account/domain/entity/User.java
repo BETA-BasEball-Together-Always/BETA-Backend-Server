@@ -71,10 +71,11 @@ public class User extends BaseEntity {
         this.bio = bio;
     }
 
-    public static User createNewSocialUser(String socialId, SocialProvider socialProvider) {
+    public static User createNewSocialUser(String socialId, SocialProvider socialProvider, String email) {
         return User.builder()
                 .socialId(socialId)
                 .socialProvider(socialProvider)
+                .email(email)
                 .signupStep(SignupStep.SOCIAL_AUTHENTICATED)
                 .status(UserStatus.ACTIVE)
                 .role(UserRole.USER)
@@ -99,8 +100,7 @@ public class User extends BaseEntity {
         this.signupStep = SignupStep.CONSENT_AGREED;
     }
 
-    public void updateProfile(String email, String nickname) {
-        this.email = email;
+    public void updateProfile(String nickname) {
         this.nickname = nickname;
         this.signupStep = SignupStep.PROFILE_COMPLETED;
     }
