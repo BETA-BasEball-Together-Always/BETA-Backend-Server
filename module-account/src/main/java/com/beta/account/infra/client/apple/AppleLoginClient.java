@@ -55,20 +55,25 @@ public class AppleLoginClient implements SocialLoginClient {
             String kid = extractKid(idToken);
             PublicKey publicKey = getPublicKey(kid);
 
-            String subject = Jwts.parser()
+            var claims = Jwts.parser()
                     .verifyWith(publicKey)
                     .requireIssuer(APPLE_ISSUER)
                     .requireAudience(appleClientId)
                     .build()
                     .parseSignedClaims(idToken)
-                    .getPayload()
-                    .getSubject();
+                    .getPayload();
 
+            String subject = claims.getSubject();
             if (subject == null || subject.isEmpty()) {
                 throw new InvalidAppleTokenException("Apple IdToken에 subject가 없습니다");
             }
 
-            return SocialUserInfo.builder().socialId(subject).build();
+            String email = claims.get("email", String.class);
+
+            return SocialUserInfo.builder()
+                    .socialId(subject)
+                    .email(email)
+                    .build();
         } catch (InvalidAppleTokenException e) {
             throw e;
         } catch (Exception e) {

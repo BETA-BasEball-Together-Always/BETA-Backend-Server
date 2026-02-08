@@ -46,6 +46,7 @@ public class KakaoLoginClient implements SocialLoginClient {
 
             return SocialUserInfo.builder()
                     .socialId(String.valueOf(response.getId()))
+                    .email(response.getEmail())
                     .build();
 
         } catch (WebClientResponseException.Unauthorized e) {

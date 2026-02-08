@@ -7,4 +7,5 @@ import lombok.Getter;
 @Builder
 public class SocialUserInfo {
     private String socialId;
+    private String email;
 }
