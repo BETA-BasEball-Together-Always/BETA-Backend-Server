@@ -12,9 +12,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 @Slf4j
 @Configuration
@@ -37,16 +34,14 @@ public class OracleCloudConfig {
     private String region;
 
     @Bean
-    public AbstractAuthenticationDetailsProvider authenticationDetailsProvider() throws IOException {
-        log.info("Oracle Cloud API Key 인증 초기화: region={}", region);
-
-        String privateKeyContent = new String(Files.readAllBytes(Paths.get(privateKeyPath)));
+    public AbstractAuthenticationDetailsProvider authenticationDetailsProvider() {
+        log.info("Oracle Cloud API Key 인증 초기화: region={}, keyPath={}", region, privateKeyPath);
 
         return SimpleAuthenticationDetailsProvider.builder()
                 .tenantId(tenancyOcid)
                 .userId(userOcid)
                 .fingerprint(fingerprint)
-                .privateKeySupplier(new SimplePrivateKeySupplier(privateKeyContent))
+                .privateKeySupplier(new SimplePrivateKeySupplier(privateKeyPath))
                 .region(Region.fromRegionCodeOrId(region))
                 .build();
     }
