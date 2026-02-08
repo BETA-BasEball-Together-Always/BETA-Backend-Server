@@ -75,6 +75,7 @@ jobs:
                 --name beta-user \
                 -p 8080:8080 \
                 --env-file /home/ubuntu/env/beta-user.env \
+                -v /home/ubuntu/oci_api_key.pem:/app/keys/oci_api_key.pem:ro \
                 --restart always \
                 --health-cmd="curl -f http://localhost:8080/actuator/health || exit 1" \
                 --health-interval=30s \
