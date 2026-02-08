@@ -1,7 +1,5 @@
 package com.beta.controller.community;
 
-import com.beta.account.domain.entity.User;
-import com.beta.account.domain.service.UserReadService;
 import com.beta.community.application.CommunityFacadeService;
 import com.beta.community.application.dto.PostDto;
 import com.beta.community.application.dto.PostListDto;
@@ -27,9 +25,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Tag(name = "Community", description = "커뮤니티 관련 API")
 @RestController
@@ -38,11 +33,10 @@ import java.util.stream.Collectors;
 public class CommunityController {
 
     private final CommunityFacadeService communityFacadeService;
-    private final UserReadService userReadService;
 
     // ==================== 게시글 API ====================
 
-    @Operation(summary = "게시글 리스트 조회")
+    @Operation(summary = "게시글 리스트 조회", description = "channel 미지정 시 내 팀 채널, 지정 시 ALL 채널 조회. sort: latest(최신순, 기본값), popular(인기순)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증 실패",
@@ -59,53 +53,19 @@ public class CommunityController {
     public ResponseEntity<PostListResponse> getPostList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "ALL") String channel) {
+            @RequestParam(required = false) String channel,
+            @RequestParam(defaultValue = "latest") String sort) {
+
+        String effectiveChannel = (channel != null) ? "ALL" : userDetails.teamCode();
 
         PostListDto postListDto = communityFacadeService.getPostList(
                 userDetails.userId(),
                 cursor,
-                channel
+                effectiveChannel,
+                sort
         );
 
-        List<Long> userIds = postListDto.getPosts().stream()
-                .map(PostListDto.PostSummaryDto::getUserId)
-                .distinct()
-                .toList();
-
-        Map<Long, User> userMap = userReadService.findUsersByIds(userIds).stream()
-                .collect(Collectors.toMap(User::getId, Function.identity()));
-
-        List<PostListResponse.PostSummary> posts = postListDto.getPosts().stream()
-                .map(dto -> {
-                    User author = userMap.get(dto.getUserId());
-                    return PostListResponse.PostSummary.builder()
-                            .postId(dto.getPostId())
-                            .content(dto.getContent())
-                            .channel(dto.getChannel())
-                            .imageUrls(dto.getImageUrls())
-                            .hashtags(dto.getHashtags())
-                            .author(PostListResponse.AuthorInfo.builder()
-                                    .userId(dto.getUserId())
-                                    .nickname(author != null ? author.getNickname() : "알 수 없음")
-                                    .teamCode(author != null && author.getBaseballTeam() != null ? author.getBaseballTeam().getCode() : null)
-                                    .build())
-                            .emotions(PostListResponse.EmotionCount.builder()
-                                    .likeCount(dto.getLikeCount())
-                                    .sadCount(dto.getSadCount())
-                                    .funCount(dto.getFunCount())
-                                    .hypeCount(dto.getHypeCount())
-                                    .build())
-                            .commentCount(dto.getCommentCount())
-                            .createdAt(dto.getCreatedAt())
-                            .build();
-                })
-                .toList();
-
-        return ResponseEntity.ok(PostListResponse.builder()
-                .posts(posts)
-                .hasNext(postListDto.isHasNext())
-                .nextCursor(postListDto.getNextCursor())
-                .build());
+        return ResponseEntity.ok(PostListResponse.from(postListDto));
     }
 
     @Operation(summary = "게시글 상세 조회")
@@ -460,4 +420,5 @@ public class CommunityController {
                 .blocked(false)
                 .build());
     }
+
 }

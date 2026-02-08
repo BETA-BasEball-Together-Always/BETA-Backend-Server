@@ -1,5 +1,6 @@
 package com.beta.community.application.dto;
 
+import com.beta.core.port.dto.AuthorInfo;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,7 +19,7 @@ public class PostListDto {
     @Builder
     public static class PostSummaryDto {
         private Long postId;
-        private Long userId;
+        private AuthorInfo author;
         private String content;
         private String channel;
         private List<String> imageUrls;

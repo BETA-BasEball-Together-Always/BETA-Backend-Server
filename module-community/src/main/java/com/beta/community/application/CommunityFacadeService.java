@@ -18,6 +18,8 @@ import com.beta.core.exception.community.DuplicatePostException;
 import com.beta.core.exception.community.InvalidImageException;
 import com.beta.core.exception.community.PostAccessDeniedException;
 import com.beta.core.exception.community.SelfBlockNotAllowedException;
+import com.beta.core.port.UserPort;
+import com.beta.core.port.dto.AuthorInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +44,7 @@ public class CommunityFacadeService {
     private final PostQueryRepository postQueryRepository;
     private final PostImageJpaRepository postImageJpaRepository;
     private final PostHashtagJpaRepository postHashtagJpaRepository;
+    private final UserPort userPort;
 
     private static final int PAGE_SIZE = 10;
 
@@ -168,27 +171,29 @@ public class CommunityFacadeService {
     }
 
     @Transactional(readOnly = true)
-    public PostListDto getPostList(Long userId, Long cursor, String channel) {
+    public PostListDto getPostList(Long userId, Long cursor, String channel, String sort) {
         List<Long> blockedUserIds = userBlockReadService.findBlockedUserIds(userId);
 
-        List<Post> posts = postQueryRepository.findPostsWithCursor(cursor, channel, blockedUserIds);
+        List<Post> posts = postQueryRepository.findPostsWithCursor(cursor, channel, blockedUserIds, sort);
 
         boolean hasNext = posts.size() > PAGE_SIZE;
         if (hasNext) {
             posts = posts.subList(0, PAGE_SIZE);
         }
 
-        Long nextCursor = hasNext && !posts.isEmpty() ? posts.get(posts.size() - 1).getId() : null;
+        Long nextCursor = hasNext && !posts.isEmpty() ? posts.getLast().getId() : null;
 
         List<Long> postIds = posts.stream().map(Post::getId).toList();
+        List<Long> userIds = posts.stream().map(Post::getUserId).distinct().toList();
 
         Map<Long, List<String>> imageUrlsMap = getImageUrlsMap(postIds);
         Map<Long, List<String>> hashtagsMap = getHashtagsMap(postIds);
+        Map<Long, AuthorInfo> authorMap = userPort.findAuthorsByIds(userIds);
 
         List<PostListDto.PostSummaryDto> postSummaries = posts.stream()
                 .map(post -> PostListDto.PostSummaryDto.builder()
                         .postId(post.getId())
-                        .userId(post.getUserId())
+                        .author(authorMap.getOrDefault(post.getUserId(), AuthorInfo.unknown(post.getUserId())))
                         .content(post.getContent())
                         .channel(post.getChannel().name())
                         .imageUrls(imageUrlsMap.getOrDefault(post.getId(), List.of()))
