@@ -65,6 +65,11 @@ oracle:
       namespace: ${OCI_NAMESPACE}
       bucket-name: ${OCI_BUCKET_NAME}
       region: ${OCI_REGION:ap-seoul-1}
+      auth:
+        tenancy-ocid: ${OCI_TENANCY_OCID}
+        user-ocid: ${OCI_USER_OCID}
+        fingerprint: ${OCI_FINGERPRINT}
+        private-key-path: ${OCI_PRIVATE_KEY_PATH}
 
 # OAuth Configuration
 oauth:
