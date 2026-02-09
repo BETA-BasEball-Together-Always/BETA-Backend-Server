@@ -192,8 +192,8 @@ class PostListApiTest extends ApiTestBase {
         }
 
         @Test
-        @DisplayName("게시글의 이미지 URL이 정확히 반환된다 (ACTIVE만)")
-        void getPostList_imageUrls() {
+        @DisplayName("게시글의 이미지 정보가 정확히 반환된다 (ACTIVE만, id와 url 포함)")
+        void getPostList_images() {
             // when
             ResponseEntity<PostListResponse> response = restTemplate.exchange(
                     "/api/v1/community/posts",
@@ -208,11 +208,12 @@ class PostListApiTest extends ApiTestBase {
                     .findFirst()
                     .orElseThrow();
 
-            assertThat(post100.getImageUrls()).hasSize(2);
-            assertThat(post100.getImageUrls()).containsExactly(
-                    "https://storage.example.com/images/post100_1.jpg",
-                    "https://storage.example.com/images/post100_2.jpg"
-            );
+            assertThat(post100.getImages()).hasSize(2);
+            // 이미지 ID와 URL이 모두 반환되는지 확인
+            assertThat(post100.getImages().get(0).getImageId()).isNotNull();
+            assertThat(post100.getImages().get(0).getImageUrl()).isEqualTo("https://storage.example.com/images/post100_1.jpg");
+            assertThat(post100.getImages().get(1).getImageId()).isNotNull();
+            assertThat(post100.getImages().get(1).getImageUrl()).isEqualTo("https://storage.example.com/images/post100_2.jpg");
         }
 
         @Test

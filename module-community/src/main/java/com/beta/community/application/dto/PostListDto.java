@@ -22,7 +22,7 @@ public class PostListDto {
         private AuthorInfo author;
         private String content;
         private String channel;
-        private List<String> imageUrls;
+        private List<ImageInfo> images;
         private List<String> hashtags;
         private Integer likeCount;
         private Integer sadCount;
