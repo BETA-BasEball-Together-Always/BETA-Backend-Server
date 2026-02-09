@@ -1,6 +1,7 @@
 package com.beta.community.application;
 
 import com.beta.community.application.dto.CreatePostDto;
+import com.beta.community.application.dto.ImageInfo;
 import com.beta.community.application.dto.PostDto;
 import com.beta.community.application.dto.PostListDto;
 import com.beta.community.application.dto.UpdatePostDto;
@@ -194,7 +195,7 @@ public class CommunityFacadeService {
         List<Long> postIds = posts.stream().map(Post::getId).toList();
         List<Long> userIds = posts.stream().map(Post::getUserId).distinct().toList();
 
-        Map<Long, List<String>> imageUrlsMap = getImageUrlsMap(postIds);
+        Map<Long, List<ImageInfo>> imagesMap = getImagesMap(postIds);
         Map<Long, List<String>> hashtagsMap = getHashtagsMap(postIds);
         Map<Long, AuthorInfo> authorMap = userPort.findAuthorsByIds(userIds);
 
@@ -204,7 +205,7 @@ public class CommunityFacadeService {
                         .author(authorMap.getOrDefault(post.getUserId(), AuthorInfo.unknown(post.getUserId())))
                         .content(post.getContent())
                         .channel(post.getChannel().name())
-                        .imageUrls(imageUrlsMap.getOrDefault(post.getId(), List.of()))
+                        .images(imagesMap.getOrDefault(post.getId(), List.of()))
                         .hashtags(hashtagsMap.getOrDefault(post.getId(), List.of()))
                         .likeCount(post.getLikeCount())
                         .sadCount(post.getSadCount())
@@ -222,7 +223,7 @@ public class CommunityFacadeService {
                 .build();
     }
 
-    private Map<Long, List<String>> getImageUrlsMap(List<Long> postIds) {
+    private Map<Long, List<ImageInfo>> getImagesMap(List<Long> postIds) {
         if (postIds.isEmpty()) {
             return Map.of();
         }
@@ -230,7 +231,10 @@ public class CommunityFacadeService {
         return images.stream()
                 .collect(Collectors.groupingBy(
                         PostImage::getPostId,
-                        Collectors.mapping(PostImage::getImgUrl, Collectors.toList())
+                        Collectors.mapping(
+                                img -> ImageInfo.of(img.getId(), img.getImgUrl()),
+                                Collectors.toList()
+                        )
                 ));
     }
 

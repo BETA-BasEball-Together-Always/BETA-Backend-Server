@@ -73,7 +73,11 @@ public class CommunityController {
         return ResponseEntity.ok(PostListResponse.from(postListDto));
     }
 
-    @Operation(summary = "게시글 상세 조회")
+    @Operation(summary = "게시글 상세 조회", description = """
+            게시글 상세 정보와 댓글 목록을 조회합니다.
+            - commentSort=latest (기본값): 댓글을 작성순으로 정렬
+            - commentSort=popular: 댓글을 좋아요순으로 정렬
+            - 삭제된 댓글은 "삭제된 댓글입니다"로 표시되며, 답글이 없으면 표시하지 않습니다.""")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "게시글 없음",
@@ -93,7 +97,7 @@ public class CommunityController {
                 .postId(postId)
                 .content("mock content")
                 .channel("ALL")
-                .imageUrls(List.of())
+                .images(List.of())
                 .hashtags(List.of())
                 .author(PostListResponse.AuthorInfo.builder()
                         .userId(1L)
@@ -110,7 +114,13 @@ public class CommunityController {
         return ResponseEntity.ok(mock);
     }
 
-    @Operation(summary = "게시글 작성")
+    @Operation(summary = "게시글 작성", description = """
+            새 게시글을 작성합니다.
+            - channel=TEAM: 내 팀 채널에 게시
+            - channel=ALL: 전체 채널에 게시
+            - 이미지: 최대 5개, 각 10MB 이하 (JPG/PNG/GIF/WEBP)
+            - 해시태그: 최대 5개, 각 20자 이하
+            - 30초 내 동일 내용 게시글 중복 방지""")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "작성 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 이미지 검증 실패",
@@ -152,7 +162,11 @@ public class CommunityController {
         return ResponseEntity.status(HttpStatus.CREATED).body(CreatePostResponse.from(postDto));
     }
 
-    @Operation(summary = "게시글 수정")
+    @Operation(summary = "게시글 수정", description = """
+            게시글을 수정합니다.
+            - 기존 이미지 삭제: deletedImageIds에 이미지 ID 목록 전달 (목록/상세 조회 응답의 imageId 사용)
+            - 새 이미지 추가: newImages에 파일 첨부
+            - 최종 이미지 개수가 5개를 초과하면 실패합니다.""")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 이미지 검증 실패",
@@ -199,7 +213,10 @@ public class CommunityController {
         return ResponseEntity.ok(CreatePostResponse.from(postDto));
     }
 
-    @Operation(summary = "게시글 삭제 (소프트)")
+    @Operation(summary = "게시글 삭제 (소프트)", description = """
+            게시글을 삭제합니다.
+            - 소프트 삭제 방식: 실제로 DB에서 삭제되지 않고 상태만 DELETED로 변경됩니다.
+            - 관련 이미지, 해시태그도 함께 비활성화됩니다.""")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "삭제 성공"),
             @ApiResponse(responseCode = "403", description = "게시글 권한 없음",
@@ -224,7 +241,12 @@ public class CommunityController {
 
     // ==================== 감정표현 API ====================
 
-    @Operation(summary = "감정표현 토글")
+    @Operation(summary = "감정표현 토글", description = """
+            게시글에 감정표현을 토글합니다.
+            - 기존에 없던 감정: 추가
+            - 같은 감정을 다시 요청: 제거
+            - 다른 감정으로 변경: 이전 감정 제거 후 새 감정 추가
+            - 응답의 toggled=true: 감정이 추가됨, false: 감정이 제거됨""")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "토글 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
@@ -258,7 +280,12 @@ public class CommunityController {
 
     // ==================== 댓글 API ====================
 
-    @Operation(summary = "댓글/답글 작성")
+    @Operation(summary = "댓글/답글 작성", description = """
+            댓글 또는 답글을 작성합니다.
+            - parentId=null: 최상위 댓글 (depth=0)
+            - parentId=댓글ID: 해당 댓글에 대한 답글 (depth=1)
+            - 답글의 답글(depth=2)은 지원하지 않습니다.
+            - 30초 내 동일 내용 댓글 중복 방지""")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "작성 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 답글 깊이 초과",
@@ -300,7 +327,7 @@ public class CommunityController {
         return ResponseEntity.status(HttpStatus.CREATED).body(mock);
     }
 
-    @Operation(summary = "댓글 수정")
+    @Operation(summary = "댓글 수정", description = "본인이 작성한 댓글의 내용을 수정합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
@@ -329,7 +356,11 @@ public class CommunityController {
         return ResponseEntity.ok(MessageResponse.of("댓글이 수정되었습니다."));
     }
 
-    @Operation(summary = "댓글 삭제 (소프트)")
+    @Operation(summary = "댓글 삭제 (소프트)", description = """
+            댓글을 삭제합니다.
+            - 소프트 삭제 방식
+            - 답글이 있는 댓글은 "삭제된 댓글입니다"로 표시됩니다.
+            - 답글이 없는 댓글은 목록에서 완전히 숨겨집니다.""")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "삭제 성공"),
             @ApiResponse(responseCode = "403", description = "댓글 권한 없음",
@@ -352,7 +383,11 @@ public class CommunityController {
         return ResponseEntity.ok(MessageResponse.of("댓글이 삭제되었습니다."));
     }
 
-    @Operation(summary = "댓글 좋아요 토글")
+    @Operation(summary = "댓글 좋아요 토글", description = """
+            댓글에 좋아요를 토글합니다.
+            - 기존에 좋아요가 없으면 추가
+            - 이미 좋아요했으면 제거
+            - 응답의 liked=true: 좋아요 추가됨, false: 좋아요 제거됨""")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "토글 성공"),
             @ApiResponse(responseCode = "404", description = "댓글 없음",
@@ -377,7 +412,10 @@ public class CommunityController {
 
     // ==================== 사용자 차단 API ====================
 
-    @Operation(summary = "사용자 차단")
+    @Operation(summary = "사용자 차단", description = """
+            특정 사용자를 차단합니다.
+            - 차단된 사용자의 게시글은 목록에서 필터링됩니다.
+            - 자기 자신은 차단할 수 없습니다.""")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "차단 성공"),
             @ApiResponse(responseCode = "400", description = "자기 자신 차단 불가",
@@ -404,7 +442,7 @@ public class CommunityController {
                 .build());
     }
 
-    @Operation(summary = "사용자 차단 해제")
+    @Operation(summary = "사용자 차단 해제", description = "차단했던 사용자의 차단을 해제합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "차단 해제 성공"),
             @ApiResponse(responseCode = "404", description = "차단 정보 없음",
