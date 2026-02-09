@@ -3,13 +3,14 @@ package com.beta.controller.community.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-@NoArgsConstructor
+@Setter
 public class UpdatePostRequest {
 
     @NotBlank(message = "게시글 내용은 필수입니다")
@@ -18,4 +19,9 @@ public class UpdatePostRequest {
 
     @Size(max = 5, message = "해시태그는 최대 5개까지 가능합니다")
     private List<@Size(max = 20, message = "해시태그는 20자 이하여야 합니다") String> hashtags = new ArrayList<>();
+
+    private List<Long> deletedImageIds = new ArrayList<>();
+
+    @Size(max = 5, message = "이미지는 최대 5개까지 업로드 가능합니다")
+    private List<MultipartFile> newImages = new ArrayList<>();
 }
