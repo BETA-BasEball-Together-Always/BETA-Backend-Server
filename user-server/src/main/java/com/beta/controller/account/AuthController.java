@@ -152,6 +152,31 @@ public class AuthController {
         return ResponseEntity.ok(LogoutResponse.success());
     }
 
+    @Operation(summary = "회원가입 상태 조회", description = "현재 회원가입 단계와 해당 단계에 필요한 데이터를 반환")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "404", description = "사용자 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "USER001", "message": "사용자를 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
+    })
+    @GetMapping("/signup/status")
+    public ResponseEntity<SignupStatusResponse> getSignupStatus(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        SignupStepResult result = accountAppService.getSignupStatus(userDetails.userId());
+        return ResponseEntity.ok(SignupStatusResponse.from(result));
+    }
+
     @Operation(summary = "회원가입 - 약관 동의", description = "약관 동의 후 사용자 이메일과 함께 다음 단계로 진행")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "처리 성공"),
