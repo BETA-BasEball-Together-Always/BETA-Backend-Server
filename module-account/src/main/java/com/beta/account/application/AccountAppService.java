@@ -131,8 +131,7 @@ public class AccountAppService {
 
         userWriteService.updateTeam(userId, baseballTeam);
 
-        String newAccessToken = jwtTokenProvider.generateAccessToken(userId, teamCode, user.getRole().name());
-        return SignupStepResult.withAccessToken(userId, SignupStep.TEAM_SELECTED, newAccessToken);
+        return SignupStepResult.of(userId, SignupStep.TEAM_SELECTED);
     }
 
     public LoginResult completeSignup(Long userId) {
