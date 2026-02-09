@@ -152,7 +152,7 @@ public class AuthController {
         return ResponseEntity.ok(LogoutResponse.success());
     }
 
-    @Operation(summary = "회원가입 - 약관 동의")
+    @Operation(summary = "회원가입 - 약관 동의", description = "약관 동의 후 사용자 이메일과 함께 다음 단계로 진행")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "처리 성공"),
             @ApiResponse(responseCode = "400", description = "필수 약관 미동의 / 잘못된 단계 / 유효성 검증 실패",
@@ -182,7 +182,7 @@ public class AuthController {
                                     {"code": "USER001", "message": "사용자를 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PostMapping("/signup/consent")
-    public ResponseEntity<SignupStepResponse> processConsent(
+    public ResponseEntity<SignupConsentResponse> processConsent(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody ConsentRequest request) {
         SignupStepResult result = accountAppService.processConsent(
@@ -190,10 +190,10 @@ public class AuthController {
                 request.getPersonalInfoRequired(),
                 request.getAgreeMarketing()
         );
-        return ResponseEntity.ok(SignupStepResponse.from(result));
+        return ResponseEntity.ok(SignupConsentResponse.from(result));
     }
 
-    @Operation(summary = "회원가입 - 프로필 설정")
+    @Operation(summary = "회원가입 - 프로필 설정", description = "닉네임 설정 후 팀 선택을 위한 야구팀 목록 반환")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "처리 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 단계 / 닉네임 길이 오류 / 유효성 검증 실패",
@@ -228,17 +228,17 @@ public class AuthController {
                                     {"code": "USER004", "message": "이미 존재하는 이름입니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @PostMapping("/signup/profile")
-    public ResponseEntity<SignupStepResponse> processProfile(
+    public ResponseEntity<SignupProfileResponse> processProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody ProfileRequest request) {
         SignupStepResult result = accountAppService.processProfile(
                 userDetails.userId(),
                 request.getNickname()
         );
-        return ResponseEntity.ok(SignupStepResponse.from(result));
+        return ResponseEntity.ok(SignupProfileResponse.from(result));
     }
 
-    @Operation(summary = "회원가입 - 팀 선택")
+    @Operation(summary = "회원가입 - 팀 선택", description = "팀 선택 완료 후 회원가입 완료 단계로 진행 (토큰 미발급, 완료 API에서 최종 토큰 발급)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "처리 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 단계 / 유효성 검증 실패",
@@ -270,14 +270,14 @@ public class AuthController {
                             }))
     })
     @PostMapping("/signup/team")
-    public ResponseEntity<SignupStepResponse> processTeamSelection(
+    public ResponseEntity<SignupTeamResponse> processTeamSelection(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody TeamSelectionRequest request) {
         SignupStepResult result = accountAppService.processTeamSelection(
                 userDetails.userId(),
                 request.getTeamCode()
         );
-        return ResponseEntity.ok(SignupStepResponse.from(result));
+        return ResponseEntity.ok(SignupTeamResponse.from(result));
     }
 
     @Operation(summary = "회원가입 완료 (추가 정보 없이)")
