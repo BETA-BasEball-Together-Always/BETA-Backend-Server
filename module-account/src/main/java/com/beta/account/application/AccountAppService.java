@@ -134,6 +134,18 @@ public class AccountAppService {
         return SignupStepResult.of(userId, SignupStep.TEAM_SELECTED);
     }
 
+    public SignupStepResult getSignupStatus(Long userId) {
+        User user = userReadService.findUserById(userId);
+        SignupStep currentStep = user.getSignupStep();
+
+        return switch (currentStep) {
+            case SOCIAL_AUTHENTICATED, TEAM_SELECTED, COMPLETED -> SignupStepResult.of(userId, currentStep);
+            case CONSENT_AGREED -> SignupStepResult.withEmail(userId, currentStep, user.getEmail());
+            case PROFILE_COMPLETED -> SignupStepResult.withTeamList(userId, currentStep,
+                    baseballTeamReadService.getAllBaseballTeams());
+        };
+    }
+
     public LoginResult completeSignup(Long userId) {
         User user = userReadService.findUserById(userId);
         userStatusService.validateSignupStep(user, SignupStep.TEAM_SELECTED);
