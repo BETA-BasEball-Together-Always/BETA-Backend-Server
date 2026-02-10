@@ -160,12 +160,7 @@ public class SearchController {
                                             {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "fieldErrors": [{"field": "keyword", "message": "검색어는 30자 이하여야 합니다.", "rejectedValue": "삽십자를초과하는아주긴검색어삽십자를초과하는아주긴검색어삽십자를초과하는아주긴검색어"}], "timestamp": "2025-01-01T00:00:00"}"""),
                                     @ExampleObject(name = "커서 값 오류", value = """
                                             {"code": "SEARCH001", "message": "커서의 score, id는 둘다 존재하거나 둘다 비어있어야 합니다.", "timestamp": "2025-01-01T00:00:00"}""")
-                            })),
-            @ApiResponse(responseCode = "500", description = "검색 서버 오류",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(name = "검색 실패", value = """
-                                    {"code": "SEARCH099", "message": "es 검색 중 오류가 발생했습니다", "timestamp": "2025-01-01T00:00:00"}""")))
+                            }))
     })
     @GetMapping("/users")
     public ResponseEntity<SearchUserResponse> searchUsers(
