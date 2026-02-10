@@ -6,6 +6,7 @@ dependencies {
     implementation project(':module-core')
     implementation project(':module-account')
     implementation project(':module-community')
+    implementation project(':module-search')
 
     // Monitoring
     implementation 'org.springframework.boot:spring-boot-starter-actuator'

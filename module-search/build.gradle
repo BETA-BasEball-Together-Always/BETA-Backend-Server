@@ -1,0 +1,11 @@
+plugins {
+    id 'BETA-Backend-Server.java-conventions'
+}
+
+dependencies {
+    implementation project(':module-core')
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+
+    testImplementation testFixtures(project(':module-core'))
+}

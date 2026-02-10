@@ -6,6 +6,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
+import org.testcontainers.utility.DockerImageName;
 
 @ActiveProfiles("test")
 public class TestContainer {
@@ -23,7 +24,9 @@ public class TestContainer {
                 .withExposedPorts(6379)
                 .withCommand("redis-server");
 
-        elasticsearch = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:8.11.0")
+        elasticsearch = new ElasticsearchContainer(
+                DockerImageName.parse("dhgudtmxhs/es-nori:8.11.0")
+                        .asCompatibleSubstituteFor("docker.elastic.co/elasticsearch/elasticsearch"))
                 .withEnv("discovery.type", "single-node")
                 .withEnv("xpack.security.enabled", "false");
 
