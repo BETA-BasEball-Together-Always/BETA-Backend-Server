@@ -4,8 +4,6 @@ plugins {
 
 dependencies {
     implementation project(':module-core')
-    implementation project(':module-account')
-    implementation project(':module-community')
 
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 
