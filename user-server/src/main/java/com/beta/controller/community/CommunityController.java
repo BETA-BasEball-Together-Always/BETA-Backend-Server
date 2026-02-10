@@ -77,7 +77,7 @@ public class CommunityController {
 
     @Operation(summary = "게시글 상세 조회", description = """
             게시글 상세 정보와 댓글 첫 페이지(20개)를 조회합니다.
-            - 댓글은 작성순(오래된 순)으로 정렬됩니다.
+            - 댓글은 최신순으로 정렬됩니다.
             - 추가 댓글은 GET /posts/{postId}/comments API로 조회하세요.
             - 삭제된 댓글은 "삭제된 댓글입니다"로 표시되며, 답글이 없으면 표시하지 않습니다.
             - 차단한 사용자의 댓글은 표시되지 않습니다.""")
@@ -119,7 +119,7 @@ public class CommunityController {
     public ResponseEntity<CommentsResponse> getComments(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId,
-            @RequestParam Long cursor) {
+            @RequestParam(required = false) Long cursor) {
 
         CommentsDto commentsDto = communityFacadeService.getComments(
                 userDetails.userId(),

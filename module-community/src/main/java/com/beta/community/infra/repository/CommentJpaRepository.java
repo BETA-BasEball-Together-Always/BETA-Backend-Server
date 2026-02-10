@@ -11,14 +11,14 @@ import java.util.List;
 
 public interface CommentJpaRepository extends JpaRepository<Comment, Long> {
 
-    @Query("SELECT c FROM Comment c WHERE c.postId = :postId AND c.depth = 0 AND c.id > :cursor ORDER BY c.createdAt ASC")
+    @Query("SELECT c FROM Comment c WHERE c.postId = :postId AND c.depth = 0 AND c.id < :cursor ORDER BY c.createdAt DESC")
     List<Comment> findParentComments(
             @Param("postId") Long postId,
             @Param("cursor") Long cursor,
             Pageable pageable
     );
 
-    @Query("SELECT c FROM Comment c WHERE c.postId = :postId AND c.parentId IN :parentIds ORDER BY c.createdAt ASC")
+    @Query("SELECT c FROM Comment c WHERE c.postId = :postId AND c.parentId IN :parentIds ORDER BY c.createdAt DESC")
     List<Comment> findRepliesByParentIds(
             @Param("postId") Long postId,
             @Param("parentIds") List<Long> parentIds
