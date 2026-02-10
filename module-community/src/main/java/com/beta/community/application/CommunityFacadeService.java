@@ -1,16 +1,20 @@
 package com.beta.community.application;
 
+import com.beta.community.application.dto.CommentsDto;
 import com.beta.community.application.dto.CreatePostDto;
 import com.beta.community.application.dto.ImageInfo;
+import com.beta.community.application.dto.PostDetailDto;
 import com.beta.community.application.dto.PostDto;
 import com.beta.community.application.dto.PostListDto;
 import com.beta.community.application.dto.UpdatePostDto;
+import com.beta.community.domain.entity.Comment;
 import com.beta.community.domain.entity.Post;
 import com.beta.community.domain.entity.PostHashtag;
 import com.beta.community.domain.entity.PostImage;
 import com.beta.community.domain.entity.Status;
 import com.beta.community.domain.entity.UserBlock;
 import com.beta.community.domain.service.*;
+import com.beta.community.infra.repository.CommentLikeJpaRepository;
 import com.beta.community.infra.repository.PostHashtagJpaRepository;
 import com.beta.community.infra.repository.PostImageJpaRepository;
 import com.beta.community.infra.repository.PostQueryRepository;
@@ -26,9 +30,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -42,12 +49,15 @@ public class CommunityFacadeService {
     private final IdempotencyService idempotencyService;
     private final UserBlockReadService userBlockReadService;
     private final UserBlockWriteService userBlockWriteService;
+    private final CommentReadService commentReadService;
     private final PostQueryRepository postQueryRepository;
     private final PostImageJpaRepository postImageJpaRepository;
     private final PostHashtagJpaRepository postHashtagJpaRepository;
+    private final CommentLikeJpaRepository commentLikeJpaRepository;
     private final UserPort userPort;
 
     private static final int PAGE_SIZE = 10;
+    private static final int COMMENT_PAGE_SIZE = 20;
 
     @Transactional
     public PostDto createPost(Long userId, String userTeamCode, CreatePostDto dto) {
@@ -248,5 +258,179 @@ public class CommunityFacadeService {
                         ph -> ph.getPost().getId(),
                         Collectors.mapping(ph -> ph.getHashtag().getTagName(), Collectors.toList())
                 ));
+    }
+
+    @Transactional(readOnly = true)
+    public PostDetailDto getPostDetail(Long userId, Long postId) {
+        Post post = postReadService.findActiveById(postId);
+        Set<Long> blockedUserIds = new HashSet<>(userBlockReadService.findBlockedUserIds(userId));
+
+        List<ImageInfo> images = getImagesMap(List.of(postId)).getOrDefault(postId, List.of());
+        List<String> hashtags = getHashtagsMap(List.of(postId)).getOrDefault(postId, List.of());
+
+        CommentTreeResult commentResult = fetchCommentsWithTree(userId, postId, null, blockedUserIds);
+
+        List<Long> allUserIds = Stream.concat(
+                Stream.of(post.getUserId()),
+                commentResult.allComments.stream().map(Comment::getUserId)
+        ).distinct().toList();
+        Map<Long, AuthorInfo> authorMap = userPort.findAuthorsByIds(allUserIds);
+
+        List<PostDetailDto.CommentDto> commentTree = buildCommentTree(
+                commentResult.parentComments,
+                commentResult.replies,
+                authorMap,
+                commentResult.likedCommentIds,
+                blockedUserIds
+        );
+
+        AuthorInfo postAuthor = authorMap.getOrDefault(post.getUserId(), AuthorInfo.unknown(post.getUserId()));
+
+        return PostDetailDto.builder()
+                .postId(post.getId())
+                .author(postAuthor)
+                .content(post.getContent())
+                .channel(post.getChannel().name())
+                .images(images)
+                .hashtags(hashtags)
+                .likeCount(post.getLikeCount())
+                .sadCount(post.getSadCount())
+                .funCount(post.getFunCount())
+                .hypeCount(post.getHypeCount())
+                .commentCount(post.getCommentCount())
+                .createdAt(post.getCreatedAt())
+                .comments(commentTree)
+                .hasNextComments(commentResult.hasNext)
+                .nextCommentCursor(commentResult.nextCursor)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public CommentsDto getComments(Long userId, Long postId, Long cursor) {
+        postReadService.findActiveById(postId);
+
+        Set<Long> blockedUserIds = new HashSet<>(userBlockReadService.findBlockedUserIds(userId));
+        CommentTreeResult commentResult = fetchCommentsWithTree(userId, postId, cursor, blockedUserIds);
+
+        List<Long> userIds = commentResult.allComments.stream()
+                .map(Comment::getUserId)
+                .distinct()
+                .toList();
+        Map<Long, AuthorInfo> authorMap = userPort.findAuthorsByIds(userIds);
+
+        List<PostDetailDto.CommentDto> commentTree = buildCommentTree(
+                commentResult.parentComments,
+                commentResult.replies,
+                authorMap,
+                commentResult.likedCommentIds,
+                blockedUserIds
+        );
+
+        return CommentsDto.builder()
+                .comments(commentTree)
+                .hasNext(commentResult.hasNext)
+                .nextCursor(commentResult.nextCursor)
+                .build();
+    }
+
+    private CommentTreeResult fetchCommentsWithTree(Long userId, Long postId, Long cursor, Set<Long> blockedUserIds) {
+        List<Comment> parentComments = commentReadService.findParentComments(postId, cursor, COMMENT_PAGE_SIZE + 1);
+        boolean hasNext = parentComments.size() > COMMENT_PAGE_SIZE;
+        if (hasNext) {
+            parentComments = parentComments.subList(0, COMMENT_PAGE_SIZE);
+        }
+
+        Long nextCursor = (hasNext && !parentComments.isEmpty())
+                ? parentComments.getLast().getId() : null;
+
+        List<Long> parentIds = parentComments.stream().map(Comment::getId).toList();
+        List<Comment> replies = commentReadService.findRepliesByParentIds(postId, parentIds);
+        List<Comment> allComments = Stream.concat(parentComments.stream(), replies.stream()).toList();
+
+        List<Long> allCommentIds = allComments.stream().map(Comment::getId).toList();
+        Set<Long> likedCommentIds = allCommentIds.isEmpty()
+                ? Set.of()
+                : commentLikeJpaRepository.findLikedCommentIds(userId, allCommentIds);
+
+        return new CommentTreeResult(parentComments, replies, allComments, likedCommentIds, hasNext, nextCursor);
+    }
+
+    private record CommentTreeResult(
+            List<Comment> parentComments,
+            List<Comment> replies,
+            List<Comment> allComments,
+            Set<Long> likedCommentIds,
+            boolean hasNext,
+            Long nextCursor
+    ) {}
+
+    private List<PostDetailDto.CommentDto> buildCommentTree(
+            List<Comment> parentComments,
+            List<Comment> replies,
+            Map<Long, AuthorInfo> authorMap,
+            Set<Long> likedCommentIds,
+            Set<Long> blockedUserIds) {
+
+        Map<Long, List<Comment>> repliesMap = replies.stream()
+                .collect(Collectors.groupingBy(Comment::getParentId));
+
+        Set<Long> parentIdsWithActiveReplies = replies.stream()
+                .filter(Comment::isActive)
+                .filter(c -> !blockedUserIds.contains(c.getUserId()))
+                .map(Comment::getParentId)
+                .collect(Collectors.toSet());
+
+        List<PostDetailDto.CommentDto> result = new ArrayList<>();
+
+        for (Comment parent : parentComments) {
+            boolean isBlocked = blockedUserIds.contains(parent.getUserId());
+            boolean isActive = parent.isActive();
+            boolean hasActiveReplies = parentIdsWithActiveReplies.contains(parent.getId());
+
+            if (isBlocked && isActive) {
+                continue;
+            }
+
+            if (!isActive && !hasActiveReplies) {
+                continue;
+            }
+
+            List<PostDetailDto.CommentDto> replyDtos = repliesMap.getOrDefault(parent.getId(), List.of()).stream()
+                    .filter(Comment::isActive)
+                    .filter(c -> !blockedUserIds.contains(c.getUserId()))
+                    .map(reply -> buildCommentDto(reply, authorMap, likedCommentIds, false, List.of()))
+                    .toList();
+
+            PostDetailDto.CommentDto parentDto = buildCommentDto(
+                    parent, authorMap, likedCommentIds, !isActive, replyDtos);
+
+            result.add(parentDto);
+        }
+
+        return result;
+    }
+
+    private PostDetailDto.CommentDto buildCommentDto(
+            Comment comment,
+            Map<Long, AuthorInfo> authorMap,
+            Set<Long> likedCommentIds,
+            boolean deleted,
+            List<PostDetailDto.CommentDto> replies) {
+
+        AuthorInfo author = authorMap.getOrDefault(comment.getUserId(), AuthorInfo.unknown(comment.getUserId()));
+
+        return PostDetailDto.CommentDto.builder()
+                .commentId(comment.getId())
+                .userId(deleted ? null : comment.getUserId())
+                .nickname(deleted ? null : author.getNickname())
+                .teamCode(deleted ? null : author.getTeamCode())
+                .content(deleted ? "삭제된 댓글입니다" : comment.getContent())
+                .likeCount(deleted ? 0 : comment.getLikeCount())
+                .depth(comment.getDepth())
+                .createdAt(comment.getCreatedAt())
+                .isLiked(deleted ? false : likedCommentIds.contains(comment.getId()))
+                .deleted(deleted)
+                .replies(replies)
+                .build();
     }
 }

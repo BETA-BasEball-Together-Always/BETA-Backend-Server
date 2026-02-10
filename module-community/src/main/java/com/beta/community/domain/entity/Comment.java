@@ -58,4 +58,12 @@ public class Comment extends BaseEntity {
         this.status = Status.DELETED;
         this.deletedAt = LocalDateTime.now();
     }
+
+    public boolean isActive() {
+        return this.status == Status.ACTIVE;
+    }
+
+    public boolean isOwnedBy(Long userId) {
+        return this.userId.equals(userId);
+    }
 }
