@@ -61,12 +61,12 @@ class CommentReadServiceTest {
         }
 
         @Test
-        @DisplayName("커서가 null이면 0으로 대체된다")
-        void cursorNullToZero() {
+        @DisplayName("커서가 null이면 Long.MAX_VALUE로 대체된다 (최신순 정렬)")
+        void cursorNullToMaxValue() {
             // given
             Long postId = 1L;
             int size = 20;
-            when(commentJpaRepository.findParentComments(eq(postId), eq(0L), any(PageRequest.class)))
+            when(commentJpaRepository.findParentComments(eq(postId), eq(Long.MAX_VALUE), any(PageRequest.class)))
                     .thenReturn(List.of());
 
             // when

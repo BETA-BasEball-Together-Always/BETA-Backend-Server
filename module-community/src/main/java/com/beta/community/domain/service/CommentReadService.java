@@ -18,7 +18,7 @@ public class CommentReadService {
     private final CommentJpaRepository commentJpaRepository;
 
     public List<Comment> findParentComments(Long postId, Long cursor, int size) {
-        Long effectiveCursor = (cursor != null) ? cursor : 0L;
+        Long effectiveCursor = (cursor != null) ? cursor : Long.MAX_VALUE;
         return commentJpaRepository.findParentComments(postId, effectiveCursor, PageRequest.of(0, size));
     }
 

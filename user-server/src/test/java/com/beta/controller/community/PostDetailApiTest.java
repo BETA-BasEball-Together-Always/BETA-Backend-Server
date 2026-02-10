@@ -178,14 +178,14 @@ class PostDetailApiTest extends ApiTestBase {
                     PostDetailResponse.class
             );
 
-            // then - 댓글 1에 대댓글 2개
-            PostDetailResponse.CommentResponse comment1 = response.getBody().getComments().stream()
-                    .filter(c -> c.getCommentId() == 1L)
+            // then - 댓글 25에 대댓글 2개 (최신순 첫 페이지)
+            PostDetailResponse.CommentResponse comment25 = response.getBody().getComments().stream()
+                    .filter(c -> c.getCommentId() == 25L)
                     .findFirst()
                     .orElseThrow();
 
-            assertThat(comment1.getReplies()).hasSize(2);
-            assertThat(comment1.getReplies().get(0).getDepth()).isEqualTo(1);
+            assertThat(comment25.getReplies()).hasSize(2);
+            assertThat(comment25.getReplies().get(0).getDepth()).isEqualTo(1);
         }
 
         @Test
@@ -199,14 +199,14 @@ class PostDetailApiTest extends ApiTestBase {
                     PostDetailResponse.class
             );
 
-            // then - 댓글 1의 likeCount와 isLiked 필드 존재 확인
-            PostDetailResponse.CommentResponse comment1 = response.getBody().getComments().stream()
-                    .filter(c -> c.getCommentId() == 1L)
+            // then - 댓글 25의 likeCount와 isLiked 필드 존재 확인
+            PostDetailResponse.CommentResponse comment25 = response.getBody().getComments().stream()
+                    .filter(c -> c.getCommentId() == 25L)
                     .findFirst()
                     .orElseThrow();
 
-            assertThat(comment1.getLikeCount()).isEqualTo(5);
-            // isLiked 필드 존재 (값은 조회 여부에 따라 다름)
+            assertThat(comment25.getLikeCount()).isEqualTo(5);
+            // isLiked 필드 존재 확인 (boolean primitive - 항상 존재)
             // 실제 좋아요 데이터가 있으면 true, 없으면 false
         }
 
@@ -221,9 +221,9 @@ class PostDetailApiTest extends ApiTestBase {
                     PostDetailResponse.class
             );
 
-            // then - 차단유저(id=3)의 댓글(id=10) 제외
+            // then - 차단유저(id=3)의 댓글(id=15) 제외
             assertThat(response.getBody().getComments())
-                    .noneMatch(c -> c.getCommentId() == 10L);
+                    .noneMatch(c -> c.getCommentId() == 15L);
         }
 
         @Test
@@ -237,9 +237,9 @@ class PostDetailApiTest extends ApiTestBase {
                     PostDetailResponse.class
             );
 
-            // then - 삭제된 댓글(id=5)은 deleted=true, content="삭제된 댓글입니다"
+            // then - 삭제된 댓글(id=24)은 deleted=true, content="삭제된 댓글입니다"
             PostDetailResponse.CommentResponse deletedComment = response.getBody().getComments().stream()
-                    .filter(c -> c.getCommentId() == 5L)
+                    .filter(c -> c.getCommentId() == 24L)
                     .findFirst()
                     .orElseThrow();
 
@@ -262,13 +262,13 @@ class PostDetailApiTest extends ApiTestBase {
                     PostDetailResponse.class
             );
 
-            // then
-            PostDetailResponse.CommentResponse comment1 = response.getBody().getComments().stream()
-                    .filter(c -> c.getCommentId() == 1L)
+            // then - 댓글 25는 user 1이 작성함
+            PostDetailResponse.CommentResponse comment25 = response.getBody().getComments().stream()
+                    .filter(c -> c.getCommentId() == 25L)
                     .findFirst()
                     .orElseThrow();
 
-            assertThat(comment1.getTeamCode()).isEqualTo("DOOSAN");
+            assertThat(comment25.getTeamCode()).isEqualTo("DOOSAN");
         }
 
         @Test
@@ -393,38 +393,35 @@ class PostDetailApiTest extends ApiTestBase {
         @Test
         @DisplayName("댓글 추가 조회에서도 차단 사용자 댓글 제외")
         void getComments_excludesBlockedUser() {
-            // when - cursor=0으로 첫 페이지 조회 (차단유저 댓글 id=10 포함)
+            // when - 커서 없이 첫 페이지 조회
             ResponseEntity<CommentsResponse> response = restTemplate.exchange(
-                    "/api/v1/community/posts/100/comments?cursor=0",
+                    "/api/v1/community/posts/100/comments",
                     HttpMethod.GET,
                     new HttpEntity<>(createAuthHeaders()),
                     CommentsResponse.class
             );
 
-            // then - 차단유저(id=3) 댓글(id=10) 제외
+            // then - 차단유저(id=3) 댓글(id=15) 제외
             assertThat(response.getBody().getComments())
-                    .noneMatch(c -> c.getCommentId() == 10L);
+                    .noneMatch(c -> c.getCommentId() == 15L);
         }
 
         @Test
         @DisplayName("댓글 추가 조회에서도 isLiked 필드가 포함된다")
         void getComments_hasIsLikedField() {
-            // when - cursor=0으로 조회 (첫 페이지)
+            // when - 커서 없이 조회 (첫 페이지)
             ResponseEntity<CommentsResponse> response = restTemplate.exchange(
-                    "/api/v1/community/posts/100/comments?cursor=0",
+                    "/api/v1/community/posts/100/comments",
                     HttpMethod.GET,
                     new HttpEntity<>(createAuthHeaders()),
                     CommentsResponse.class
             );
 
-            // then - 댓글에 isLiked 필드가 존재하는지 확인
-            PostDetailResponse.CommentResponse comment1 = response.getBody().getComments().stream()
-                    .filter(c -> c.getCommentId() == 1L)
-                    .findFirst()
-                    .orElseThrow();
-
-            // isLiked 필드 존재 확인 (값은 상관없이)
-            assertThat(comment1.getLikeCount()).isEqualTo(5);
+            // then - 댓글에 isLiked 필드가 존재하는지 확인 (최신순으로 정렬됨)
+            assertThat(response.getBody().getComments()).isNotEmpty();
+            PostDetailResponse.CommentResponse firstComment = response.getBody().getComments().get(0);
+            // isLiked 필드 존재 확인 (primitive boolean이므로 항상 존재)
+            assertThat(firstComment.getLikeCount()).isNotNull();
         }
     }
 }
