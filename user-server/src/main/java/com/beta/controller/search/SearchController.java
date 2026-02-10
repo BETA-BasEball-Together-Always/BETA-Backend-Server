@@ -145,7 +145,6 @@ public class SearchController {
             summary = "계정 검색",
             description = """
                             키워드로 계정(사용자)을 검색합니다.
-                            닉네임, 자기소개에서 검색합니다.
                             검색 완료 시 검색 기록이 저장됩니다.
                         """
     )
