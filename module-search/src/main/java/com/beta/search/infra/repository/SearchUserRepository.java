@@ -40,20 +40,17 @@ public class SearchUserRepository {
         return hits.getSearchHits();
     }
 
-    public List<SearchHit<UserDocument>> searchByNicknamePrefix(String keyword, SearchCursor cursor, int size) {
-        NativeQueryBuilder queryBuilder = NativeQuery.builder()
+    public List<SearchHit<UserDocument>> searchByNicknamePrefix(String keyword, int size) {
+        NativeQuery query = NativeQuery.builder()
                 .withQuery(q -> q
                         .matchPhrasePrefix(m -> m.field("nickname").query(keyword))
                 )
                 .withSort(s -> s.score(sc -> sc.order(SortOrder.Desc)))
                 .withSort(s -> s.field(f -> f.field("id").order(SortOrder.Asc)))
-                .withMaxResults(size);
+                .withMaxResults(size)
+                .build();
 
-        if (cursor != null && !cursor.isFirst()) {
-            queryBuilder.withSearchAfter(List.of(cursor.getScore(), cursor.getId()));
-        }
-
-        SearchHits<UserDocument> hits = elasticsearchOperations.search(queryBuilder.build(), UserDocument.class);
+        SearchHits<UserDocument> hits = elasticsearchOperations.search(query, UserDocument.class);
         return hits.getSearchHits();
     }
 

@@ -29,8 +29,9 @@ public class UserDocument {
     private String bio; // 검색 대상
 
     @Field(type = FieldType.Keyword)
-    private String teamName; // 표시용
+    private String teamCode;
 
     @Field(type = FieldType.Keyword)
-    private String teamProfileUrl; // 표시용
+    private String teamNameKr;
+
 }

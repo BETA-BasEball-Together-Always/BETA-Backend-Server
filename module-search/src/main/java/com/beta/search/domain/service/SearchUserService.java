@@ -13,13 +13,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SearchUserService {
 
+
     private final SearchUserRepository searchUserRepository;
 
-    public List<SearchHit<UserDocument>> search(String keyword, SearchCursor cursor, int size) {
-        return searchUserRepository.searchByKeyword(keyword, cursor, size);
+    public List<UserDocument> search(String keyword, SearchCursor cursor, int size) {
+        return searchUserRepository.searchByKeyword(keyword, cursor, size)
+                .stream()
+                .map(SearchHit::getContent)
+                .toList();
     }
 
-    public List<SearchHit<UserDocument>> searchWhileTyping(String keyword, SearchCursor cursor, int size) {
-        return searchUserRepository.searchByNicknamePrefix(keyword, cursor, size);
+    public List<UserDocument> searchWhileTyping(String keyword, int size) {
+        return searchUserRepository.searchByNicknamePrefix(keyword, size)
+                .stream()
+                .map(SearchHit::getContent)
+                .toList();
     }
 }

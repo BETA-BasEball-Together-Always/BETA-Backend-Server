@@ -31,18 +31,14 @@ public class SearchLogDocument {
     @Field(type = FieldType.Keyword)
     private String searchType;  // POST, USER, HASHTAG
 
-    @Field(type = FieldType.Integer)
-    private Integer resultCount;
-
     @Field(type = FieldType.Date)
     private LocalDateTime searchedAt; // 검색 시각, 인기 검색어 기간 필터용
 
-    public static SearchLogDocument create(String keyword, Long userId, String searchType, int resultCount) {
+    public static SearchLogDocument create(String keyword, Long userId, String searchType) {
         return SearchLogDocument.builder()
                 .keyword(keyword)
                 .userId(userId)
                 .searchType(searchType)
-                .resultCount(resultCount)
                 .searchedAt(LocalDateTime.now())
                 .build();
     }

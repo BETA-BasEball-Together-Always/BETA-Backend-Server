@@ -39,4 +39,5 @@ public class PostDocument {
 
     @Field(type = FieldType.Date)
     private LocalDateTime createdAt; // 정렬용
+
 }
