@@ -1,5 +1,6 @@
 package com.beta.controller.community.response;
 
+import com.beta.community.application.dto.PostDetailDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -42,6 +43,12 @@ public class PostDetailResponse {
     @Schema(description = "댓글 목록 (트리 구조)")
     private List<CommentResponse> comments;
 
+    @Schema(description = "다음 댓글 페이지 존재 여부", example = "true")
+    private boolean hasNextComments;
+
+    @Schema(description = "다음 댓글 페이지 커서 (다음 페이지 조회 시 사용)", example = "20")
+    private Long nextCommentCursor;
+
     @Getter
     @Builder
     @Schema(description = "댓글 정보")
@@ -50,13 +57,16 @@ public class PostDetailResponse {
         @Schema(description = "댓글 ID", example = "1")
         private Long commentId;
 
-        @Schema(description = "작성자 ID", example = "1")
+        @Schema(description = "작성자 ID (삭제된 댓글은 null)", example = "1")
         private Long userId;
 
-        @Schema(description = "작성자 닉네임", example = "야구팬123")
+        @Schema(description = "작성자 닉네임 (삭제된 댓글은 null)", example = "야구팬123")
         private String nickname;
 
-        @Schema(description = "댓글 내용", example = "동감합니다!")
+        @Schema(description = "작성자 응원팀 코드 (삭제된 댓글은 null)", example = "DOOSAN")
+        private String teamCode;
+
+        @Schema(description = "댓글 내용 (삭제된 댓글은 '삭제된 댓글입니다')", example = "동감합니다!")
         private String content;
 
         @Schema(description = "좋아요 수", example = "5")
@@ -68,7 +78,66 @@ public class PostDetailResponse {
         @Schema(description = "작성일시", example = "2025-01-01T12:30:00")
         private LocalDateTime createdAt;
 
+        @Schema(description = "내가 좋아요 눌렀는지 여부", example = "false")
+        private boolean isLiked;
+
+        @Schema(description = "삭제된 댓글인지 여부", example = "false")
+        private boolean deleted;
+
         @Schema(description = "답글 목록 (depth 0인 경우에만 존재)")
         private List<CommentResponse> replies;
+    }
+
+    public static PostDetailResponse from(PostDetailDto dto) {
+        return PostDetailResponse.builder()
+                .postId(dto.getPostId())
+                .content(dto.getContent())
+                .channel(dto.getChannel())
+                .images(dto.getImages().stream()
+                        .map(PostListResponse.ImageResponse::from)
+                        .toList())
+                .hashtags(dto.getHashtags())
+                .author(PostListResponse.AuthorInfo.builder()
+                        .userId(dto.getAuthor().getUserId())
+                        .nickname(dto.getAuthor().getNickname())
+                        .teamCode(dto.getAuthor().getTeamCode())
+                        .build())
+                .emotions(PostListResponse.EmotionCount.builder()
+                        .likeCount(dto.getLikeCount())
+                        .sadCount(dto.getSadCount())
+                        .funCount(dto.getFunCount())
+                        .hypeCount(dto.getHypeCount())
+                        .build())
+                .commentCount(dto.getCommentCount())
+                .createdAt(dto.getCreatedAt())
+                .comments(toCommentResponses(dto.getComments()))
+                .hasNextComments(dto.isHasNextComments())
+                .nextCommentCursor(dto.getNextCommentCursor())
+                .build();
+    }
+
+    private static List<CommentResponse> toCommentResponses(List<PostDetailDto.CommentDto> comments) {
+        if (comments == null) {
+            return List.of();
+        }
+        return comments.stream()
+                .map(PostDetailResponse::toCommentResponse)
+                .toList();
+    }
+
+    private static CommentResponse toCommentResponse(PostDetailDto.CommentDto dto) {
+        return CommentResponse.builder()
+                .commentId(dto.getCommentId())
+                .userId(dto.getUserId())
+                .nickname(dto.getNickname())
+                .teamCode(dto.getTeamCode())
+                .content(dto.getContent())
+                .likeCount(dto.getLikeCount())
+                .depth(dto.getDepth())
+                .createdAt(dto.getCreatedAt())
+                .isLiked(dto.isLiked())
+                .deleted(dto.isDeleted())
+                .replies(toCommentResponses(dto.getReplies()))
+                .build();
     }
 }

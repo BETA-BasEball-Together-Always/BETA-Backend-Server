@@ -1,6 +1,8 @@
 package com.beta.controller.community;
 
 import com.beta.community.application.CommunityFacadeService;
+import com.beta.community.application.dto.CommentsDto;
+import com.beta.community.application.dto.PostDetailDto;
 import com.beta.community.application.dto.PostDto;
 import com.beta.community.application.dto.PostListDto;
 import com.beta.community.application.dto.UpdatePostDto;
@@ -74,10 +76,11 @@ public class CommunityController {
     }
 
     @Operation(summary = "게시글 상세 조회", description = """
-            게시글 상세 정보와 댓글 목록을 조회합니다.
-            - commentSort=latest (기본값): 댓글을 작성순으로 정렬
-            - commentSort=popular: 댓글을 좋아요순으로 정렬
-            - 삭제된 댓글은 "삭제된 댓글입니다"로 표시되며, 답글이 없으면 표시하지 않습니다.""")
+            게시글 상세 정보와 댓글 첫 페이지(20개)를 조회합니다.
+            - 댓글은 작성순(오래된 순)으로 정렬됩니다.
+            - 추가 댓글은 GET /posts/{postId}/comments API로 조회하세요.
+            - 삭제된 댓글은 "삭제된 댓글입니다"로 표시되며, 답글이 없으면 표시하지 않습니다.
+            - 차단한 사용자의 댓글은 표시되지 않습니다.""")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "게시글 없음",
@@ -89,29 +92,42 @@ public class CommunityController {
     @GetMapping("/posts/{postId}")
     public ResponseEntity<PostDetailResponse> getPostDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long postId,
-            @RequestParam(defaultValue = "latest") String commentSort) {
+            @PathVariable Long postId) {
 
-        // TODO: 실제 구현 예정 (Step 6)
-        PostDetailResponse mock = PostDetailResponse.builder()
-                .postId(postId)
-                .content("mock content")
-                .channel("ALL")
-                .images(List.of())
-                .hashtags(List.of())
-                .author(PostListResponse.AuthorInfo.builder()
-                        .userId(1L)
-                        .nickname("mock")
-                        .teamCode("DOOSAN")
-                        .build())
-                .emotions(PostListResponse.EmotionCount.builder()
-                        .likeCount(0).sadCount(0).funCount(0).hypeCount(0)
-                        .build())
-                .commentCount(0)
-                .createdAt(LocalDateTime.now())
-                .comments(List.of())
-                .build();
-        return ResponseEntity.ok(mock);
+        PostDetailDto postDetailDto = communityFacadeService.getPostDetail(
+                userDetails.userId(),
+                postId
+        );
+
+        return ResponseEntity.ok(PostDetailResponse.from(postDetailDto));
+    }
+
+    @Operation(summary = "댓글 추가 조회", description = """
+            게시글의 댓글을 커서 기반으로 추가 조회합니다.
+            - 부모 댓글 기준 20개씩 조회합니다.
+            - 각 부모 댓글의 대댓글은 모두 포함됩니다.
+            - hasNext=true면 nextCursor로 다음 페이지를 조회하세요.""")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "게시글 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "COMMUNITY004", "message": "게시글을 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
+    })
+    @GetMapping("/posts/{postId}/comments")
+    public ResponseEntity<CommentsResponse> getComments(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long postId,
+            @RequestParam Long cursor) {
+
+        CommentsDto commentsDto = communityFacadeService.getComments(
+                userDetails.userId(),
+                postId,
+                cursor
+        );
+
+        return ResponseEntity.ok(CommentsResponse.from(commentsDto));
     }
 
     @Operation(summary = "게시글 작성", description = """
