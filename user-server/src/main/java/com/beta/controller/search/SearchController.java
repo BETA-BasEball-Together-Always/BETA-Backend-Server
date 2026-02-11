@@ -30,7 +30,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import com.beta.controller.community.response.MessageResponse;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -90,12 +89,12 @@ public class SearchController {
                             }))
     })
     @DeleteMapping("/my-logs/{logId}")
-    public ResponseEntity<MessageResponse> deleteMySearchLog(
+    public ResponseEntity<Void> deleteMySearchLog(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "검색 기록 ID") @PathVariable String logId
     ) {
         searchAppService.deleteMySearchLog(userDetails.userId(), logId);
-        return ResponseEntity.ok(MessageResponse.of("검색 기록이 삭제되었습니다."));
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(
