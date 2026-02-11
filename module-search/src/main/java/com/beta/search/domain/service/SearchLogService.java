@@ -26,6 +26,10 @@ public class SearchLogService {
                 .toList();
     }
 
+    public void deleteByIdAndUserId(String id, Long userId) {
+        searchLogRepository.deleteByIdAndUserId(id, userId);
+    }
+
     public List<String> searchWhileTyping(String keyword, int size) {
         return searchLogRepository.searchByKeywordPrefix(keyword, size);
     }

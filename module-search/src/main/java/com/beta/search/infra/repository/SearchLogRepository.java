@@ -7,6 +7,7 @@ import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
 import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
 import com.beta.search.domain.document.SearchLogDocument;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -43,6 +44,19 @@ public class SearchLogRepository {
                 elasticsearchOperations.search(queryBuilder.build(), SearchLogDocument.class);
 
         return hits.getSearchHits();
+    }
+
+    public void deleteByIdAndUserId(String id, Long userId) {
+        NativeQuery query = NativeQuery.builder()
+                .withQuery(q -> q
+                        .bool(b -> b
+                                .must(m -> m.term(t -> t.field("_id").value(id)))
+                                .must(m -> m.term(t -> t.field("userId").value(userId)))
+                        )
+                )
+                .build();
+
+        elasticsearchOperations.delete(DeleteQuery.builder(query).build(), SearchLogDocument.class);
     }
 
     public List<String> searchByKeywordPrefix(String keyword, int size) {

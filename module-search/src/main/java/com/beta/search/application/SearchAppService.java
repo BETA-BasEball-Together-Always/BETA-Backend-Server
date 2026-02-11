@@ -21,4 +21,8 @@ public class SearchAppService {
         );
         return new SearchMyLogResult(items);
     }
+
+    public void deleteMySearchLog(Long userId, String logId) {
+        searchLogService.deleteByIdAndUserId(logId, userId);
+    }
 }
