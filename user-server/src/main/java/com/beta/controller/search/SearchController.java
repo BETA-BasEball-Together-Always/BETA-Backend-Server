@@ -66,8 +66,7 @@ public class SearchController {
     public ResponseEntity<SearchMyLogsResponse> getMySearchLogs(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        List<String> keywords = searchAppService.findMyRecentKeywords(userDetails.userId());
-        return ResponseEntity.ok(SearchMyLogsResponse.of(keywords));
+        return ResponseEntity.ok(SearchMyLogsResponse.from(searchAppService.findMyRecentKeywords(userDetails.userId())));
     }
 
     @Operation(

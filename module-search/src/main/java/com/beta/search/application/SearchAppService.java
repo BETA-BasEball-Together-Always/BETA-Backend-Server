@@ -1,5 +1,7 @@
 package com.beta.search.application;
 
+import com.beta.search.application.dto.SearchMyLogResult;
+import com.beta.search.application.dto.SearchMyLogResult.SearchMyLogItem;
 import com.beta.search.domain.service.SearchLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,7 +15,10 @@ public class SearchAppService {
 
     private final SearchLogService searchLogService;
 
-    public List<String> findMyRecentKeywords(Long userId) {
-        return searchLogService.findRecentKeywordsByUser(userId, RECENT_KEYWORDS_SIZE);
+    public SearchMyLogResult findMyRecentKeywords(Long userId) {
+        List<SearchMyLogItem> items = SearchMyLogItem.from(
+                searchLogService.findRecentKeywordsByUser(userId, RECENT_KEYWORDS_SIZE)
+        );
+        return new SearchMyLogResult(items);
     }
 }

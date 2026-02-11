@@ -9,6 +9,12 @@ public record SearchHashtagResponse(
         boolean hasNext
 ) {
 
+    public record HashtagItem(
+            Long hashtagId,
+            String tagName,
+            Long usageCount
+    ) {}
+
     public static SearchHashtagResponse from(SearchHashtagResult result) {
         List<HashtagItem> items = result.hashtags().stream()
                 .map(item -> new HashtagItem(
@@ -21,9 +27,4 @@ public record SearchHashtagResponse(
         return new SearchHashtagResponse(items, result.hasNext());
     }
 
-    public record HashtagItem(
-            Long hashtagId,
-            String tagName,
-            Long usageCount
-    ) {}
 }

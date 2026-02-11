@@ -1,22 +1,21 @@
 package com.beta.search.infra.repository;
 
+import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
 import co.elastic.clients.elasticsearch._types.aggregations.TermsAggregation;
-import co.elastic.clients.json.JsonData;
 import com.beta.search.domain.document.SearchLogDocument;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 
 @Repository
@@ -24,12 +23,11 @@ import java.util.List;
 public class SearchLogRepository {
 
     private final ElasticsearchOperations elasticsearchOperations;
-
     public void save(SearchLogDocument document) {
         elasticsearchOperations.save(document);
     }
 
-    public List<String> findRecentKeywordsByUser(Long userId, int size) {
+    public List<SearchHit<SearchLogDocument>> findRecentKeywordsByUser(Long userId, int size) {
 
         NativeQueryBuilder queryBuilder = NativeQuery.builder()
                 .withQuery(q -> q
@@ -38,16 +36,13 @@ public class SearchLogRepository {
                 .withSort(s -> s
                         .field(f -> f.field("searchedAt").order(SortOrder.Desc))
                 )
+                .withFieldCollapse(FieldCollapse.of(fc -> fc.field("keyword")))
                 .withMaxResults(size);
 
         SearchHits<SearchLogDocument> hits =
                 elasticsearchOperations.search(queryBuilder.build(), SearchLogDocument.class);
 
-        return hits.getSearchHits()
-                .stream()
-                .map(hit -> hit.getContent().getKeyword())
-                .distinct()
-                .toList();
+        return hits.getSearchHits();
     }
 
     public List<String> searchByKeywordPrefix(String keyword, int size) {
