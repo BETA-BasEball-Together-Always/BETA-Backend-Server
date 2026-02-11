@@ -92,7 +92,7 @@ public class SearchController {
     @DeleteMapping("/my-logs/{logId}")
     public ResponseEntity<MessageResponse> deleteMySearchLog(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable String logId
+            @Parameter(description = "검색 기록 ID") @PathVariable String logId
     ) {
         searchAppService.deleteMySearchLog(userDetails.userId(), logId);
         return ResponseEntity.ok(MessageResponse.of("검색 기록이 삭제되었습니다."));
