@@ -11,6 +11,7 @@ import com.beta.controller.community.response.*;
 import com.beta.core.response.ErrorResponse;
 import com.beta.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -43,7 +44,9 @@ public class CommunityController {
             - sort=latest (기본값): 최신순, cursor 파라미터 사용
             - sort=popular: 인기순, offset 파라미터 사용""")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PostListResponse.class))),
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -57,9 +60,13 @@ public class CommunityController {
     @GetMapping("/posts")
     public ResponseEntity<PostListResponse> getPostList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "페이지 커서 (최신순 정렬 시), 첫 조회 시 생략")
             @RequestParam(required = false) Long cursor,
+            @Parameter(description = "페이지 오프셋 (인기순 정렬 시), 기본값 0")
             @RequestParam(required = false) Integer offset,
+            @Parameter(description = "채널 구분. 생략 시 내 팀 채널, 지정 시 전체 채널")
             @RequestParam(required = false) String channel,
+            @Parameter(description = "정렬 방식: latest(최신순, 기본값), popular(인기순)")
             @RequestParam(defaultValue = "latest") String sort) {
 
         String effectiveChannel = (channel != null) ? "ALL" : userDetails.teamCode();
@@ -82,7 +89,9 @@ public class CommunityController {
             - 삭제된 댓글은 "삭제된 댓글입니다"로 표시되며, 답글이 없으면 표시하지 않습니다.
             - 차단한 사용자의 댓글은 표시되지 않습니다.""")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PostDetailResponse.class))),
             @ApiResponse(responseCode = "404", description = "게시글 없음",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -92,7 +101,7 @@ public class CommunityController {
     @GetMapping("/posts/{postId}")
     public ResponseEntity<PostDetailResponse> getPostDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long postId) {
+            @Parameter(description = "게시글 ID") @PathVariable Long postId) {
 
         PostDetailDto postDetailDto = communityFacadeService.getPostDetail(
                 userDetails.userId(),
@@ -108,7 +117,9 @@ public class CommunityController {
             - 각 부모 댓글의 대댓글은 모두 포함됩니다.
             - hasNext=true면 nextCursor로 다음 페이지를 조회하세요.""")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CommentsResponse.class))),
             @ApiResponse(responseCode = "404", description = "게시글 없음",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -118,7 +129,8 @@ public class CommunityController {
     @GetMapping("/posts/{postId}/comments")
     public ResponseEntity<CommentsResponse> getComments(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long postId,
+            @Parameter(description = "게시글 ID") @PathVariable Long postId,
+            @Parameter(description = "댓글 커서 (다음 페이지 조회 시)")
             @RequestParam(required = false) Long cursor) {
 
         CommentsDto commentsDto = communityFacadeService.getComments(
@@ -138,7 +150,9 @@ public class CommunityController {
             - 해시태그: 최대 5개, 각 20자 이하
             - 30초 내 동일 내용 게시글 중복 방지""")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "작성 성공"),
+            @ApiResponse(responseCode = "201", description = "작성 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CreatePostResponse.class))),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 이미지 검증 실패",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -184,7 +198,9 @@ public class CommunityController {
             - 새 이미지 추가: newImages에 파일 첨부
             - 최종 이미지 개수가 5개를 초과하면 실패합니다.""")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "200", description = "수정 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CreatePostResponse.class))),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 이미지 검증 실패",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -213,7 +229,7 @@ public class CommunityController {
     @PutMapping(value = "/posts/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CreatePostResponse> updatePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long postId,
+            @Parameter(description = "게시글 ID") @PathVariable Long postId,
             @Valid @ModelAttribute UpdatePostRequest request) {
 
         PostDto postDto = communityFacadeService.updatePost(
@@ -234,7 +250,9 @@ public class CommunityController {
             - 소프트 삭제 방식: 실제로 DB에서 삭제되지 않고 상태만 DELETED로 변경됩니다.
             - 관련 이미지, 해시태그도 함께 비활성화됩니다.""")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "삭제 성공"),
+            @ApiResponse(responseCode = "200", description = "삭제 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponse.class))),
             @ApiResponse(responseCode = "403", description = "게시글 권한 없음",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -249,7 +267,7 @@ public class CommunityController {
     @DeleteMapping("/posts/{postId}")
     public ResponseEntity<MessageResponse> deletePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long postId) {
+            @Parameter(description = "게시글 ID") @PathVariable Long postId) {
 
         communityFacadeService.deletePost(userDetails.userId(), postId);
         return ResponseEntity.ok(MessageResponse.of("게시글이 삭제되었습니다."));
@@ -264,7 +282,9 @@ public class CommunityController {
             - 다른 감정으로 변경: 이전 감정 제거 후 새 감정 추가
             - 응답의 toggled=true: 감정이 추가됨, false: 감정이 제거됨""")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "토글 성공"),
+            @ApiResponse(responseCode = "200", description = "토글 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = EmotionResponse.class))),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -279,7 +299,7 @@ public class CommunityController {
     @PostMapping("/posts/{postId}/emotions")
     public ResponseEntity<EmotionResponse> toggleEmotion(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long postId,
+            @Parameter(description = "게시글 ID") @PathVariable Long postId,
             @Valid @RequestBody EmotionRequest request) {
 
         // TODO: 실제 구현 예정 (Step 7)
@@ -303,7 +323,9 @@ public class CommunityController {
             - 답글의 답글(depth=2)은 지원하지 않습니다.
             - 30초 내 동일 내용 댓글 중복 방지""")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "작성 성공"),
+            @ApiResponse(responseCode = "201", description = "작성 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CommentCreateResponse.class))),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패 / 답글 깊이 초과",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -327,7 +349,7 @@ public class CommunityController {
     @PostMapping("/posts/{postId}/comments")
     public ResponseEntity<CommentCreateResponse> createComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long postId,
+            @Parameter(description = "게시글 ID") @PathVariable Long postId,
             @Valid @RequestBody CreateCommentRequest request) {
 
         // TODO: 실제 구현 예정 (Step 8)
@@ -345,7 +367,9 @@ public class CommunityController {
 
     @Operation(summary = "댓글 수정", description = "본인이 작성한 댓글의 내용을 수정합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "200", description = "수정 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponse.class))),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -365,7 +389,7 @@ public class CommunityController {
     @PutMapping("/comments/{commentId}")
     public ResponseEntity<MessageResponse> updateComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long commentId,
+            @Parameter(description = "댓글 ID") @PathVariable Long commentId,
             @Valid @RequestBody UpdateCommentRequest request) {
 
         // TODO: 실제 구현 예정 (Step 8)
@@ -378,7 +402,9 @@ public class CommunityController {
             - 답글이 있는 댓글은 "삭제된 댓글입니다"로 표시됩니다.
             - 답글이 없는 댓글은 목록에서 완전히 숨겨집니다.""")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "삭제 성공"),
+            @ApiResponse(responseCode = "200", description = "삭제 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponse.class))),
             @ApiResponse(responseCode = "403", description = "댓글 권한 없음",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -393,7 +419,7 @@ public class CommunityController {
     @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<MessageResponse> deleteComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long commentId) {
+            @Parameter(description = "댓글 ID") @PathVariable Long commentId) {
 
         // TODO: 실제 구현 예정 (Step 8)
         return ResponseEntity.ok(MessageResponse.of("댓글이 삭제되었습니다."));
@@ -405,7 +431,9 @@ public class CommunityController {
             - 이미 좋아요했으면 제거
             - 응답의 liked=true: 좋아요 추가됨, false: 좋아요 제거됨""")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "토글 성공"),
+            @ApiResponse(responseCode = "200", description = "토글 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CommentLikeResponse.class))),
             @ApiResponse(responseCode = "404", description = "댓글 없음",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -415,7 +443,7 @@ public class CommunityController {
     @PostMapping("/comments/{commentId}/like")
     public ResponseEntity<CommentLikeResponse> toggleCommentLike(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long commentId) {
+            @Parameter(description = "댓글 ID") @PathVariable Long commentId) {
 
         // TODO: 실제 구현 예정 (Step 8)
         CommentLikeResponse mock = CommentLikeResponse.builder()
@@ -433,7 +461,9 @@ public class CommunityController {
             - 차단된 사용자의 게시글은 목록에서 필터링됩니다.
             - 자기 자신은 차단할 수 없습니다.""")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "차단 성공"),
+            @ApiResponse(responseCode = "200", description = "차단 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = BlockResponse.class))),
             @ApiResponse(responseCode = "400", description = "자기 자신 차단 불가",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -448,7 +478,7 @@ public class CommunityController {
     @PostMapping("/users/{userId}/block")
     public ResponseEntity<BlockResponse> blockUser(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long userId) {
+            @Parameter(description = "차단할 사용자 ID") @PathVariable Long userId) {
 
         communityFacadeService.blockUser(userDetails.userId(), userId);
         return ResponseEntity.ok(BlockResponse.builder()
@@ -460,7 +490,9 @@ public class CommunityController {
 
     @Operation(summary = "사용자 차단 해제", description = "차단했던 사용자의 차단을 해제합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "차단 해제 성공"),
+            @ApiResponse(responseCode = "200", description = "차단 해제 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = BlockResponse.class))),
             @ApiResponse(responseCode = "404", description = "차단 정보 없음",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -470,7 +502,7 @@ public class CommunityController {
     @DeleteMapping("/users/{userId}/block")
     public ResponseEntity<BlockResponse> unblockUser(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long userId) {
+            @Parameter(description = "차단 해제할 사용자 ID") @PathVariable Long userId) {
 
         communityFacadeService.unblockUser(userDetails.userId(), userId);
         return ResponseEntity.ok(BlockResponse.builder()

@@ -1,6 +1,7 @@
 package com.beta.controller.community.response;
 
 import com.beta.community.application.dto.PostDetailDto;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,7 +23,8 @@ public class PostDetailResponse {
     @Schema(description = "채널 (ALL: 전체, 팀코드: 팀 채널)", example = "DOOSAN")
     private String channel;
 
-    @Schema(description = "이미지 목록 (id, url 포함)")
+    @ArraySchema(arraySchema = @Schema(description = "이미지 목록 (id, url 포함)"),
+            schema = @Schema(implementation = PostListResponse.ImageResponse.class))
     private List<PostListResponse.ImageResponse> images;
 
     @Schema(description = "해시태그 목록", example = "[\"야구\", \"두산\"]")
@@ -40,7 +42,8 @@ public class PostDetailResponse {
     @Schema(description = "작성일시", example = "2025-01-01T12:00:00")
     private LocalDateTime createdAt;
 
-    @Schema(description = "댓글 목록 (트리 구조)")
+    @ArraySchema(arraySchema = @Schema(description = "댓글 목록 (트리 구조)"),
+            schema = @Schema(implementation = CommentResponse.class))
     private List<CommentResponse> comments;
 
     @Schema(description = "다음 댓글 페이지 존재 여부", example = "true")
@@ -84,7 +87,8 @@ public class PostDetailResponse {
         @Schema(description = "삭제된 댓글인지 여부", example = "false")
         private boolean deleted;
 
-        @Schema(description = "답글 목록 (depth 0인 경우에만 존재)")
+        @ArraySchema(arraySchema = @Schema(description = "답글 목록 (depth 0인 경우에만 존재)"),
+                schema = @Schema(implementation = CommentResponse.class))
         private List<CommentResponse> replies;
     }
 

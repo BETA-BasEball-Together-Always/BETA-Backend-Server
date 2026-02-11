@@ -2,6 +2,7 @@ package com.beta.controller.community.response;
 
 import com.beta.community.application.dto.CommentsDto;
 import com.beta.community.application.dto.PostDetailDto;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,7 +14,8 @@ import java.util.List;
 @Schema(description = "댓글 목록 응답")
 public class CommentsResponse {
 
-    @Schema(description = "댓글 목록 (트리 구조)")
+    @ArraySchema(arraySchema = @Schema(description = "댓글 목록 (트리 구조)"),
+            schema = @Schema(implementation = PostDetailResponse.CommentResponse.class))
     private List<PostDetailResponse.CommentResponse> comments;
 
     @Schema(description = "다음 페이지 존재 여부", example = "true")

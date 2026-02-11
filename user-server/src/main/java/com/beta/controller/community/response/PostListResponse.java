@@ -2,6 +2,7 @@ package com.beta.controller.community.response;
 
 import com.beta.community.application.dto.ImageInfo;
 import com.beta.community.application.dto.PostListDto;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,7 +15,8 @@ import java.util.List;
 @Schema(description = "게시글 목록 응답")
 public class PostListResponse {
 
-    @Schema(description = "게시글 목록")
+    @ArraySchema(arraySchema = @Schema(description = "게시글 목록"),
+            schema = @Schema(implementation = PostSummary.class))
     private List<PostSummary> posts;
 
     @Schema(description = "다음 페이지 존재 여부", example = "true")
@@ -49,7 +51,8 @@ public class PostListResponse {
         @Schema(description = "채널 (ALL: 전체, 팀코드: 팀 채널)", example = "DOOSAN")
         private String channel;
 
-        @Schema(description = "이미지 목록 (id, url 포함)")
+        @ArraySchema(arraySchema = @Schema(description = "이미지 목록 (id, url 포함)"),
+                schema = @Schema(implementation = ImageResponse.class))
         private List<ImageResponse> images;
 
         @Schema(description = "해시태그 목록", example = "[\"야구\", \"두산\"]")
