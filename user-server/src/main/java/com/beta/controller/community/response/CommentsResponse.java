@@ -2,7 +2,6 @@ package com.beta.controller.community.response;
 
 import com.beta.community.application.dto.CommentsDto;
 import com.beta.community.application.dto.PostDetailDto;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,8 +13,7 @@ import java.util.List;
 @Schema(description = "댓글 목록 응답")
 public class CommentsResponse {
 
-    @ArraySchema(arraySchema = @Schema(description = "댓글 목록 (트리 구조)"),
-            schema = @Schema(implementation = PostDetailResponse.CommentResponse.class))
+    @Schema(description = "댓글 목록 (트리 구조)")
     private List<PostDetailResponse.CommentResponse> comments;
 
     @Schema(description = "다음 페이지 존재 여부", example = "true")
@@ -53,7 +51,31 @@ public class CommentsResponse {
                 .createdAt(dto.getCreatedAt())
                 .isLiked(dto.isLiked())
                 .deleted(dto.isDeleted())
-                .replies(toCommentResponses(dto.getReplies()))
+                .replies(toReplyResponses(dto.getReplies()))
+                .build();
+    }
+
+    private static List<PostDetailResponse.ReplyResponse> toReplyResponses(List<PostDetailDto.CommentDto> replies) {
+        if (replies == null) {
+            return List.of();
+        }
+        return replies.stream()
+                .map(CommentsResponse::toReplyResponse)
+                .toList();
+    }
+
+    private static PostDetailResponse.ReplyResponse toReplyResponse(PostDetailDto.CommentDto dto) {
+        return PostDetailResponse.ReplyResponse.builder()
+                .commentId(dto.getCommentId())
+                .userId(dto.getUserId())
+                .nickname(dto.getNickname())
+                .teamCode(dto.getTeamCode())
+                .content(dto.getContent())
+                .likeCount(dto.getLikeCount())
+                .depth(dto.getDepth())
+                .createdAt(dto.getCreatedAt())
+                .isLiked(dto.isLiked())
+                .deleted(dto.isDeleted())
                 .build();
     }
 }

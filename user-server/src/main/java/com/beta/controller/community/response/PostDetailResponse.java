@@ -1,7 +1,6 @@
 package com.beta.controller.community.response;
 
 import com.beta.community.application.dto.PostDetailDto;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,8 +22,7 @@ public class PostDetailResponse {
     @Schema(description = "채널 (ALL: 전체, 팀코드: 팀 채널)", example = "DOOSAN")
     private String channel;
 
-    @ArraySchema(arraySchema = @Schema(description = "이미지 목록 (id, url 포함)"),
-            schema = @Schema(implementation = PostListResponse.ImageResponse.class))
+    @Schema(description = "이미지 목록 (id, url 포함)")
     private List<PostListResponse.ImageResponse> images;
 
     @Schema(description = "해시태그 목록", example = "[\"야구\", \"두산\"]")
@@ -42,8 +40,7 @@ public class PostDetailResponse {
     @Schema(description = "작성일시", example = "2025-01-01T12:00:00")
     private LocalDateTime createdAt;
 
-    @ArraySchema(arraySchema = @Schema(description = "댓글 목록 (트리 구조)"),
-            schema = @Schema(implementation = CommentResponse.class))
+    @Schema(description = "댓글 목록 (트리 구조)")
     private List<CommentResponse> comments;
 
     @Schema(description = "다음 댓글 페이지 존재 여부", example = "true")
@@ -87,9 +84,44 @@ public class PostDetailResponse {
         @Schema(description = "삭제된 댓글인지 여부", example = "false")
         private boolean deleted;
 
-        @ArraySchema(arraySchema = @Schema(description = "답글 목록 (depth 0인 경우에만 존재)"),
-                schema = @Schema(implementation = CommentResponse.class))
-        private List<CommentResponse> replies;
+        @Schema(description = "답글 목록 (depth 0인 경우에만 존재)")
+        private List<ReplyResponse> replies;
+    }
+
+    @Getter
+    @Builder
+    @Schema(description = "답글 정보")
+    public static class ReplyResponse {
+
+        @Schema(description = "댓글 ID", example = "2")
+        private Long commentId;
+
+        @Schema(description = "작성자 ID (삭제된 댓글은 null)", example = "1")
+        private Long userId;
+
+        @Schema(description = "작성자 닉네임 (삭제된 댓글은 null)", example = "야구팬456")
+        private String nickname;
+
+        @Schema(description = "작성자 응원팀 코드 (삭제된 댓글은 null)", example = "DOOSAN")
+        private String teamCode;
+
+        @Schema(description = "댓글 내용 (삭제된 댓글은 '삭제된 댓글입니다')", example = "저도요!")
+        private String content;
+
+        @Schema(description = "좋아요 수", example = "3")
+        private Integer likeCount;
+
+        @Schema(description = "댓글 깊이 (답글은 항상 1)", example = "1")
+        private Integer depth;
+
+        @Schema(description = "작성일시", example = "2025-01-01T12:35:00")
+        private LocalDateTime createdAt;
+
+        @Schema(description = "내가 좋아요 눌렀는지 여부", example = "false")
+        private boolean isLiked;
+
+        @Schema(description = "삭제된 댓글인지 여부", example = "false")
+        private boolean deleted;
     }
 
     public static PostDetailResponse from(PostDetailDto dto) {
@@ -141,7 +173,31 @@ public class PostDetailResponse {
                 .createdAt(dto.getCreatedAt())
                 .isLiked(dto.isLiked())
                 .deleted(dto.isDeleted())
-                .replies(toCommentResponses(dto.getReplies()))
+                .replies(toReplyResponses(dto.getReplies()))
+                .build();
+    }
+
+    private static List<ReplyResponse> toReplyResponses(List<PostDetailDto.CommentDto> replies) {
+        if (replies == null) {
+            return List.of();
+        }
+        return replies.stream()
+                .map(PostDetailResponse::toReplyResponse)
+                .toList();
+    }
+
+    private static ReplyResponse toReplyResponse(PostDetailDto.CommentDto dto) {
+        return ReplyResponse.builder()
+                .commentId(dto.getCommentId())
+                .userId(dto.getUserId())
+                .nickname(dto.getNickname())
+                .teamCode(dto.getTeamCode())
+                .content(dto.getContent())
+                .likeCount(dto.getLikeCount())
+                .depth(dto.getDepth())
+                .createdAt(dto.getCreatedAt())
+                .isLiked(dto.isLiked())
+                .deleted(dto.isDeleted())
                 .build();
     }
 }
