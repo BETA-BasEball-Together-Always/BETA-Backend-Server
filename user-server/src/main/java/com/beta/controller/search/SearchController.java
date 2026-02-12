@@ -30,8 +30,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -66,8 +69,32 @@ public class SearchController {
     public ResponseEntity<SearchMyLogsResponse> getMySearchLogs(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        List<String> keywords = searchAppService.findMyRecentKeywords(userDetails.userId());
-        return ResponseEntity.ok(SearchMyLogsResponse.of(keywords));
+        return ResponseEntity.ok(SearchMyLogsResponse.from(searchAppService.findMyRecentKeywords(userDetails.userId())));
+    }
+
+    @Operation(
+            summary = "검색 기록 삭제",
+            description = "로그인한 사용자의 특정 검색 기록을 삭제합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "삭제 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            }))
+    })
+    @DeleteMapping("/my-logs/{logId}")
+    public ResponseEntity<Void> deleteMySearchLog(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "검색 기록 ID") @PathVariable String logId
+    ) {
+        searchAppService.deleteMySearchLog(userDetails.userId(), logId);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(

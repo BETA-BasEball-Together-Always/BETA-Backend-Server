@@ -3,6 +3,7 @@ package com.beta.search.domain.service;
 import com.beta.search.domain.document.SearchLogDocument;
 import com.beta.search.infra.repository.SearchLogRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,8 +19,15 @@ public class SearchLogService {
         searchLogRepository.save(log);
     }
 
-    public List<String> findRecentKeywordsByUser(Long userId, int size) {
-        return searchLogRepository.findRecentKeywordsByUser(userId, size);
+    public List<SearchLogDocument> findRecentKeywordsByUser(Long userId, int size) {
+        return searchLogRepository.findRecentKeywordsByUser(userId, size)
+                .stream()
+                .map(SearchHit::getContent)
+                .toList();
+    }
+
+    public void deleteByIdAndUserId(String id, Long userId) {
+        searchLogRepository.deleteByIdAndUserId(id, userId);
     }
 
     public List<String> searchWhileTyping(String keyword, int size) {
