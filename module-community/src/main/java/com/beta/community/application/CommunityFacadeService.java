@@ -2,12 +2,15 @@ package com.beta.community.application;
 
 import com.beta.community.application.dto.CommentsDto;
 import com.beta.community.application.dto.CreatePostDto;
+import com.beta.community.application.dto.EmotionToggleDto;
 import com.beta.community.application.dto.ImageInfo;
 import com.beta.community.application.dto.PostDetailDto;
 import com.beta.community.application.dto.PostDto;
 import com.beta.community.application.dto.PostListDto;
 import com.beta.community.application.dto.UpdatePostDto;
 import com.beta.community.domain.entity.Comment;
+import com.beta.community.domain.entity.Emotion;
+import com.beta.community.domain.entity.Emotion.EmotionType;
 import com.beta.community.domain.entity.Post;
 import com.beta.community.domain.entity.PostHashtag;
 import com.beta.community.domain.entity.PostImage;
@@ -33,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,6 +54,8 @@ public class CommunityFacadeService {
     private final UserBlockReadService userBlockReadService;
     private final UserBlockWriteService userBlockWriteService;
     private final CommentReadService commentReadService;
+    private final EmotionReadService emotionReadService;
+    private final EmotionWriteService emotionWriteService;
     private final PostQueryRepository postQueryRepository;
     private final PostImageJpaRepository postImageJpaRepository;
     private final PostHashtagJpaRepository postHashtagJpaRepository;
@@ -179,6 +185,50 @@ public class CommunityFacadeService {
     public void unblockUser(Long blockerId, Long blockedId) {
         UserBlock userBlock = userBlockReadService.findByBlockerAndBlocked(blockerId, blockedId);
         userBlockWriteService.delete(userBlock);
+    }
+
+    @Transactional
+    public EmotionToggleDto toggleEmotion(Long userId, Long postId, String emotionTypeStr) {
+        EmotionType newEmotionType = EmotionType.valueOf(emotionTypeStr);
+        Optional<Emotion> existingEmotion = emotionReadService.findByUserIdAndPostId(userId, postId);
+
+        boolean toggled;
+        if (existingEmotion.isEmpty()) {
+            Emotion emotion = Emotion.builder()
+                    .userId(userId)
+                    .postId(postId)
+                    .emotionType(newEmotionType)
+                    .build();
+            emotionWriteService.save(emotion);
+            emotionWriteService.incrementEmotionCount(postId, newEmotionType);
+            toggled = true;
+        } else {
+            Emotion currentEmotion = existingEmotion.get();
+            EmotionType currentType = currentEmotion.getEmotionType();
+
+            if (currentType == newEmotionType) {
+                emotionWriteService.delete(userId, postId);
+                emotionWriteService.decrementEmotionCount(postId, currentType);
+                toggled = false;
+            } else {
+                currentEmotion.changeEmotionType(newEmotionType);
+                emotionWriteService.save(currentEmotion);
+                emotionWriteService.decrementEmotionCount(postId, currentType);
+                emotionWriteService.incrementEmotionCount(postId, newEmotionType);
+                toggled = true;
+            }
+        }
+
+        Post post = postReadService.findActiveById(postId);
+        return EmotionToggleDto.builder()
+                .postId(postId)
+                .emotionType(emotionTypeStr)
+                .toggled(toggled)
+                .likeCount(post.getLikeCount())
+                .sadCount(post.getSadCount())
+                .funCount(post.getFunCount())
+                .hypeCount(post.getHypeCount())
+                .build();
     }
 
     @Transactional(readOnly = true)
