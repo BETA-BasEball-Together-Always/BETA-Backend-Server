@@ -2,6 +2,7 @@ package com.beta.controller.community;
 
 import com.beta.community.application.CommunityFacadeService;
 import com.beta.community.application.dto.CommentsDto;
+import com.beta.community.application.dto.EmotionToggleDto;
 import com.beta.community.application.dto.PostDetailDto;
 import com.beta.community.application.dto.PostDto;
 import com.beta.community.application.dto.PostListDto;
@@ -302,16 +303,23 @@ public class CommunityController {
             @Parameter(description = "게시글 ID") @PathVariable Long postId,
             @Valid @RequestBody EmotionRequest request) {
 
-        // TODO: 실제 구현 예정 (Step 7)
-        EmotionResponse mock = EmotionResponse.builder()
-                .postId(postId)
-                .emotionType(request.getEmotionType())
-                .toggled(true)
+        EmotionToggleDto result = communityFacadeService.toggleEmotion(
+                userDetails.userId(),
+                postId,
+                request.getEmotionType()
+        );
+
+        return ResponseEntity.ok(EmotionResponse.builder()
+                .postId(result.getPostId())
+                .emotionType(result.getEmotionType())
+                .toggled(result.isToggled())
                 .emotions(PostListResponse.EmotionCount.builder()
-                        .likeCount(0).sadCount(0).funCount(0).hypeCount(0)
+                        .likeCount(result.getLikeCount())
+                        .sadCount(result.getSadCount())
+                        .funCount(result.getFunCount())
+                        .hypeCount(result.getHypeCount())
                         .build())
-                .build();
-        return ResponseEntity.ok(mock);
+                .build());
     }
 
     // ==================== 댓글 API ====================
