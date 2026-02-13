@@ -1,6 +1,7 @@
 package com.beta.community.application;
 
 import com.beta.community.application.dto.CommentsDto;
+import com.beta.community.application.dto.CommentTreeResult;
 import com.beta.community.application.dto.CreatePostDto;
 import com.beta.community.application.dto.EmotionToggleDto;
 import com.beta.community.application.dto.ImageInfo;
@@ -322,15 +323,15 @@ public class CommunityFacadeService {
 
         List<Long> allUserIds = Stream.concat(
                 Stream.of(post.getUserId()),
-                commentResult.allComments.stream().map(Comment::getUserId)
+                commentResult.allComments().stream().map(Comment::getUserId)
         ).distinct().toList();
         Map<Long, AuthorInfo> authorMap = userPort.findAuthorsByIds(allUserIds);
 
         List<PostDetailDto.CommentDto> commentTree = buildCommentTree(
-                commentResult.parentComments,
-                commentResult.replies,
+                commentResult.parentComments(),
+                commentResult.replies(),
                 authorMap,
-                commentResult.likedCommentIds,
+                commentResult.likedCommentIds(),
                 blockedUserIds
         );
 
@@ -350,8 +351,8 @@ public class CommunityFacadeService {
                 .commentCount(post.getCommentCount())
                 .createdAt(post.getCreatedAt())
                 .comments(commentTree)
-                .hasNextComments(commentResult.hasNext)
-                .nextCommentCursor(commentResult.nextCursor)
+                .hasNextComments(commentResult.hasNext())
+                .nextCommentCursor(commentResult.nextCursor())
                 .build();
     }
 
@@ -362,24 +363,24 @@ public class CommunityFacadeService {
         Set<Long> blockedUserIds = new HashSet<>(userBlockReadService.findBlockedUserIds(userId));
         CommentTreeResult commentResult = fetchCommentsWithTree(userId, postId, cursor, blockedUserIds);
 
-        List<Long> userIds = commentResult.allComments.stream()
+        List<Long> userIds = commentResult.allComments().stream()
                 .map(Comment::getUserId)
                 .distinct()
                 .toList();
         Map<Long, AuthorInfo> authorMap = userPort.findAuthorsByIds(userIds);
 
         List<PostDetailDto.CommentDto> commentTree = buildCommentTree(
-                commentResult.parentComments,
-                commentResult.replies,
+                commentResult.parentComments(),
+                commentResult.replies(),
                 authorMap,
-                commentResult.likedCommentIds,
+                commentResult.likedCommentIds(),
                 blockedUserIds
         );
 
         return CommentsDto.builder()
                 .comments(commentTree)
-                .hasNext(commentResult.hasNext)
-                .nextCursor(commentResult.nextCursor)
+                .hasNext(commentResult.hasNext())
+                .nextCursor(commentResult.nextCursor())
                 .build();
     }
 
@@ -405,14 +406,6 @@ public class CommunityFacadeService {
         return new CommentTreeResult(parentComments, replies, allComments, likedCommentIds, hasNext, nextCursor);
     }
 
-    private record CommentTreeResult(
-            List<Comment> parentComments,
-            List<Comment> replies,
-            List<Comment> allComments,
-            Set<Long> likedCommentIds,
-            boolean hasNext,
-            Long nextCursor
-    ) {}
 
     private List<PostDetailDto.CommentDto> buildCommentTree(
             List<Comment> parentComments,
