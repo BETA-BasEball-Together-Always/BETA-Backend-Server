@@ -21,6 +21,7 @@ import com.beta.community.domain.service.*;
 import com.beta.community.infra.repository.CommentLikeJpaRepository;
 import com.beta.community.infra.repository.PostHashtagJpaRepository;
 import com.beta.community.infra.repository.PostImageJpaRepository;
+import com.beta.community.infra.repository.PostJpaRepository;
 import com.beta.community.infra.repository.PostQueryRepository;
 import com.beta.core.exception.community.AlreadyBlockedException;
 import com.beta.core.exception.community.DuplicatePostException;
@@ -58,6 +59,7 @@ public class CommunityFacadeService {
     private final EmotionReadService emotionReadService;
     private final EmotionWriteService emotionWriteService;
     private final PostQueryRepository postQueryRepository;
+    private final PostJpaRepository postJpaRepository;
     private final PostImageJpaRepository postImageJpaRepository;
     private final PostHashtagJpaRepository postHashtagJpaRepository;
     private final CommentLikeJpaRepository commentLikeJpaRepository;

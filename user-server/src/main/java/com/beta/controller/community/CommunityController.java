@@ -1,6 +1,9 @@
 package com.beta.controller.community;
 
+import com.beta.community.application.CommentAppService;
 import com.beta.community.application.CommunityFacadeService;
+import com.beta.community.application.dto.CommentCreateDto;
+import com.beta.community.application.dto.CommentLikeToggleDto;
 import com.beta.community.application.dto.CommentsDto;
 import com.beta.community.application.dto.EmotionToggleDto;
 import com.beta.community.application.dto.PostDetailDto;
@@ -27,8 +30,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Tag(name = "Community", description = "커뮤니티 관련 API")
 @RestController
@@ -37,6 +38,7 @@ import java.util.List;
 public class CommunityController {
 
     private final CommunityFacadeService communityFacadeService;
+    private final CommentAppService commentAppService;
 
     // ==================== 게시글 API ====================
 
@@ -343,11 +345,24 @@ public class CommunityController {
                                     @ExampleObject(name = "입력값 검증 실패", value = """
                                             {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}""")
                             })),
-            @ApiResponse(responseCode = "404", description = "게시글 없음",
+            @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(value = """
-                                    {"code": "COMMUNITY004", "message": "게시글을 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "404", description = "게시글 또는 부모 댓글 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "게시글 없음", value = """
+                                            {"code": "COMMUNITY004", "message": "게시글을 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "부모 댓글 없음", value = """
+                                            {"code": "COMMUNITY008", "message": "댓글을 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
             @ApiResponse(responseCode = "409", description = "중복 댓글",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -360,17 +375,22 @@ public class CommunityController {
             @Parameter(description = "게시글 ID") @PathVariable Long postId,
             @Valid @RequestBody CreateCommentRequest request) {
 
-        // TODO: 실제 구현 예정 (Step 8)
-        CommentCreateResponse mock = CommentCreateResponse.builder()
-                .commentId(1L)
-                .postId(postId)
-                .userId(userDetails.userId())
-                .content(request.getContent())
-                .parentId(request.getParentId())
-                .depth(request.getParentId() != null ? 1 : 0)
-                .createdAt(LocalDateTime.now())
-                .build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(mock);
+        CommentCreateDto result = commentAppService.createComment(
+                userDetails.userId(),
+                postId,
+                request.getContent(),
+                request.getParentId()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(CommentCreateResponse.builder()
+                .commentId(result.getCommentId())
+                .postId(result.getPostId())
+                .userId(result.getUserId())
+                .content(result.getContent())
+                .parentId(result.getParentId())
+                .depth(result.getDepth())
+                .createdAt(result.getCreatedAt())
+                .build());
     }
 
     @Operation(summary = "댓글 수정", description = "본인이 작성한 댓글의 내용을 수정합니다.")
@@ -383,6 +403,15 @@ public class CommunityController {
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = @ExampleObject(value = """
                                     {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
             @ApiResponse(responseCode = "403", description = "댓글 권한 없음",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -400,7 +429,12 @@ public class CommunityController {
             @Parameter(description = "댓글 ID") @PathVariable Long commentId,
             @Valid @RequestBody UpdateCommentRequest request) {
 
-        // TODO: 실제 구현 예정 (Step 8)
+        commentAppService.updateComment(
+                userDetails.userId(),
+                commentId,
+                request.getContent()
+        );
+
         return ResponseEntity.ok(MessageResponse.of("댓글이 수정되었습니다."));
     }
 
@@ -413,6 +447,15 @@ public class CommunityController {
             @ApiResponse(responseCode = "200", description = "삭제 성공",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = MessageResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
             @ApiResponse(responseCode = "403", description = "댓글 권한 없음",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -429,7 +472,8 @@ public class CommunityController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "댓글 ID") @PathVariable Long commentId) {
 
-        // TODO: 실제 구현 예정 (Step 8)
+        commentAppService.deleteComment(userDetails.userId(), commentId);
+
         return ResponseEntity.ok(MessageResponse.of("댓글이 삭제되었습니다."));
     }
 
@@ -442,6 +486,15 @@ public class CommunityController {
             @ApiResponse(responseCode = "200", description = "토글 성공",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = CommentLikeResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
             @ApiResponse(responseCode = "404", description = "댓글 없음",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -453,13 +506,16 @@ public class CommunityController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Parameter(description = "댓글 ID") @PathVariable Long commentId) {
 
-        // TODO: 실제 구현 예정 (Step 8)
-        CommentLikeResponse mock = CommentLikeResponse.builder()
-                .commentId(commentId)
-                .liked(true)
-                .likeCount(1)
-                .build();
-        return ResponseEntity.ok(mock);
+        CommentLikeToggleDto result = commentAppService.toggleCommentLike(
+                userDetails.userId(),
+                commentId
+        );
+
+        return ResponseEntity.ok(CommentLikeResponse.builder()
+                .commentId(result.getCommentId())
+                .liked(result.isLiked())
+                .likeCount(result.getLikeCount())
+                .build());
     }
 
     // ==================== 사용자 차단 API ====================

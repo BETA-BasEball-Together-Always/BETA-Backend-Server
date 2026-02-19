@@ -4,6 +4,7 @@ import com.beta.community.domain.entity.Comment;
 import com.beta.community.domain.entity.Status;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -29,4 +30,12 @@ public interface CommentJpaRepository extends JpaRepository<Comment, Long> {
             @Param("parentIds") List<Long> parentIds,
             @Param("status") Status status
     );
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Comment c SET c.likeCount = c.likeCount + 1 WHERE c.id = :commentId")
+    void incrementLikeCount(@Param("commentId") Long commentId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Comment c SET c.likeCount = c.likeCount - 1 WHERE c.id = :commentId AND c.likeCount > 0")
+    void decrementLikeCount(@Param("commentId") Long commentId);
 }
