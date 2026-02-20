@@ -56,7 +56,7 @@ public class SearchPostRepository {
             SearchResponse<PostDocument> response = elasticsearchClient.search(requestBuilder.build(), PostDocument.class);
             return response.hits().hits();
         } catch (IOException e) {
-            throw new SearchFailedException();
+            throw new SearchFailedException(e);
         }
     }
 }
