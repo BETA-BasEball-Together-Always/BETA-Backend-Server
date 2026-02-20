@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS post_hashtag;
+DROP TABLE IF EXISTS posts;
+DROP TABLE IF EXISTS hashtag;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS baseball_teams;
