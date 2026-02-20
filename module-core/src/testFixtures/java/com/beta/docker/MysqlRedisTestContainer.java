@@ -7,7 +7,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
 
 @ActiveProfiles("test")
-public class TestContainer {
+public class MysqlRedisTestContainer {
     protected static MySQLContainer<?> mysql;
     protected static GenericContainer<?> redis;
 
