@@ -7,4 +7,8 @@ public class SearchFailedException extends BaseException {
     public SearchFailedException() {
         super(ErrorCode.SEARCH_FAILED);
     }
+
+    public SearchFailedException(Throwable cause) {
+        super(ErrorCode.SEARCH_FAILED, cause);
+    }
 }
