@@ -1,9 +1,10 @@
-package com.beta.search.application;
+package com.beta.search.application.unit;
 
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.beta.core.port.PostPort;
 import com.beta.core.port.dto.AuthorInfo;
 import com.beta.core.port.dto.PostInfo;
+import com.beta.search.application.SearchFacadeService;
 import com.beta.search.application.dto.SearchPostResult;
 import com.beta.search.application.dto.SearchUserResult;
 import com.beta.search.domain.cursor.SearchCursor;

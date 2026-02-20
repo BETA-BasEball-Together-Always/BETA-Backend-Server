@@ -1,10 +1,12 @@
-package com.beta.search.application;
+package com.beta.search.application.integration;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import com.beta.core.port.PostPort;
 import com.beta.core.port.dto.AuthorInfo;
 import com.beta.core.port.dto.PostInfo;
 import com.beta.docker.MysqlEsTestContainer;
+import com.beta.search.application.SearchAppService;
+import com.beta.search.application.SearchFacadeService;
 import com.beta.search.application.dto.SearchHashtagResult;
 import com.beta.search.application.dto.SearchMyLogResult;
 import com.beta.search.application.dto.SearchPostResult;
@@ -17,7 +19,6 @@ import com.beta.search.domain.document.SearchLogDocument;
 import com.beta.search.domain.document.UserDocument;
 import com.beta.search.infra.repository.SearchLogRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -25,9 +26,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
-import org.springframework.test.context.jdbc.Sql;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -37,10 +38,8 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(classes = SearchApplicationIntegrationTest.TestConfig.class)
-@Sql(scripts = "/sql/search-application-test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(scripts = "/sql/cleanup.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
-class SearchApplicationIntegrationTest extends MysqlEsTestContainer {
+@SpringBootTest(classes = SearchServicesIntegrationTest.TestConfig.class)
+class SearchServicesIntegrationTest extends MysqlEsTestContainer {
 
     @Autowired
     private SearchFacadeService searchFacadeService;
@@ -68,30 +67,30 @@ class SearchApplicationIntegrationTest extends MysqlEsTestContainer {
     @Test
     void searchWhileTyping_호출시_추천검색어와_추천유저를_반환한다() {
         // given
-        index_search_log("log-1", "doosan", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 0, 0));
-        index_search_log("log-2", "dodgers", 2L, "POST", LocalDateTime.of(2026, 2, 19, 12, 1, 0));
+        index_search_log("log-1", "두산", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 0, 0));
+        index_search_log("log-2", "두산베어스", 2L, "POST", LocalDateTime.of(2026, 2, 19, 12, 1, 0));
         save_documents(
                 UserDocument.builder()
                         .id(1L)
-                        .nickname("doosan-fan")
-                        .bio("baseball fan")
+                        .nickname("두산팬")
+                        .bio("야구 팬")
                         .teamCode("DOOSAN")
-                        .teamNameKr("Doosan Bears")
+                        .teamNameKr("두산 베어스")
                         .build(),
                 UserDocument.builder()
                         .id(2L)
-                        .nickname("lions-fan")
-                        .bio("samsung fan")
+                        .nickname("삼성팬")
+                        .bio("삼성 야구 팬")
                         .teamCode("SAMSUNG")
-                        .teamNameKr("Samsung Lions")
+                        .teamNameKr("삼성 라이온즈")
                         .build()
         );
 
         // when
-        SearchSuggestionsResult result = searchFacadeService.searchWhileTyping("do");
+        SearchSuggestionsResult result = searchFacadeService.searchWhileTyping("두산");
 
         // then
-        assertThat(result.suggestedKeywords()).contains("doosan", "dodgers");
+        assertThat(result.suggestedKeywords()).contains("두산", "두산베어스");
         assertThat(result.suggestedUsers().stream().map(SearchSuggestionsResult.SuggestedUser::userId))
                 .contains(1L);
     }
@@ -102,21 +101,21 @@ class SearchApplicationIntegrationTest extends MysqlEsTestContainer {
         index_post_document(
                 100L,
                 "ALL",
-                "doosan game was great",
-                "search-user-one",
-                List.of("doosan", "baseball"),
+                "두산 경기 정말 좋았다",
+                "유저1",
+                List.of("두산", "야구"),
                 "2026-02-19T12:00:00"
         );
 
         // when
-        SearchPostResult result = searchFacadeService.searchPosts("doosan", "ALL", 1L, SearchCursor.first());
+        SearchPostResult result = searchFacadeService.searchPosts("두산", "ALL", 1L, SearchCursor.first());
 
         // then
         assertThat(result.posts()).hasSize(1);
         assertThat(result.posts().getFirst().postId()).isEqualTo(100L);
-        assertThat(result.posts().getFirst().hashtags()).contains("doosan", "baseball");
+        assertThat(result.posts().getFirst().hashtags()).contains("두산", "야구");
         elasticsearchOperations.indexOps(SearchLogDocument.class).refresh();
-        assertThat(count_search_logs(1L, "doosan")).isGreaterThanOrEqualTo(1L);
+        assertThat(count_search_logs(1L, "두산")).isGreaterThanOrEqualTo(1L);
     }
 
     @Test
@@ -125,21 +124,21 @@ class SearchApplicationIntegrationTest extends MysqlEsTestContainer {
         save_documents(
                 UserDocument.builder()
                         .id(1L)
-                        .nickname("doosan-fan")
-                        .bio("baseball fan")
+                        .nickname("두산팬")
+                        .bio("야구 팬")
                         .teamCode("DOOSAN")
-                        .teamNameKr("Doosan Bears")
+                        .teamNameKr("두산 베어스")
                         .build()
         );
 
         // when
-        SearchUserResult result = searchFacadeService.searchUsers("doosan", 1L, SearchCursor.first());
+        SearchUserResult result = searchFacadeService.searchUsers("두산", 1L, SearchCursor.first());
 
         // then
         assertThat(result.users()).hasSize(1);
-        assertThat(result.users().getFirst().nickname()).isEqualTo("doosan-fan");
+        assertThat(result.users().getFirst().nickname()).isEqualTo("두산팬");
         elasticsearchOperations.indexOps(SearchLogDocument.class).refresh();
-        assertThat(count_search_logs(1L, "doosan")).isGreaterThanOrEqualTo(1L);
+        assertThat(count_search_logs(1L, "두산")).isGreaterThanOrEqualTo(1L);
     }
 
     @Test
@@ -148,31 +147,31 @@ class SearchApplicationIntegrationTest extends MysqlEsTestContainer {
         save_documents(
                 HashtagDocument.builder()
                         .id(1L)
-                        .tagName("doosan")
+                        .tagName("두산")
                         .usageCount(10L)
                         .build()
         );
 
         // when
-        SearchHashtagResult result = searchFacadeService.searchHashtags("doosan", 1L, SearchCursor.first());
+        SearchHashtagResult result = searchFacadeService.searchHashtags("두산", 1L, SearchCursor.first());
 
         // then
         assertThat(result.hashtags()).hasSize(1);
-        assertThat(result.hashtags().getFirst().tagName()).isEqualTo("doosan");
+        assertThat(result.hashtags().getFirst().tagName()).isEqualTo("두산");
         elasticsearchOperations.indexOps(SearchLogDocument.class).refresh();
-        assertThat(count_search_logs(1L, "doosan")).isGreaterThanOrEqualTo(1L);
+        assertThat(count_search_logs(1L, "두산")).isGreaterThanOrEqualTo(1L);
     }
 
     @Test
     void findMyRecentKeywords_호출시_중복없이_최신검색어_최대5개를_반환한다() {
         // given
-        index_search_log("l1", "doosan", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 0, 0));
-        index_search_log("l2", "doosan", 1L, "USER", LocalDateTime.of(2026, 2, 19, 12, 1, 0));
-        index_search_log("l3", "lions", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 2, 0));
-        index_search_log("l4", "giants", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 3, 0));
-        index_search_log("l5", "eagles", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 4, 0));
-        index_search_log("l6", "tigers", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 5, 0));
-        index_search_log("l7", "twins", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 6, 0));
+        index_search_log("l1", "두산", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 0, 0));
+        index_search_log("l2", "두산", 1L, "USER", LocalDateTime.of(2026, 2, 19, 12, 1, 0));
+        index_search_log("l3", "삼성", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 2, 0));
+        index_search_log("l4", "한화", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 3, 0));
+        index_search_log("l5", "기아", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 4, 0));
+        index_search_log("l6", "롯데", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 5, 0));
+        index_search_log("l7", "엘지", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 6, 0));
 
         // when
         SearchMyLogResult result = searchAppService.findMyRecentKeywords(1L);
@@ -186,12 +185,12 @@ class SearchApplicationIntegrationTest extends MysqlEsTestContainer {
     @Test
     void deleteMySearchLog_호출시_본인로그만_삭제한다() {
         // given
-        index_search_log("target-log", "delete-me", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 1, 0));
-        index_search_log("same-user-log", "keep-me", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 2, 0));
-        index_search_log("other-user-log", "other-user-keyword", 2L, "POST", LocalDateTime.of(2026, 2, 19, 12, 3, 0));
+        index_search_log("target-log", "삭제대상", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 1, 0));
+        index_search_log("same-user-log", "유지대상", 1L, "POST", LocalDateTime.of(2026, 2, 19, 12, 2, 0));
+        index_search_log("other-user-log", "다른유저키워드", 2L, "POST", LocalDateTime.of(2026, 2, 19, 12, 3, 0));
 
         String targetLogId = searchAppService.findMyRecentKeywords(1L).logs().stream()
-                .filter(item -> item.keyword().equals("delete-me"))
+                .filter(item -> item.keyword().equals("삭제대상"))
                 .map(SearchMyLogResult.SearchMyLogItem::id)
                 .findFirst()
                 .orElseThrow();
@@ -202,10 +201,10 @@ class SearchApplicationIntegrationTest extends MysqlEsTestContainer {
 
         // then
         assertThat(searchAppService.findMyRecentKeywords(1L).logs().stream().map(SearchMyLogResult.SearchMyLogItem::keyword))
-                .doesNotContain("delete-me")
-                .contains("keep-me");
+                .doesNotContain("삭제대상")
+                .contains("유지대상");
         assertThat(searchAppService.findMyRecentKeywords(2L).logs().stream().map(SearchMyLogResult.SearchMyLogItem::keyword))
-                .contains("other-user-keyword");
+                .contains("다른유저키워드");
     }
 
     // ES에 데이터 저장
@@ -289,7 +288,13 @@ class SearchApplicationIntegrationTest extends MysqlEsTestContainer {
 
     @SpringBootConfiguration
     @EnableAutoConfiguration
-    @ComponentScan(basePackages = "com.beta.search")
+    @ComponentScan(
+            basePackages = "com.beta.search",
+            excludeFilters = @ComponentScan.Filter(
+                    type = FilterType.REGEX,
+                    pattern = "com\\.beta\\.search\\.application\\.(integration|unit)\\..*"
+            )
+    )
     static class TestConfig {
         @Bean
         PostPort postPort() {
@@ -302,7 +307,7 @@ class SearchApplicationIntegrationTest extends MysqlEsTestContainer {
                                     .author(AuthorInfo.unknown(userId))
                                     .channel("ALL")
                                     .imageUrls(List.of())
-                                    .hashtags(List.of("doosan", "baseball"))
+                                    .hashtags(List.of("두산", "야구"))
                                     .commentCount(0)
                                     .likeCount(0)
                                     .sadCount(0)
