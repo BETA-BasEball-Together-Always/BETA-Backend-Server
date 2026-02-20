@@ -5,9 +5,5 @@ plugins {
 dependencies {
     implementation project(':module-core')
 
-    implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
-
     testImplementation testFixtures(project(':module-core'))
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 }
