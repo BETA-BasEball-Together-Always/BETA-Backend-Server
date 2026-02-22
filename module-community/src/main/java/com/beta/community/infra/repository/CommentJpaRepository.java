@@ -38,4 +38,7 @@ public interface CommentJpaRepository extends JpaRepository<Comment, Long> {
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Comment c SET c.likeCount = c.likeCount - 1 WHERE c.id = :commentId AND c.likeCount > 0")
     void decrementLikeCount(@Param("commentId") Long commentId);
+
+    @Query("SELECT DISTINCT c.postId FROM Comment c WHERE c.userId = :userId AND c.status = 'ACTIVE' ORDER BY c.postId DESC")
+    List<Long> findDistinctPostIdsByUserId(@Param("userId") Long userId);
 }

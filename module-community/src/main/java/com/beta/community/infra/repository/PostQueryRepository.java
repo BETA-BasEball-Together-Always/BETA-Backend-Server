@@ -77,4 +77,38 @@ public class PostQueryRepository {
         }
         return QPost.post.userId.notIn(blockedUserIds);
     }
+
+    public List<Post> findPostsByUserId(Long userId, Long cursor, int limit) {
+        QPost post = QPost.post;
+
+        return queryFactory
+                .selectFrom(post)
+                .where(
+                        post.status.eq(Status.ACTIVE),
+                        post.userId.eq(userId),
+                        cursorCondition(cursor)
+                )
+                .orderBy(post.id.desc())
+                .limit(limit + 1)
+                .fetch();
+    }
+
+    public List<Post> findPostsByIdsWithCursor(List<Long> postIds, Long cursor, int limit) {
+        if (postIds == null || postIds.isEmpty()) {
+            return List.of();
+        }
+
+        QPost post = QPost.post;
+
+        return queryFactory
+                .selectFrom(post)
+                .where(
+                        post.status.eq(Status.ACTIVE),
+                        post.id.in(postIds),
+                        cursorCondition(cursor)
+                )
+                .orderBy(post.id.desc())
+                .limit(limit + 1)
+                .fetch();
+    }
 }
