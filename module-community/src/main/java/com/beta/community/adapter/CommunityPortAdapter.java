@@ -51,6 +51,12 @@ public class CommunityPortAdapter implements CommunityPort {
         return toMyPostInfoList(posts);
     }
 
+    @Override
+    public List<MyPostInfo> findUserPostsWithChannelFilter(Long userId, List<String> channels, Long cursor, int pageSize) {
+        List<Post> posts = postQueryRepository.findPostsByUserIdWithChannelFilter(userId, channels, cursor, pageSize);
+        return toMyPostInfoList(posts);
+    }
+
     private List<MyPostInfo> toMyPostInfoList(List<Post> posts) {
         if (posts.isEmpty()) {
             return List.of();

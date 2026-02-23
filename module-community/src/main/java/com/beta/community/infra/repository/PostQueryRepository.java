@@ -111,4 +111,24 @@ public class PostQueryRepository {
                 .limit(limit + 1)
                 .fetch();
     }
+
+    public List<Post> findPostsByUserIdWithChannelFilter(Long userId, List<String> channels, Long cursor, int limit) {
+        QPost post = QPost.post;
+
+        List<Post.Channel> channelEnums = channels.stream()
+                .map(Post.Channel::valueOf)
+                .toList();
+
+        return queryFactory
+                .selectFrom(post)
+                .where(
+                        post.status.eq(Status.ACTIVE),
+                        post.userId.eq(userId),
+                        post.channel.in(channelEnums),
+                        cursorCondition(cursor)
+                )
+                .orderBy(post.id.desc())
+                .limit(limit + 1)
+                .fetch();
+    }
 }

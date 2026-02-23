@@ -49,6 +49,7 @@ public enum ErrorCode {
     SELF_BLOCK_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "COMMUNITY013", "자기 자신을 차단할 수 없습니다"),
     ALREADY_BLOCKED(HttpStatus.CONFLICT, "COMMUNITY014", "이미 차단된 사용자입니다"),
     BLOCK_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMUNITY015", "차단 정보를 찾을 수 없습니다"),
+    BLOCKED_USER_PROFILE(HttpStatus.FORBIDDEN, "COMMUNITY016", "차단한 사용자의 프로필을 조회할 수 없습니다"),
 
     INVALID_CURSOR(HttpStatus.BAD_REQUEST, "SEARCH001", "커서의 score, id는 둘다 존재하거나 둘다 비어있어야 합니다."),
     SEARCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SEARCH099", "es 검색 중 오류가 발생했습니다");
