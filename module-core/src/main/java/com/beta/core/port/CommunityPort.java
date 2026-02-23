@@ -11,4 +11,6 @@ public interface CommunityPort {
     List<MyPostInfo> findCommentedPosts(Long userId, Long cursor, int pageSize);
 
     List<MyPostInfo> findLikedPosts(Long userId, Long cursor, int pageSize);
+
+    List<MyPostInfo> findUserPostsWithChannelFilter(Long userId, List<String> channels, Long cursor, int pageSize);
 }
