@@ -75,4 +75,20 @@ public class UserWriteService {
         user.completeSignup();
         return user;
     }
+
+    @Transactional
+    public User updateBio(Long userId, String bio) {
+        User user = userJpaRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new UserNotFoundException("해당 ID의 사용자를 찾을 수 없습니다."));
+        user.updateBio(bio);
+        return user;
+    }
+
+    @Transactional
+    public User withdraw(Long userId) {
+        User user = userJpaRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new UserNotFoundException("해당 ID의 사용자를 찾을 수 없습니다."));
+        user.withdraw();
+        return user;
+    }
 }
