@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserConsentJpaRepository extends JpaRepository<UserConsents, Long> {
 
+    void deleteByUserId(Long userId);
 }

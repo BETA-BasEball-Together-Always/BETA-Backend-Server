@@ -25,4 +25,8 @@ public interface CommentLikeJpaRepository extends JpaRepository<CommentLike, Lon
     @Modifying
     @Query("DELETE FROM CommentLike cl WHERE cl.userId = :userId AND cl.commentId = :commentId")
     void deleteByUserIdAndCommentId(@Param("userId") Long userId, @Param("commentId") Long commentId);
+
+    @Modifying
+    @Query("DELETE FROM CommentLike cl WHERE cl.userId = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
 }

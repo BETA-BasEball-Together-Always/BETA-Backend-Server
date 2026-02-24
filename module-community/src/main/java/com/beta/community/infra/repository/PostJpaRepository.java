@@ -47,4 +47,8 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Post p SET p.commentCount = p.commentCount - 1 WHERE p.id = :postId AND p.commentCount > 0")
     void decrementCommentCount(@Param("postId") Long postId);
+
+    @Modifying
+    @Query("DELETE FROM Post p WHERE p.userId = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
 }

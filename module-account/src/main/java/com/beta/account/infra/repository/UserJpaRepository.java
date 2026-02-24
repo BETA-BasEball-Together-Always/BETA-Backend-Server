@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,4 +27,7 @@ public interface UserJpaRepository extends JpaRepository<User, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT u FROM User u WHERE u.id = :userId")
     Optional<User> findByIdForUpdate(@Param("userId") Long userId);
+
+    @Query("SELECT u FROM User u WHERE u.status = 'WITHDRAWN' AND u.withdrawnAt < :threshold")
+    List<User> findExpiredWithdrawnUsers(@Param("threshold") LocalDateTime threshold);
 }
