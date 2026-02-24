@@ -54,6 +54,9 @@ public class User extends BaseEntity {
     @Column(name = "bio", length = 50)
     private String bio;
 
+    @Column(name = "withdrawn_at")
+    private java.time.LocalDateTime withdrawnAt;
+
     @Builder
     public User(String socialId, String email, String nickname, SocialProvider socialProvider,
                 UserStatus status, UserRole role, SignupStep signupStep, BaseballTeam baseballTeam,
@@ -121,5 +124,14 @@ public class User extends BaseEntity {
 
     public boolean isSignupCompleted() {
         return this.signupStep == SignupStep.COMPLETED;
+    }
+
+    public void updateBio(String bio) {
+        this.bio = (bio == null || bio.isBlank()) ? null : bio;
+    }
+
+    public void withdraw() {
+        this.status = UserStatus.WITHDRAWN;
+        this.withdrawnAt = java.time.LocalDateTime.now();
     }
 }

@@ -11,6 +11,7 @@ import com.beta.core.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -192,5 +193,17 @@ public class AccountAppService {
                 UserDto.toDto(completedUser),
                 completedUser.getSocialProvider().name()
         );
+    }
+
+    public String updateBio(Long userId, String bio) {
+        User user = userWriteService.updateBio(userId, bio);
+        return user.getBio();
+    }
+
+    public LocalDateTime processWithdrawal(Long userId) {
+        User user = userWriteService.withdraw(userId);
+        userDeviceWriteService.deleteAllByUserId(userId);
+        refreshTokenService.deleteByUserId(userId);
+        return user.getWithdrawnAt();
     }
 }

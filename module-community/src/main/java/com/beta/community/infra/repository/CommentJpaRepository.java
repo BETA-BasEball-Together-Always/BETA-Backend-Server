@@ -41,4 +41,15 @@ public interface CommentJpaRepository extends JpaRepository<Comment, Long> {
 
     @Query("SELECT DISTINCT c.postId FROM Comment c WHERE c.userId = :userId AND c.status = 'ACTIVE' ORDER BY c.postId DESC")
     List<Long> findDistinctPostIdsByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM Comment c WHERE c.userId = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT c.id FROM Comment c WHERE c.postId IN :postIds")
+    List<Long> findAllIdsByPostIdIn(@Param("postIds") List<Long> postIds);
+
+    @Modifying
+    @Query("DELETE FROM Comment c WHERE c.postId IN :postIds")
+    void deleteAllByPostIdIn(@Param("postIds") List<Long> postIds);
 }

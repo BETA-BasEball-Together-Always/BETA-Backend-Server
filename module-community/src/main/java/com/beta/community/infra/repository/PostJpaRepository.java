@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface PostJpaRepository extends JpaRepository<Post, Long> {
 
     @Modifying(clearAutomatically = true)
@@ -47,4 +49,11 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Post p SET p.commentCount = p.commentCount - 1 WHERE p.id = :postId AND p.commentCount > 0")
     void decrementCommentCount(@Param("postId") Long postId);
+
+    @Modifying
+    @Query("DELETE FROM Post p WHERE p.userId = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT p.id FROM Post p WHERE p.userId = :userId")
+    List<Long> findAllIdsByUserId(@Param("userId") Long userId);
 }
