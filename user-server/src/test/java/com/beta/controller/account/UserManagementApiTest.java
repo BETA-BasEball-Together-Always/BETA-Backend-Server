@@ -1,6 +1,9 @@
 package com.beta.controller.account;
 
 import com.beta.ApiTestBase;
+import com.beta.account.application.port.CommunityDataCleanupPort;
+import com.beta.account.infra.repository.UserJpaRepository;
+import com.beta.community.infra.repository.*;
 import com.beta.controller.account.request.UpdateBioRequest;
 import com.beta.controller.account.response.UpdateBioResponse;
 import com.beta.controller.account.response.WithdrawResponse;
@@ -30,8 +33,35 @@ class UserManagementApiTest extends ApiTestBase {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private CommunityDataCleanupPort communityDataCleanupPort;
+
+    @Autowired
+    private UserJpaRepository userJpaRepository;
+
+    @Autowired
+    private PostJpaRepository postJpaRepository;
+
+    @Autowired
+    private CommentJpaRepository commentJpaRepository;
+
+    @Autowired
+    private CommentLikeJpaRepository commentLikeJpaRepository;
+
+    @Autowired
+    private EmotionJpaRepository emotionJpaRepository;
+
+    @Autowired
+    private PostImageJpaRepository postImageJpaRepository;
+
+    @Autowired
+    private PostHashtagJpaRepository postHashtagJpaRepository;
+
+    @Autowired
+    private UserBlockJpaRepository userBlockJpaRepository;
+
     private static final Long USER_WITH_BIO = 1L;
-    private static final Long USER_WITHOUT_BIO = 2L;
+    private static final Long CLEANUP_TEST_USER = 4L;
 
     private String accessToken;
 
@@ -215,6 +245,66 @@ class UserManagementApiTest extends ApiTestBase {
 
             // then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @Nested
+    @DisplayName("CommunityDataCleanupPort 테스트")
+    class DataCleanup {
+
+        @Test
+        @DisplayName("사용자 데이터 삭제 - 게시글/댓글/좋아요/감정표현/이미지/해시태그/차단 모두 삭제")
+        void deleteAllUserCommunityData_deletesAllRelatedData() {
+            // given - 삭제 전 데이터 확인
+            assertThat(postJpaRepository.findById(100L)).isPresent();
+            assertThat(postImageJpaRepository.findById(1L)).isPresent();
+            assertThat(commentJpaRepository.findById(1L)).isPresent(); // 다른 유저가 쓴 댓글
+            assertThat(commentJpaRepository.findById(2L)).isPresent(); // 본인이 쓴 댓글
+            assertThat(commentJpaRepository.findById(3L)).isPresent(); // 다른 게시글에 쓴 댓글
+            assertThat(commentLikeJpaRepository.findById(1L)).isPresent(); // user4가 누른 좋아요
+            assertThat(commentLikeJpaRepository.findById(2L)).isPresent(); // user2가 댓글1에 누른 좋아요
+            assertThat(emotionJpaRepository.findById(1L)).isPresent(); // user2가 게시글100에 누른 감정
+            assertThat(emotionJpaRepository.findById(2L)).isPresent(); // user4가 게시글200에 누른 감정
+            assertThat(postHashtagJpaRepository.findById(1L)).isPresent();
+            assertThat(userBlockJpaRepository.findById(1L)).isPresent();
+
+            // when - user4 커뮤니티 데이터 삭제
+            communityDataCleanupPort.deleteAllUserCommunityData(CLEANUP_TEST_USER);
+
+            // then - user4 관련 데이터 삭제 확인
+            // 1. user4의 게시글(100) 삭제됨
+            assertThat(postJpaRepository.findById(100L)).isEmpty();
+
+            // 2. 게시글100의 이미지 삭제됨
+            assertThat(postImageJpaRepository.findById(1L)).isEmpty();
+
+            // 3. 게시글100에 달린 모든 댓글 삭제됨 (다른 유저가 쓴 것 포함)
+            assertThat(commentJpaRepository.findById(1L)).isEmpty();
+            assertThat(commentJpaRepository.findById(2L)).isEmpty();
+
+            // 4. user4가 다른 게시글에 쓴 댓글 삭제됨
+            assertThat(commentJpaRepository.findById(3L)).isEmpty();
+
+            // 5. 게시글100의 댓글에 달린 좋아요 삭제됨 (다른 유저 것 포함)
+            assertThat(commentLikeJpaRepository.findById(2L)).isEmpty();
+
+            // 6. user4가 누른 댓글 좋아요 삭제됨
+            assertThat(commentLikeJpaRepository.findById(1L)).isEmpty();
+
+            // 7. 게시글100에 달린 감정표현 삭제됨 (다른 유저 것 포함)
+            assertThat(emotionJpaRepository.findById(1L)).isEmpty();
+
+            // 8. user4가 다른 게시글에 누른 감정표현 삭제됨
+            assertThat(emotionJpaRepository.findById(2L)).isEmpty();
+
+            // 9. 게시글100의 해시태그 연결 삭제됨
+            assertThat(postHashtagJpaRepository.findById(1L)).isEmpty();
+
+            // 10. user4의 차단 관계 삭제됨
+            assertThat(userBlockJpaRepository.findById(1L)).isEmpty();
+
+            // 11. 다른 유저의 게시글(200)은 유지됨
+            assertThat(postJpaRepository.findById(200L)).isPresent();
         }
     }
 
