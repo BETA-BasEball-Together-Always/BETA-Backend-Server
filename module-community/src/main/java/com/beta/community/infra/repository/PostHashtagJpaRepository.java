@@ -3,6 +3,7 @@ package com.beta.community.infra.repository;
 import com.beta.community.domain.entity.Hashtag;
 import com.beta.community.domain.entity.PostHashtag;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,4 +16,8 @@ public interface PostHashtagJpaRepository extends JpaRepository<PostHashtag, Lon
     List<PostHashtag> findByPost_IdIn(@Param("postIds") List<Long> postIds);
 
     void deleteAllByPostIdAndHashtagIn(Long postId, List<Hashtag> hashtags);
+
+    @Modifying
+    @Query("DELETE FROM PostHashtag ph WHERE ph.post.id IN :postIds")
+    void deleteAllByPostIdIn(@Param("postIds") List<Long> postIds);
 }

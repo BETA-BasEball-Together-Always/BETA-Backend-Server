@@ -18,4 +18,8 @@ public interface PostImageJpaRepository extends JpaRepository<PostImage, Long> {
     @Modifying
     @Query("DELETE FROM PostImage pi WHERE pi.userId = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM PostImage pi WHERE pi.postId IN :postIds")
+    void deleteAllByPostIdIn(@Param("postIds") List<Long> postIds);
 }

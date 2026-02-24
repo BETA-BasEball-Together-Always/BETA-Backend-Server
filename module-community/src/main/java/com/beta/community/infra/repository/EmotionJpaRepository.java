@@ -24,4 +24,8 @@ public interface EmotionJpaRepository extends JpaRepository<Emotion, Long> {
     @Modifying
     @Query("DELETE FROM Emotion e WHERE e.userId = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM Emotion e WHERE e.postId IN :postIds")
+    void deleteAllByPostIdIn(@Param("postIds") List<Long> postIds);
 }
