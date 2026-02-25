@@ -10,6 +10,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -129,6 +130,28 @@ public class PostQueryRepository {
                 )
                 .orderBy(post.id.desc())
                 .limit(limit + 1)
+                .fetch();
+    }
+
+    public List<Post> findPopularPostsWithinHours(int hours, int limit, List<Long> blockedUserIds) {
+        QPost post = QPost.post;
+        LocalDateTime since = LocalDateTime.now().minusHours(hours);
+
+        NumberExpression<Integer> totalEmotions = post.likeCount
+                .add(post.sadCount)
+                .add(post.funCount)
+                .add(post.hypeCount);
+
+        return queryFactory
+                .selectFrom(post)
+                .where(
+                        post.status.eq(Status.ACTIVE),
+                        post.channel.eq(Post.Channel.ALL),
+                        post.createdAt.goe(since),
+                        blockedUserCondition(blockedUserIds)
+                )
+                .orderBy(totalEmotions.desc(), post.id.desc())
+                .limit(limit)
                 .fetch();
     }
 }
