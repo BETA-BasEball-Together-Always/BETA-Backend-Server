@@ -65,6 +65,13 @@ dependencies {
     // Elastic search
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 
+    // HTML Parsing for KBO crawling
+    implementation 'org.jsoup:jsoup:1.18.3'
+
+    // Caffeine Cache
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
