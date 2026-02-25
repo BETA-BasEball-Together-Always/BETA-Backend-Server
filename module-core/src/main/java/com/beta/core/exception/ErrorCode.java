@@ -52,7 +52,9 @@ public enum ErrorCode {
     BLOCKED_USER_PROFILE(HttpStatus.FORBIDDEN, "COMMUNITY016", "차단한 사용자의 프로필을 조회할 수 없습니다"),
 
     INVALID_CURSOR(HttpStatus.BAD_REQUEST, "SEARCH001", "커서의 score, id는 둘다 존재하거나 둘다 비어있어야 합니다."),
-    SEARCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SEARCH099", "es 검색 중 오류가 발생했습니다");
+    SEARCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SEARCH099", "es 검색 중 오류가 발생했습니다"),
+
+    KBO_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "KBO001", "현재 순위 정보를 불러올 수 없습니다");
 
     private final HttpStatus status;
     private final String code;
