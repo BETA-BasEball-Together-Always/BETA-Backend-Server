@@ -1,11 +1,11 @@
 package com.beta.account.infra.repository;
 
+import com.beta.core.security.AdminAuthConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.time.Duration;
 import java.util.Optional;
 
 @Slf4j
@@ -13,24 +13,20 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AdminRefreshTokenRedisRepository {
 
-    private static final String TOKEN_KEY_PREFIX = "admin_refresh_token:token:";
-    private static final String USER_KEY_PREFIX = "admin_refresh_token:user:";
-    private static final Duration TTL = Duration.ofDays(7);
-
     private final StringRedisTemplate redisTemplate;
 
     public void save(Long userId, String refreshToken) {
         deleteByUserId(userId);
 
-        String tokenKey = TOKEN_KEY_PREFIX + refreshToken;
-        String userKey = USER_KEY_PREFIX + userId;
+        String tokenKey = AdminAuthConstants.REFRESH_TOKEN_TOKEN_KEY_PREFIX + refreshToken;
+        String userKey = AdminAuthConstants.REFRESH_TOKEN_USER_KEY_PREFIX + userId;
 
-        redisTemplate.opsForValue().set(tokenKey, String.valueOf(userId), TTL);
-        redisTemplate.opsForValue().set(userKey, refreshToken, TTL);
+        redisTemplate.opsForValue().set(tokenKey, String.valueOf(userId), AdminAuthConstants.REFRESH_TOKEN_TTL);
+        redisTemplate.opsForValue().set(userKey, refreshToken, AdminAuthConstants.REFRESH_TOKEN_TTL);
     }
 
     public Optional<Long> findUserIdByToken(String refreshToken) {
-        String tokenKey = TOKEN_KEY_PREFIX + refreshToken;
+        String tokenKey = AdminAuthConstants.REFRESH_TOKEN_TOKEN_KEY_PREFIX + refreshToken;
         String userId = redisTemplate.opsForValue().get(tokenKey);
         if (userId == null) {
             return Optional.empty();
@@ -39,11 +35,11 @@ public class AdminRefreshTokenRedisRepository {
     }
 
     public void deleteByUserId(Long userId) {
-        String userKey = USER_KEY_PREFIX + userId;
+        String userKey = AdminAuthConstants.REFRESH_TOKEN_USER_KEY_PREFIX + userId;
         String refreshToken = redisTemplate.opsForValue().get(userKey);
 
         if (refreshToken != null) {
-            String tokenKey = TOKEN_KEY_PREFIX + refreshToken;
+            String tokenKey = AdminAuthConstants.REFRESH_TOKEN_TOKEN_KEY_PREFIX + refreshToken;
             redisTemplate.delete(tokenKey);
             redisTemplate.delete(userKey);
             log.debug("Deleted admin refresh token - userId: {}", userId);

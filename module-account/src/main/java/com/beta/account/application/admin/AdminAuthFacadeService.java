@@ -9,6 +9,7 @@ import com.beta.account.domain.service.SocialUserInfoService;
 import com.beta.account.domain.service.UserReadService;
 import com.beta.account.domain.service.UserStatusService;
 import com.beta.account.infra.client.SocialUserInfo;
+import com.beta.core.security.AdminAuthConstants;
 import com.beta.core.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,9 +20,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AdminAuthFacadeService {
-
-    private static final String ADMIN_CLIENT = "ADMIN";
-    private static final String ADMIN_ROLE = "ADMIN";
 
     private final SocialUserInfoService socialUserInfoService;
     private final UserReadService userReadService;
@@ -36,7 +34,12 @@ public class AdminAuthFacadeService {
 
         userStatusService.validateAdminUser(user);
 
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getId(), null, ADMIN_ROLE, ADMIN_CLIENT);
+        String accessToken = jwtTokenProvider.generateAccessToken(
+                user.getId(),
+                null,
+                AdminAuthConstants.ADMIN_ROLE,
+                AdminAuthConstants.ADMIN_CLIENT
+        );
         String refreshToken = UUID.randomUUID().toString();
         adminRefreshTokenService.upsertRefreshToken(user.getId(), refreshToken);
 
@@ -50,7 +53,12 @@ public class AdminAuthFacadeService {
 
         userStatusService.validateAdminUser(user);
 
-        String newAccessToken = jwtTokenProvider.generateAccessToken(user.getId(), null, ADMIN_ROLE, ADMIN_CLIENT);
+        String newAccessToken = jwtTokenProvider.generateAccessToken(
+                user.getId(),
+                null,
+                AdminAuthConstants.ADMIN_ROLE,
+                AdminAuthConstants.ADMIN_CLIENT
+        );
         String newRefreshToken = UUID.randomUUID().toString();
         adminRefreshTokenService.upsertRefreshToken(user.getId(), newRefreshToken);
 

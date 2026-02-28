@@ -2,6 +2,7 @@ package com.beta.filter;
 
 import com.beta.core.exception.ErrorCode;
 import com.beta.core.response.ErrorResponse;
+import com.beta.core.security.AdminAuthConstants;
 import com.beta.core.security.JwtTokenProvider;
 import com.beta.security.CustomUserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,8 +25,6 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    private static final String ADMIN_CLIENT = "ADMIN";
 
     private final JwtTokenProvider jwtTokenProvider;
     private final ObjectMapper objectMapper;
@@ -54,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String role = jwtTokenProvider.getClaim(token, JwtTokenProvider.ClaimEnum.ROLE.name(), String.class);
                 String client = jwtTokenProvider.getClaim(token, JwtTokenProvider.ClaimEnum.CLIENT.name(), String.class);
 
-                if (userId != null && role != null && ADMIN_CLIENT.equals(client)) {
+                if (userId != null && role != null && AdminAuthConstants.ADMIN_CLIENT.equals(client)) {
                     CustomUserDetails userDetails = new CustomUserDetails(Long.valueOf(userId), teamCode, role, client);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails,
