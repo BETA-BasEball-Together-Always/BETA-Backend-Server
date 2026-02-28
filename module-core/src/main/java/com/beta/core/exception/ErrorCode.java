@@ -34,6 +34,8 @@ public enum ErrorCode {
     INVALID_SIGNUP_STEP(HttpStatus.BAD_REQUEST, "USER008", "잘못된 회원가입 단계입니다"),
     INVALID_NICKNAME_LENGTH(HttpStatus.BAD_REQUEST, "USER009", "닉네임은 2-13자 사이여야 합니다"),
 
+    ADMIN_NOT_ALLOWED(HttpStatus.FORBIDDEN, "ADMIN001", "관리자 권한의 사용자가 아닙니다."),
+
     INVALID_CHANNEL_ACCESS(HttpStatus.FORBIDDEN, "COMMUNITY001", "채널 접근 권한이 없습니다"),
     INVALID_IMAGE(HttpStatus.BAD_REQUEST, "COMMUNITY002", "유효하지 않은 이미지입니다"),
     IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "COMMUNITY003", "이미지 업로드에 실패했습니다"),
