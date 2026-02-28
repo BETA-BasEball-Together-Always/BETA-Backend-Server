@@ -1,6 +1,7 @@
 package com.beta.core.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -25,18 +26,26 @@ public class JwtTokenProvider {
     }
 
     public String generateAccessToken(Long userId, String favoriteTeamCode, String role) {
+        return generateAccessToken(userId, favoriteTeamCode, role, null);
+    }
+
+    public String generateAccessToken(Long userId, String favoriteTeamCode, String role, String client) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
-        
-        return Jwts.builder()
+
+        JwtBuilder builder = Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim(ClaimEnum.TYPE.name(), "ACCESS")
                 .claim(ClaimEnum.TEAM_CODE.name(), favoriteTeamCode)
                 .claim(ClaimEnum.ROLE.name(), role)
                 .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(secretKey)
-                .compact();
+                .expiration(expiryDate);
+
+        if (client != null) {
+            builder.claim(ClaimEnum.CLIENT.name(), client);
+        }
+
+        return builder.signWith(secretKey).compact();
     }
 
     public String getSubject(String token) {
@@ -88,6 +97,6 @@ public class JwtTokenProvider {
     }
 
     public enum ClaimEnum {
-        TYPE, TEAM_CODE, ROLE
+        TYPE, TEAM_CODE, ROLE, CLIENT
     }
 }
