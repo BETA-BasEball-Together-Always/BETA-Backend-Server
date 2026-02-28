@@ -1,0 +1,24 @@
+plugins {
+    id 'BETA-Backend-Server.java-conventions'
+}
+
+dependencies {
+    implementation project(':module-core')
+    implementation project(':module-account')
+    implementation project(':module-community')
+    implementation project(':module-search')
+
+    testImplementation testFixtures(project(':module-core'))
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.named('bootJar') {
+    enabled = true
+}
+
+tasks.named('jar') {
+    enabled = false
+}
