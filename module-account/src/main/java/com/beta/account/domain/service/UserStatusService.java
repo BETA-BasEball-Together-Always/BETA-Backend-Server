@@ -4,6 +4,7 @@ import com.beta.account.domain.entity.SignupStep;
 import com.beta.account.domain.entity.User;
 import com.beta.account.infra.repository.UserJpaRepository;
 import com.beta.core.exception.account.*;
+import com.beta.core.exception.admin.NotAdminException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -62,4 +63,12 @@ public class UserStatusService {
                     String.format("닉네임은 %d~%d자 사이여야 합니다", MIN_NICKNAME_LENGTH, MAX_NICKNAME_LENGTH));
         }
     }
+
+    public void validateAdminUser(User user) {
+        if (user == null || user.getRole() != User.UserRole.ADMIN) {
+            throw new NotAdminException();
+        }
+        validateUserStatus(user);
+    }
+
 }
