@@ -1,0 +1,87 @@
+name: Deploy BETA Admin
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-admin:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build JAR
+        run: ./gradlew :admin-server:bootJar -x test
+
+      - name: Docker Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_ADMIN_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ADMIN_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & Push Admin Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.admin
+          push: true
+          platforms: linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            dhgudtmxhs/beta-admin:latest
+            dhgudtmxhs/beta-admin:${{ github.sha }}
+
+      # proxy-vm 접속 -> beta-admin 로 점프 -> 컨테이너 재기동
+      - name: Deploy to beta-admin via proxy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROXY_HOST }}      # proxy-vm Public IP
+          username: ubuntu
+          key: ${{ secrets.PROXY_SSH_KEY }}
+          script: |
+            echo ">>> check internal ssh key"
+            ls -l /home/ubuntu/.ssh/beta_user_key
+
+            ssh -i /home/ubuntu/.ssh/beta_user_key \
+                -o StrictHostKeyChecking=no \
+                ubuntu@10.0.1.64 << 'EOF'
+              set -e
+
+              echo ">>> pull image"
+              docker pull dhgudtmxhs/beta-admin:latest
+
+              echo ">>> stop & remove old container"
+              docker stop beta-admin || true
+              docker rm beta-admin || true
+
+              echo ">>> run new container"
+              docker run -d \
+                --name beta-admin \
+                -p 8080:8080 \
+                --env-file /home/ubuntu/env/beta-admin.env \
+                -v /home/ubuntu/oci_api_key.pem:/app/keys/oci_api_key.pem:ro \
+                -v /home/ubuntu/app-cacerts:/app/certs/app-cacerts:ro \
+                --restart always \
+                --health-cmd="curl -f http://localhost:8080/actuator/health || exit 1" \
+                --health-interval=30s \
+                --health-timeout=10s \
+                --health-retries=3 \
+                dhgudtmxhs/beta-admin:latest
+
+              echo ">>> deployment finished"
+            EOF
