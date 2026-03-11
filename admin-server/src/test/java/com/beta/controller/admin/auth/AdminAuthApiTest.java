@@ -38,7 +38,8 @@ import static org.mockito.BDDMockito.given;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
                 "spring.data.redis.username=",
-                "spring.data.redis.password="
+                "spring.data.redis.password=",
+                "management.health.mail.enabled=false"
         }
 )
 @Sql(scripts = {"/sql/admin-cleanup.sql", "/sql/admin-auth-test-data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
@@ -57,10 +58,11 @@ class AdminAuthApiTest extends MysqlRedisTestContainer {
     @MockitoBean
     private SocialUserInfoService socialUserInfoService;
 
-    // @SpringBootTest 컨텍스트 로딩 시 AppleLoginClient 빈도 함께 생성되어서 oauth.apple.* 프로퍼티 의존성을 모킹함
+    // @SpringBootTest 컨텍스트 로딩 시 AppleLoginClient 빈도 함께 생성되어서 프로퍼티 의존성을 모킹함
     @MockitoBean
     private AppleLoginClient appleLoginClient;
 
+    // MailHealthContributor가 JavaMailSender 의존성을 타서 모킹
     @MockitoBean
     private JavaMailSender javaMailSender;
 
