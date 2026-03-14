@@ -4,6 +4,7 @@ import com.beta.account.domain.entity.SignupStep;
 import com.beta.account.domain.entity.User;
 import com.beta.account.infra.repository.UserJpaRepository;
 import com.beta.core.exception.account.*;
+import com.beta.core.exception.admin.InvalidAdminActionException;
 import com.beta.core.exception.admin.NotAdminException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -69,6 +70,26 @@ public class UserStatusService {
             throw new NotAdminException();
         }
         validateUserStatus(user);
+    }
+
+    public void validateSuspend(User member) {
+        if (member.getStatus() == User.UserStatus.WITHDRAWN) {
+            throw new InvalidAdminActionException("탈퇴한 사용자는 정지할 수 없습니다.");
+        }
+
+        if (member.getStatus() == User.UserStatus.SUSPENDED) {
+            throw new InvalidAdminActionException("이미 정지된 사용자입니다.");
+        }
+    }
+
+    public void validateUnsuspend(User member) {
+        if (member.getStatus() == User.UserStatus.WITHDRAWN) {
+            throw new InvalidAdminActionException("탈퇴한 사용자는 정지 해제할 수 없습니다.");
+        }
+
+        if (member.getStatus() != User.UserStatus.SUSPENDED) {
+            throw new InvalidAdminActionException("정지된 사용자만 정지 해제할 수 있습니다.");
+        }
     }
 
 }
