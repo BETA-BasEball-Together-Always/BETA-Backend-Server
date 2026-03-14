@@ -35,6 +35,8 @@ public enum ErrorCode {
     INVALID_NICKNAME_LENGTH(HttpStatus.BAD_REQUEST, "USER009", "닉네임은 2-13자 사이여야 합니다"),
 
     ADMIN_NOT_ALLOWED(HttpStatus.FORBIDDEN, "ADMIN001", "관리자 권한의 사용자가 아닙니다."),
+    INVALID_ADMIN_ACTION(HttpStatus.BAD_REQUEST, "ADMIN002", "수행할 수 없는 관리자 액션입니다."),
+    ADMIN_TARGET_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN003", "관리 대상 사용자를 찾을 수 없습니다."),
 
     INVALID_CHANNEL_ACCESS(HttpStatus.FORBIDDEN, "COMMUNITY001", "채널 접근 권한이 없습니다"),
     INVALID_IMAGE(HttpStatus.BAD_REQUEST, "COMMUNITY002", "유효하지 않은 이미지입니다"),
