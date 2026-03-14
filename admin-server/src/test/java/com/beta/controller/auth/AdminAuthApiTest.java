@@ -1,4 +1,4 @@
-package com.beta.controller.admin.auth;
+package com.beta.controller.auth;
 
 import com.beta.account.domain.service.AdminRefreshTokenService;
 import com.beta.account.domain.service.SocialUserInfoService;
