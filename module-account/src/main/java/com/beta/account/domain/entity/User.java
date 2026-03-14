@@ -134,4 +134,12 @@ public class User extends BaseEntity {
         this.status = UserStatus.WITHDRAWN;
         this.withdrawnAt = java.time.LocalDateTime.now();
     }
+
+    public void suspend() {
+        this.status = UserStatus.SUSPENDED;
+    }
+
+    public void unsuspend() {
+        this.status = UserStatus.ACTIVE;
+    }
 }

@@ -22,4 +22,12 @@ public class PostWriteService {
     public void softDelete(Post post) {
         post.softDelete();
     }
+
+    public void hide(Post post) {
+        post.hide();
+    }
+
+    public void unhide(Post post) {
+        post.unhide();
+    }
 }

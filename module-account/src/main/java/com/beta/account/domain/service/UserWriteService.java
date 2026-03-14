@@ -91,4 +91,16 @@ public class UserWriteService {
         user.withdraw();
         return user;
     }
+
+    @Transactional
+    public User suspend(User user) {
+        user.suspend();
+        return user;
+    }
+
+    @Transactional
+    public User unsuspend(User user) {
+        user.unsuspend();
+        return user;
+    }
 }
