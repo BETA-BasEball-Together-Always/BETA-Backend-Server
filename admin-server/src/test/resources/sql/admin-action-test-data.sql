@@ -13,7 +13,8 @@ INSERT INTO users (
     (1, 'admin-social-id', 'admin@test.com', 'admin-user', 'KAKAO', 'ACTIVE', 'ADMIN', 'COMPLETED', NOW(), NOW()),
     (2, 'target-user-social-id', 'target-user@test.com', 'target-user', 'KAKAO', 'ACTIVE', 'USER', 'COMPLETED', NOW(), NOW()),
     (3, 'hidden-post-user-social-id', 'post-user@test.com', 'post-user', 'KAKAO', 'ACTIVE', 'USER', 'COMPLETED', NOW(), NOW()),
-    (4, 'comment-user-social-id', 'comment-user@test.com', 'comment-user', 'KAKAO', 'ACTIVE', 'USER', 'COMPLETED', NOW(), NOW());
+    (4, 'comment-user-social-id', 'comment-user@test.com', 'comment-user', 'KAKAO', 'ACTIVE', 'USER', 'COMPLETED', NOW(), NOW()),
+    (5, 'suspended-user-social-id', 'suspended-user@test.com', 'suspended-user', 'KAKAO', 'SUSPENDED', 'USER', 'COMPLETED', NOW(), NOW());
 
 INSERT INTO posts (
     id,
@@ -48,3 +49,17 @@ INSERT INTO `comment` (
     updated_at
 ) VALUES
     (201, 4, NULL, 101, '정상 댓글', 0, 0, 'ACTIVE', NULL, NOW(), NOW());
+INSERT INTO `comment` (
+    id,
+    user_id,
+    parent_id,
+    post_id,
+    content,
+    depth,
+    like_count,
+    status,
+    deleted_at,
+    created_at,
+    updated_at
+) VALUES
+    (202, 4, NULL, 101, '숨김 댓글', 0, 0, 'HIDDEN', NULL, NOW(), NOW());
