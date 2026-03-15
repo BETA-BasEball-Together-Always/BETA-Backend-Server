@@ -1,0 +1,5 @@
+SET FOREIGN_KEY_CHECKS = 0;
+DELETE FROM user_block;
+DELETE FROM users;
+DELETE FROM baseball_teams;
+SET FOREIGN_KEY_CHECKS = 1;
