@@ -1,0 +1,12 @@
+SET FOREIGN_KEY_CHECKS = 0;
+DELETE FROM admin_log;
+DELETE FROM `comment`;
+DELETE FROM comment_like;
+DELETE FROM emotion;
+DELETE FROM post_image;
+DELETE FROM post_hashtag;
+DELETE FROM posts;
+DELETE FROM hashtag;
+DELETE FROM user_block;
+DELETE FROM users;
+SET FOREIGN_KEY_CHECKS = 1;
