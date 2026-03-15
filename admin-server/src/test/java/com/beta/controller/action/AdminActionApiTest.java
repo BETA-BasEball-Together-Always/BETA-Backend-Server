@@ -30,6 +30,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -81,6 +82,60 @@ class AdminActionApiTest extends MysqlRedisTestContainer {
     OracleCloudStorageClient oracleCloudStorageClient;
 
     @Test
+    void 관리자_로그_조회_API_호출시_필터조건에_맞는_페이지결과를_반환한다() {
+        // given
+        String accessToken = jwtTokenProvider.generateAccessToken(1L, null, "ADMIN", AdminAuthConstants.ADMIN_CLIENT);
+        HttpHeaders headers = bearerHeaders(accessToken);
+
+        adminLogJpaRepository.save(AdminLog.suspendMember(1L, 2L, "운영 정책 위반"));
+        adminLogJpaRepository.save(AdminLog.hidePost(1L, 101L, "운영자 숨김"));
+        adminLogJpaRepository.save(AdminLog.hideComment(1L, 201L, "댓글 숨김"));
+
+        // when
+        ResponseEntity<Map> response = restTemplate.exchange(
+                "/api/v1/admin/action-logs?page=0&size=10&action=MEMBER_SUSPEND",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                Map.class
+        );
+
+        // then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(Long.parseLong(String.valueOf(response.getBody().get("totalCount")))).isEqualTo(1L);
+        assertThat(Integer.parseInt(String.valueOf(response.getBody().get("page")))).isEqualTo(0);
+        assertThat(Integer.parseInt(String.valueOf(response.getBody().get("size")))).isEqualTo(10);
+
+        List<Map<String, Object>> items = (List<Map<String, Object>>) response.getBody().get("items");
+        assertThat(items).hasSize(1);
+        assertThat(items.get(0).get("actorAdminId")).isEqualTo(1);
+        assertThat(items.get(0).get("actorAdminNickname")).isEqualTo("admin-user");
+        assertThat(items.get(0).get("action")).isEqualTo("MEMBER_SUSPEND");
+        assertThat(items.get(0).get("targetType")).isEqualTo("MEMBER");
+        assertThat(items.get(0).get("reason")).isEqualTo("운영 정책 위반");
+    }
+
+    @Test
+    void 관리자_로그_조회_API_호출시_조회_시작일이_종료일보다_늦으면_400_VALIDATION001_예외를_반환한다() {
+        // given
+        String accessToken = jwtTokenProvider.generateAccessToken(1L, null, "ADMIN", AdminAuthConstants.ADMIN_CLIENT);
+        HttpHeaders headers = bearerHeaders(accessToken);
+
+        // when
+        ResponseEntity<ErrorResponse> response = restTemplate.exchange(
+                "/api/v1/admin/action-logs?from=%s&to=%s".formatted(LocalDate.now(), LocalDate.now().minusDays(1)),
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                ErrorResponse.class
+        );
+
+        // then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCode()).isEqualTo("VALIDATION001");
+    }
+
+    @Test
     void 관리자_회원_정지_API_호출시_200_응답과_상태변경을_반환한다() {
         // given
         String accessToken = jwtTokenProvider.generateAccessToken(1L, null, "ADMIN", AdminAuthConstants.ADMIN_CLIENT);
@@ -123,7 +178,7 @@ class AdminActionApiTest extends MysqlRedisTestContainer {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().get("success")).isEqualTo(true);
-        assertThat(response.getBody().get("message")).isEqualTo("게시글이 다시 노출되었습니다.");
+        assertThat(response.getBody().get("message")).isEqualTo("게시글 숨김이 해제되었습니다.");
 
         Post post = postJpaRepository.findById(102L).orElseThrow();
         assertThat(post.getStatus()).isEqualTo(Status.ACTIVE);
