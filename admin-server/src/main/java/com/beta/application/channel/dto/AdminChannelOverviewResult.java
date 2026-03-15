@@ -30,7 +30,7 @@ public record AdminChannelOverviewResult(
         List<TeamActivity> teams = communityMetrics.channels().stream()
                 .map(channelMetrics -> TeamActivity.from(
                         teamMap.get(channelMetrics.channelCode()),
-                        accountMetrics.getMemberCount(channelMetrics.channelCode()),
+                        accountMetrics.getUserCount(channelMetrics.channelCode()),
                         channelMetrics
                 ))
                 .sorted(Comparator.comparing(TeamActivity::teamName))
@@ -90,7 +90,7 @@ public record AdminChannelOverviewResult(
     public record TeamActivity(
             String teamCode,
             String teamName,
-            long memberCount,
+            long userCount,
             long todayPostCount,
             long todayCommentCount,
             long todayActivityCount,
@@ -101,7 +101,7 @@ public record AdminChannelOverviewResult(
     ) {
         private static TeamActivity from(
                 BaseballTeam baseballTeam,
-                long memberCount,
+                long userCount,
                 AdminCommunityChannelOverviewMetricsResult.ChannelActivityMetrics metrics
         ) {
             String teamName = baseballTeam != null && baseballTeam.getTeamNameKr() != null
@@ -111,7 +111,7 @@ public record AdminChannelOverviewResult(
             return new TeamActivity(
                     metrics.channelCode(),
                     teamName,
-                    memberCount,
+                    userCount,
                     metrics.todayPostCount(),
                     metrics.todayCommentCount(),
                     metrics.todayActivityCount(),

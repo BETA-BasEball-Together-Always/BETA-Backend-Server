@@ -105,7 +105,7 @@ class AdminChannelOverviewApiTest extends MysqlRedisTestContainer {
 
         Map<String, Object> lg = findTeamByCode(teams, "LG");
         assertThat(lg.get("teamName")).isEqualTo("LG 트윈스");
-        assertThat(toLong(lg.get("memberCount"))).isEqualTo(2L);
+        assertThat(toLong(lg.get("userCount"))).isEqualTo(2L);
         assertThat(toLong(lg.get("todayPostCount"))).isEqualTo(2L);
         assertThat(toLong(lg.get("todayCommentCount"))).isEqualTo(3L);
         assertThat(toLong(lg.get("todayActivityCount"))).isEqualTo(5L);
@@ -129,19 +129,19 @@ class AdminChannelOverviewApiTest extends MysqlRedisTestContainer {
 
         Map<String, Object> kiwoom = findTeamByCode(teams, "KIWOOM");
         assertThat(kiwoom.get("teamName")).isEqualTo("키움 히어로즈");
-        assertThat(toLong(kiwoom.get("memberCount"))).isZero();
+        assertThat(toLong(kiwoom.get("userCount"))).isZero();
         assertThat(toLong(kiwoom.get("todayPostCount"))).isZero();
         assertThat(toLong(kiwoom.get("todayCommentCount"))).isZero();
         assertThat(toLong(kiwoom.get("weeklyActivityCount"))).isZero();
 
         Map<String, Object> kia = findTeamByCode(teams, "KIA");
-        assertThat(toLong(kia.get("memberCount"))).isEqualTo(1L);
+        assertThat(toLong(kia.get("userCount"))).isEqualTo(1L);
 
         Map<String, Object> doosan = findTeamByCode(teams, "DOOSAN");
-        assertThat(toLong(doosan.get("memberCount"))).isEqualTo(1L);
+        assertThat(toLong(doosan.get("userCount"))).isEqualTo(1L);
 
         Map<String, Object> hanwha = findTeamByCode(teams, "HANWHA");
-        assertThat(toLong(hanwha.get("memberCount"))).isEqualTo(1L);
+        assertThat(toLong(hanwha.get("userCount"))).isEqualTo(1L);
     }
 
     @Test

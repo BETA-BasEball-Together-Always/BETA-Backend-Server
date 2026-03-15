@@ -1,6 +1,6 @@
 package com.beta.account.application.admin.dto;
 
-import com.beta.account.infra.repository.ChannelOverviewMemberQueryRepository;
+import com.beta.account.infra.repository.ChannelOverviewUserQueryRepository;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -8,23 +8,23 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public record AdminAccountChannelOverviewMetricsResult(
-        Map<String, Long> memberCountByTeamCode
+        Map<String, Long> userCountByTeamCode
 ) {
     public static AdminAccountChannelOverviewMetricsResult from(
-            List<ChannelOverviewMemberQueryRepository.TeamMemberCountSnapshot> snapshots
+            List<ChannelOverviewUserQueryRepository.TeamUserCountSnapshot> snapshots
     ) {
-        Map<String, Long> memberCountByTeamCode = snapshots.stream()
+        Map<String, Long> userCountByTeamCode = snapshots.stream()
                 .collect(Collectors.toMap(
-                        ChannelOverviewMemberQueryRepository.TeamMemberCountSnapshot::teamCode,
-                        ChannelOverviewMemberQueryRepository.TeamMemberCountSnapshot::memberCount,
+                        ChannelOverviewUserQueryRepository.TeamUserCountSnapshot::teamCode,
+                        ChannelOverviewUserQueryRepository.TeamUserCountSnapshot::userCount,
                         (left, right) -> right,
                         LinkedHashMap::new
                 ));
 
-        return new AdminAccountChannelOverviewMetricsResult(memberCountByTeamCode);
+        return new AdminAccountChannelOverviewMetricsResult(userCountByTeamCode);
     }
 
-    public long getMemberCount(String teamCode) {
-        return memberCountByTeamCode.getOrDefault(teamCode, 0L);
+    public long getUserCount(String teamCode) {
+        return userCountByTeamCode.getOrDefault(teamCode, 0L);
     }
 }

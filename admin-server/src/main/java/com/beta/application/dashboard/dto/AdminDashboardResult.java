@@ -7,8 +7,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record AdminDashboardResult(
-        Long totalMemberCount,
-        Long totalMemberDelta,
+        Long totalUserCount,
+        Long totalUserDelta,
         Long todayPostCount,
         Long todayPostDelta,
         Long todayNewSignupCount,
@@ -23,8 +23,8 @@ public record AdminDashboardResult(
             Long pendingReportCount
     ) {
         return new AdminDashboardResult(
-                accountMetrics.totalMemberCount(),
-                accountMetrics.totalMemberDelta(),
+                accountMetrics.totalUserCount(),
+                accountMetrics.totalUserDelta(),
                 communityMetrics.todayPostCount(),
                 communityMetrics.todayPostDelta(),
                 accountMetrics.todayNewSignupCount(),

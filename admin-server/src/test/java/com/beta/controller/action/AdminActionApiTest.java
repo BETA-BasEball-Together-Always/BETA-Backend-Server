@@ -87,7 +87,7 @@ class AdminActionApiTest extends MysqlRedisTestContainer {
         String accessToken = jwtTokenProvider.generateAccessToken(1L, null, "ADMIN", AdminAuthConstants.ADMIN_CLIENT);
         HttpHeaders headers = bearerHeaders(accessToken);
 
-        adminLogJpaRepository.save(AdminLog.suspendMember(1L, 2L, "운영 정책 위반"));
+        adminLogJpaRepository.save(AdminLog.suspendUser(1L, 2L, "운영 정책 위반"));
         adminLogJpaRepository.save(AdminLog.hidePost(1L, 101L, "운영자 숨김"));
         adminLogJpaRepository.save(AdminLog.hideComment(1L, 201L, "댓글 숨김"));
 
@@ -136,14 +136,14 @@ class AdminActionApiTest extends MysqlRedisTestContainer {
     }
 
     @Test
-    void 관리자_회원_정지_API_호출시_200_응답과_상태변경을_반환한다() {
+    void 관리자_사용자_정지_API_호출시_200_응답과_상태변경을_반환한다() {
         // given
         String accessToken = jwtTokenProvider.generateAccessToken(1L, null, "ADMIN", AdminAuthConstants.ADMIN_CLIENT);
         HttpHeaders headers = bearerHeaders(accessToken);
 
         // when
         ResponseEntity<Map> response = restTemplate.exchange(
-                "/api/v1/admin/members/2/suspend",
+                "/api/v1/admin/users/2/suspend",
                 HttpMethod.PATCH,
                 new HttpEntity<>(Map.of("reason", "운영 정책 위반"), headers),
                 Map.class
@@ -153,7 +153,7 @@ class AdminActionApiTest extends MysqlRedisTestContainer {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().get("success")).isEqualTo(true);
-        assertThat(response.getBody().get("message")).isEqualTo("회원이 정지되었습니다.");
+        assertThat(response.getBody().get("message")).isEqualTo("사용자가 정지되었습니다.");
 
         User user = userJpaRepository.findById(2L).orElseThrow();
         assertThat(user.getStatus()).isEqualTo(User.UserStatus.SUSPENDED);
@@ -214,7 +214,7 @@ class AdminActionApiTest extends MysqlRedisTestContainer {
     void 관리자_액션_API를_토큰없이_호출하면_401_JWT002_예외를_반환한다() {
         // when
         ResponseEntity<ErrorResponse> response = restTemplate.exchange(
-                "/api/v1/admin/members/2/suspend",
+                "/api/v1/admin/users/2/suspend",
                 HttpMethod.PATCH,
                 new HttpEntity<>(Map.of("reason", "운영 정책 위반")),
                 ErrorResponse.class
@@ -234,7 +234,7 @@ class AdminActionApiTest extends MysqlRedisTestContainer {
 
         // when
         ResponseEntity<ErrorResponse> response = restTemplate.exchange(
-                "/api/v1/admin/members/2/suspend",
+                "/api/v1/admin/users/2/suspend",
                 HttpMethod.PATCH,
                 new HttpEntity<>(Map.of("reason", "운영 정책 위반"), headers),
                 ErrorResponse.class
@@ -254,7 +254,7 @@ class AdminActionApiTest extends MysqlRedisTestContainer {
 
         // when
         ResponseEntity<ErrorResponse> response = restTemplate.exchange(
-                "/api/v1/admin/members/2/suspend",
+                "/api/v1/admin/users/2/suspend",
                 HttpMethod.PATCH,
                 new HttpEntity<>(Map.of("reason", ""), headers),
                 ErrorResponse.class

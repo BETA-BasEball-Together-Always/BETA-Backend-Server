@@ -84,8 +84,8 @@ class AdminDashboardApiTest extends MysqlRedisTestContainer {
         assertThat(response.getBody()).isNotNull();
 
         Map<String, Object> body = response.getBody();
-        assertThat(toLong(body.get("totalMemberCount"))).isEqualTo(3L);
-        assertThat(toLong(body.get("totalMemberDelta"))).isEqualTo(1L);
+        assertThat(toLong(body.get("totalUserCount"))).isEqualTo(3L);
+        assertThat(toLong(body.get("totalUserDelta"))).isEqualTo(1L);
         assertThat(toLong(body.get("todayPostCount"))).isEqualTo(3L);
         assertThat(toLong(body.get("todayPostDelta"))).isEqualTo(1L);
         assertThat(toLong(body.get("todayNewSignupCount"))).isEqualTo(2L);

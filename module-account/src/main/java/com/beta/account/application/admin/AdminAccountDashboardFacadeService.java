@@ -17,12 +17,12 @@ public class AdminAccountDashboardFacadeService {
         DashboardMetricsQueryRepository.DashboardMetricsSnapshot snapshot =
                 dashboardMetricsQueryRepository.getDashboardMetricsSnapshot();
 
-        long totalMemberDelta = snapshot.todayActiveSignups() - snapshot.todayWithdrawnUsers();
+        long totalUserDelta = snapshot.todayActiveSignups() - snapshot.todayWithdrawnUsers();
         long todayNewSignupDelta = snapshot.todayNewSignupCount() - snapshot.yesterdayNewSignupCount();
 
         return new AdminAccountDashboardMetricsResult(
-                snapshot.totalMemberCount(),
-                totalMemberDelta,
+                snapshot.totalUserCount(),
+                totalUserDelta,
                 snapshot.todayNewSignupCount(),
                 todayNewSignupDelta
         );
