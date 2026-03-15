@@ -8,10 +8,10 @@ import java.util.List;
 
 @Schema(description = "관리자 대시보드 응답")
 public record AdminDashboardResponse(
-        @Schema(description = "총 회원수(정상 상태)", example = "12456")
-        Long totalMemberCount,
-        @Schema(description = "총 회원수 증감(+/-)", example = "234")
-        Long totalMemberDelta,
+        @Schema(description = "총 사용자 수(정상 상태)", example = "12456")
+        Long totalUserCount,
+        @Schema(description = "총 사용자 수 증감(+/-)", example = "234")
+        Long totalUserDelta,
         @Schema(description = "오늘 게시물 수", example = "89")
         Long todayPostCount,
         @Schema(description = "오늘 게시물 수 증감(+/-)", example = "23")
@@ -29,8 +29,8 @@ public record AdminDashboardResponse(
 ) {
     public static AdminDashboardResponse from(AdminDashboardResult result) {
         return new AdminDashboardResponse(
-                result.totalMemberCount(),
-                result.totalMemberDelta(),
+                result.totalUserCount(),
+                result.totalUserDelta(),
                 result.todayPostCount(),
                 result.todayPostDelta(),
                 result.todayNewSignupCount(),

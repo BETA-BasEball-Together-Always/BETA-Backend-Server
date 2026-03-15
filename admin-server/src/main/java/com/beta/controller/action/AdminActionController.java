@@ -77,7 +77,7 @@ public class AdminActionController {
         return ResponseEntity.ok(AdminPageResponse.from(responsePage));
     }
 
-    @Operation(summary = "회원 정지")
+    @Operation(summary = "사용자 정지")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "정지 성공",
                     content = @Content(mediaType = "application/json",
@@ -107,17 +107,17 @@ public class AdminActionController {
                             examples = @ExampleObject(value = """
                                     {"code": "USER001", "message": "사용자를 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
     })
-    @PatchMapping("/members/{memberId}/suspend")
-    public ResponseEntity<AdminActionResponse> suspendMember(
+    @PatchMapping("/users/{userId}/suspend")
+    public ResponseEntity<AdminActionResponse> suspendUser(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long memberId,
+            @PathVariable Long userId,
             @Valid @RequestBody AdminActionRequest request
     ) {
-        adminActionFacadeService.suspendMember(userDetails.userId(), memberId, request.reason());
-        return ResponseEntity.ok(AdminActionResponse.success("회원이 정지되었습니다."));
+        adminActionFacadeService.suspendUser(userDetails.userId(), userId, request.reason());
+        return ResponseEntity.ok(AdminActionResponse.success("사용자가 정지되었습니다."));
     }
 
-    @Operation(summary = "회원 정지 해제")
+    @Operation(summary = "사용자 정지 해제")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "정지 해제 성공",
                     content = @Content(mediaType = "application/json",
@@ -135,14 +135,14 @@ public class AdminActionController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PatchMapping("/members/{memberId}/unsuspend")
-    public ResponseEntity<AdminActionResponse> unsuspendMember(
+    @PatchMapping("/users/{userId}/unsuspend")
+    public ResponseEntity<AdminActionResponse> unsuspendUser(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long memberId,
+            @PathVariable Long userId,
             @Valid @RequestBody AdminActionRequest request
     ) {
-        adminActionFacadeService.unsuspendMember(userDetails.userId(), memberId, request.reason());
-        return ResponseEntity.ok(AdminActionResponse.success("회원 정지가 해제되었습니다."));
+        adminActionFacadeService.unsuspendUser(userDetails.userId(), userId, request.reason());
+        return ResponseEntity.ok(AdminActionResponse.success("사용자 정지가 해제되었습니다."));
     }
 
     @Operation(summary = "게시글 숨김")

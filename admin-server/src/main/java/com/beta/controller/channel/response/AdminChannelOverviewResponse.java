@@ -56,7 +56,7 @@ public record AdminChannelOverviewResponse(
             @Schema(description = "팀명", example = "LG 트윈스")
             String teamName,
             @Schema(description = "팀 사용자 수", example = "18120")
-            long memberCount,
+            long userCount,
             @Schema(description = "오늘 게시물 수", example = "42")
             long todayPostCount,
             @Schema(description = "오늘 댓글 수", example = "96")
@@ -76,7 +76,7 @@ public record AdminChannelOverviewResponse(
             return new TeamActivity(
                     item.teamCode(),
                     item.teamName(),
-                    item.memberCount(),
+                    item.userCount(),
                     item.todayPostCount(),
                     item.todayCommentCount(),
                     item.todayActivityCount(),

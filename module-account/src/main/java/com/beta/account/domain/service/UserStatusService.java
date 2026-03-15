@@ -72,22 +72,22 @@ public class UserStatusService {
         validateUserStatus(user);
     }
 
-    public void validateSuspend(User member) {
-        if (member.getStatus() == User.UserStatus.WITHDRAWN) {
+    public void validateSuspend(User user) {
+        if (user.getStatus() == User.UserStatus.WITHDRAWN) {
             throw new InvalidAdminActionException("탈퇴한 사용자는 정지할 수 없습니다.");
         }
 
-        if (member.getStatus() == User.UserStatus.SUSPENDED) {
+        if (user.getStatus() == User.UserStatus.SUSPENDED) {
             throw new InvalidAdminActionException("이미 정지된 사용자입니다.");
         }
     }
 
-    public void validateUnsuspend(User member) {
-        if (member.getStatus() == User.UserStatus.WITHDRAWN) {
+    public void validateUnsuspend(User user) {
+        if (user.getStatus() == User.UserStatus.WITHDRAWN) {
             throw new InvalidAdminActionException("탈퇴한 사용자는 정지 해제할 수 없습니다.");
         }
 
-        if (member.getStatus() != User.UserStatus.SUSPENDED) {
+        if (user.getStatus() != User.UserStatus.SUSPENDED) {
             throw new InvalidAdminActionException("정지된 사용자만 정지 해제할 수 있습니다.");
         }
     }

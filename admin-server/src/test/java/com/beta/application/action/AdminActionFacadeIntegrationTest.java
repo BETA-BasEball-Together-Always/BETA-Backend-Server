@@ -71,14 +71,14 @@ class AdminActionFacadeIntegrationTest extends MysqlRedisTestContainer {
     private OracleCloudStorageClient oracleCloudStorageClient;
 
     @Test
-    void 회원_정지시_상태가_변경되고_관리자_로그가_저장된다() {
+    void 사용자_정지시_상태가_변경되고_관리자_로그가_저장된다() {
         // given
         Long actorAdminId = 1L;
         Long targetUserId = 2L;
         String reason = "운영 정책 위반";
 
         // when
-        adminActionFacadeService.suspendMember(actorAdminId, targetUserId, reason);
+        adminActionFacadeService.suspendUser(actorAdminId, targetUserId, reason);
 
         // then
         User user = userJpaRepository.findById(targetUserId).orElseThrow();

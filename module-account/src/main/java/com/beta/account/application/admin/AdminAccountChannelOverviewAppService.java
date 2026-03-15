@@ -1,7 +1,7 @@
 package com.beta.account.application.admin;
 
 import com.beta.account.application.admin.dto.AdminAccountChannelOverviewMetricsResult;
-import com.beta.account.infra.repository.ChannelOverviewMemberQueryRepository;
+import com.beta.account.infra.repository.ChannelOverviewUserQueryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,12 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AdminAccountChannelOverviewAppService {
 
-    private final ChannelOverviewMemberQueryRepository channelOverviewMemberQueryRepository;
+    private final ChannelOverviewUserQueryRepository channelOverviewUserQueryRepository;
 
     @Transactional(readOnly = true)
     public AdminAccountChannelOverviewMetricsResult getChannelOverviewAccountMetrics() {
         return AdminAccountChannelOverviewMetricsResult.from(
-                channelOverviewMemberQueryRepository.findActiveMemberCountsByFavoriteTeamCode()
+                channelOverviewUserQueryRepository.findActiveUserCountsByFavoriteTeamCode()
         );
     }
 }

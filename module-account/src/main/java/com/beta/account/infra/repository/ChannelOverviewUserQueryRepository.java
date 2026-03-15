@@ -13,17 +13,17 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class ChannelOverviewMemberQueryRepository {
+public class ChannelOverviewUserQueryRepository {
 
     private final JPAQueryFactory queryFactory;
 
-    public List<TeamMemberCountSnapshot> findActiveMemberCountsByFavoriteTeamCode() {
+    public List<TeamUserCountSnapshot> findActiveUserCountsByFavoriteTeamCode() {
         QUser user = QUser.user;
         StringExpression teamCodeExpr = user.baseballTeam.code;
-        NumberExpression<Long> memberCountExpr = user.id.count();
+        NumberExpression<Long> userCountExpr = user.id.count();
 
         return queryFactory
-                .select(teamCodeExpr, memberCountExpr)
+                .select(teamCodeExpr, userCountExpr)
                 .from(user)
                 .where(
                         user.status.eq(User.UserStatus.ACTIVE),
@@ -32,27 +32,27 @@ public class ChannelOverviewMemberQueryRepository {
                 .groupBy(teamCodeExpr)
                 .fetch()
                 .stream()
-                .map(tuple -> toSnapshot(tuple, teamCodeExpr, memberCountExpr))
+                .map(tuple -> toSnapshot(tuple, teamCodeExpr, userCountExpr))
                 .toList();
     }
 
-    private TeamMemberCountSnapshot toSnapshot(
+    private TeamUserCountSnapshot toSnapshot(
             Tuple tuple,
             StringExpression teamCodeExpr,
-            NumberExpression<Long> memberCountExpr
+            NumberExpression<Long> userCountExpr
     ) {
         String teamCode = tuple.get(teamCodeExpr);
-        Long memberCount = tuple.get(memberCountExpr);
+        Long userCount = tuple.get(userCountExpr);
 
-        return new TeamMemberCountSnapshot(
+        return new TeamUserCountSnapshot(
                 teamCode,
-                memberCount != null ? memberCount : 0L
+                userCount != null ? userCount : 0L
         );
     }
 
-    public record TeamMemberCountSnapshot(
+    public record TeamUserCountSnapshot(
             String teamCode,
-            long memberCount
+            long userCount
     ) {
     }
 }

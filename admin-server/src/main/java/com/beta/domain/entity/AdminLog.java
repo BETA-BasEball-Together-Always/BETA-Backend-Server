@@ -50,19 +50,19 @@ public class AdminLog extends BaseEntity {
         this.reason = normalizeReason(reason);
     }
 
-    public static AdminLog suspendMember(Long actorAdminId, Long targetMemberId, String reason) {
+    public static AdminLog suspendUser(Long actorAdminId, Long targetUserId, String reason) {
         return builder()
                 .actorAdminId(actorAdminId)
-                .targetId(targetMemberId)
+                .targetId(targetUserId)
                 .action(AdminLogAction.MEMBER_SUSPEND)
                 .reason(reason)
                 .build();
     }
 
-    public static AdminLog unsuspendMember(Long actorAdminId, Long targetMemberId, String reason) {
+    public static AdminLog unsuspendUser(Long actorAdminId, Long targetUserId, String reason) {
         return builder()
                 .actorAdminId(actorAdminId)
-                .targetId(targetMemberId)
+                .targetId(targetUserId)
                 .action(AdminLogAction.MEMBER_UNSUSPEND)
                 .reason(reason)
                 .build();

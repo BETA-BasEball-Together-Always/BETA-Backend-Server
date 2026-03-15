@@ -19,16 +19,16 @@ public class AdminActionFacadeService {
     private final AdminLogWriteService adminLogWriteService;
 
     @Transactional
-    public void suspendMember(Long actorAdminId, Long targetUserId, String reason) {
+    public void suspendUser(Long actorAdminId, Long targetUserId, String reason) {
         adminUserActionAppService.suspendUser(targetUserId);
-        AdminLog adminLog = AdminLog.suspendMember(actorAdminId, targetUserId, reason);
+        AdminLog adminLog = AdminLog.suspendUser(actorAdminId, targetUserId, reason);
         adminLogWriteService.save(adminLog);
     }
 
     @Transactional
-    public void unsuspendMember(Long actorAdminId, Long targetUserId, String reason) {
+    public void unsuspendUser(Long actorAdminId, Long targetUserId, String reason) {
         adminUserActionAppService.unsuspendUser(targetUserId);
-        AdminLog adminLog = AdminLog.unsuspendMember(actorAdminId, targetUserId, reason);
+        AdminLog adminLog = AdminLog.unsuspendUser(actorAdminId, targetUserId, reason);
         adminLogWriteService.save(adminLog);
     }
 

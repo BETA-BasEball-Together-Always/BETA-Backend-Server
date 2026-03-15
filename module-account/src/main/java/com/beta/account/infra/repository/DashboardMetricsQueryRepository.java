@@ -25,8 +25,8 @@ public class DashboardMetricsQueryRepository {
         LocalDateTime yesterdayStart = todayStart.minusDays(1); // 어제 00:00:00
         LocalDateTime yesterdayNow = now.minusDays(1); // 어제 동일 시각
 
-        NumberExpression<Long> totalMemberCountExpr = sumWhen(
-                user.status.eq(User.UserStatus.ACTIVE) // 총 회원수(ACTIVE)
+        NumberExpression<Long> totalUserCountExpr = sumWhen(
+                user.status.eq(User.UserStatus.ACTIVE) // 총 사용자 수(ACTIVE)
         );
         NumberExpression<Long> todayActiveSignupsExpr = sumWhen(
                 user.status.eq(User.UserStatus.ACTIVE)
@@ -48,7 +48,7 @@ public class DashboardMetricsQueryRepository {
 
         Tuple tuple = queryFactory
                 .select(
-                        totalMemberCountExpr,
+                        totalUserCountExpr,
                         todayActiveSignupsExpr,
                         todayWithdrawnUsersExpr,
                         todayNewSignupCountExpr,
@@ -62,7 +62,7 @@ public class DashboardMetricsQueryRepository {
         }
 
         return new DashboardMetricsSnapshot(
-                getOrZero(tuple, totalMemberCountExpr),
+                getOrZero(tuple, totalUserCountExpr),
                 getOrZero(tuple, todayActiveSignupsExpr),
                 getOrZero(tuple, todayWithdrawnUsersExpr),
                 getOrZero(tuple, todayNewSignupCountExpr),
@@ -83,7 +83,7 @@ public class DashboardMetricsQueryRepository {
     }
 
     public record DashboardMetricsSnapshot(
-            long totalMemberCount,
+            long totalUserCount,
             long todayActiveSignups,
             long todayWithdrawnUsers,
             long todayNewSignupCount,
