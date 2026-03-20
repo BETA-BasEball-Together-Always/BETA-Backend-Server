@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.elasticsearch.core.SearchHit;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -162,7 +163,7 @@ class SearchFacadeServiceTest {
                 .teamCode("LG")
                 .teamNameKr("LG 트윈스")
                 .build();
-        when(searchUserService.search(anyString(), any(), anyInt())).thenReturn(List.of(userDoc));
+        when(searchUserService.search(anyString(), any(), anyInt())).thenReturn(List.of(createMockUserHit(userDoc)));
 
         // when
         SearchUserResult result = searchFacadeService.searchUsers(keyword, userId, cursor);
@@ -204,5 +205,22 @@ class SearchFacadeServiceTest {
         when(hit.source()).thenReturn(doc);
         when(hit.highlight()).thenReturn(Map.of("content", List.of("<em>테스트</em> 내용")));
         return hit;
+    }
+
+    @SuppressWarnings("unchecked")
+    private SearchHit<UserDocument> createMockUserHit(UserDocument userDocument) {
+        return new SearchHit<>(
+                "users",
+                String.valueOf(userDocument.getId()),
+                null,
+                1.0f,
+                new Object[0],
+                Map.of(),
+                Map.of(),
+                null,
+                null,
+                List.of(),
+                userDocument
+        );
     }
 }

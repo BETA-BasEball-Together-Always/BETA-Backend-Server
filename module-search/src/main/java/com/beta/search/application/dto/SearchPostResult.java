@@ -3,6 +3,7 @@ package com.beta.search.application.dto;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.beta.core.port.dto.AuthorInfo;
 import com.beta.core.port.dto.PostInfo;
+import com.beta.search.domain.cursor.SearchCursor;
 import com.beta.search.domain.document.PostDocument;
 
 import java.time.LocalDateTime;
@@ -10,7 +11,8 @@ import java.util.List;
 
 public record SearchPostResult(
         List<SearchPostItem> posts,
-        boolean hasNext
+        boolean hasNext,
+        SearchCursor nextCursor
 ) {
 
     public record SearchPostItem(

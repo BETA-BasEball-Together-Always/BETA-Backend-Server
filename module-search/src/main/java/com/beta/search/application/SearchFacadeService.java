@@ -53,6 +53,7 @@ public class SearchFacadeService {
         );
 
         boolean hasNext = trimToPageSize(hits);
+        SearchCursor nextCursor = extractNextCursor(hits, hasNext);
 
         List<SearchPostResult.SearchPostItem> searchItems = SearchPostResult.SearchPostItem.from(hits);
 
@@ -68,32 +69,46 @@ public class SearchFacadeService {
 
         searchLogService.save(keyword, userId, SearchType.POST.name());
 
-        return new SearchPostResult(enrichedPostItems, hasNext);
+        return new SearchPostResult(enrichedPostItems, hasNext, nextCursor);
     }
 
     public SearchUserResult searchUsers(String keyword, Long userId, SearchCursor cursor) {
-        List<UserDocument> users = searchUserService.search(keyword, cursor, PAGE_SIZE + 1);
+        List<org.springframework.data.elasticsearch.core.SearchHit<UserDocument>> userHits =
+                new ArrayList<>(searchUserService.search(keyword, cursor, PAGE_SIZE + 1));
 
-        boolean hasNext = trimToPageSize(users);
+        boolean hasNext = trimToPageSize(userHits);
+        SearchCursor nextCursor = extractNextCursorFromUserHits(userHits, hasNext);
+
+        List<UserDocument> users = userHits.stream()
+                .map(org.springframework.data.elasticsearch.core.SearchHit::getContent)
+                .toList();
 
         searchLogService.save(keyword, userId, SearchType.USER.name());
 
         return new SearchUserResult(
                 SearchUserResult.SearchUserItem.from(users),
-                hasNext
+                hasNext,
+                nextCursor
         );
     }
 
     public SearchHashtagResult searchHashtags(String keyword, Long userId, SearchCursor cursor) {
-        List<HashtagDocument> hashtags = searchHashtagService.search(keyword, cursor, PAGE_SIZE + 1);
+        List<org.springframework.data.elasticsearch.core.SearchHit<HashtagDocument>> hashtagHits =
+                new ArrayList<>(searchHashtagService.search(keyword, cursor, PAGE_SIZE + 1));
 
-        boolean hasNext = trimToPageSize(hashtags);
+        boolean hasNext = trimToPageSize(hashtagHits);
+        SearchCursor nextCursor = extractNextCursorFromHashtagHits(hashtagHits, hasNext);
+
+        List<HashtagDocument> hashtags = hashtagHits.stream()
+                .map(org.springframework.data.elasticsearch.core.SearchHit::getContent)
+                .toList();
 
         searchLogService.save(keyword, userId, SearchType.HASHTAG.name());
 
         return new SearchHashtagResult(
                 SearchHashtagResult.SearchHashtagItem.from(hashtags),
-                hasNext
+                hasNext,
+                nextCursor
         );
     }
 
@@ -103,6 +118,51 @@ public class SearchFacadeService {
         }
         items.subList(PAGE_SIZE, items.size()).clear();
         return true;
+    }
+
+    private SearchCursor extractNextCursor(List<Hit<PostDocument>> hits, boolean hasNext) {
+        if (!hasNext || hits.isEmpty()) {
+            return null;
+        }
+
+        Hit<PostDocument> lastHit = hits.getLast();
+        if (lastHit.score() == null || lastHit.source() == null || lastHit.source().getId() == null) {
+            return null;
+        }
+
+        return SearchCursor.of(lastHit.score().floatValue(), lastHit.source().getId());
+    }
+
+    private SearchCursor extractNextCursorFromUserHits(
+            List<org.springframework.data.elasticsearch.core.SearchHit<UserDocument>> hits,
+            boolean hasNext
+    ) {
+        if (!hasNext || hits.isEmpty()) {
+            return null;
+        }
+
+        org.springframework.data.elasticsearch.core.SearchHit<UserDocument> lastHit = hits.getLast();
+        if (lastHit.getContent() == null || lastHit.getContent().getId() == null) {
+            return null;
+        }
+
+        return SearchCursor.of(lastHit.getScore(), lastHit.getContent().getId());
+    }
+
+    private SearchCursor extractNextCursorFromHashtagHits(
+            List<org.springframework.data.elasticsearch.core.SearchHit<HashtagDocument>> hits,
+            boolean hasNext
+    ) {
+        if (!hasNext || hits.isEmpty()) {
+            return null;
+        }
+
+        org.springframework.data.elasticsearch.core.SearchHit<HashtagDocument> lastHit = hits.getLast();
+        if (lastHit.getContent() == null || lastHit.getContent().getId() == null) {
+            return null;
+        }
+
+        return SearchCursor.of(lastHit.getScore(), lastHit.getContent().getId());
     }
 
 }
