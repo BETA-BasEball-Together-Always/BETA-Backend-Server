@@ -6,6 +6,7 @@ import com.beta.controller.search.request.SearchSuggestionsRequest;
 import com.beta.controller.search.request.SearchUserRequest;
 import com.beta.controller.search.request.SearchChannel;
 import com.beta.search.domain.cursor.SearchCursor;
+import com.beta.search.domain.sort.SearchPostSort;
 import com.beta.controller.search.response.SearchHashtagResponse;
 import com.beta.controller.search.response.SearchMyLogsResponse;
 import com.beta.controller.search.response.SearchPostResponse;
@@ -162,9 +163,10 @@ public class SearchController {
             @Valid @ModelAttribute SearchPostRequest request
     ) {
         String targetChannel = request.channel() == SearchChannel.TEAM ? userDetails.teamCode() : SearchChannel.ALL.name();
+        SearchPostSort sort = request.sort() != null ? request.sort() : SearchPostSort.RECOMMENDED;
 
         SearchCursor cursor = SearchCursor.of(request.cursorScore(), request.cursorId());
-        SearchPostResult result = searchFacadeService.searchPosts(request.keyword(), targetChannel, userDetails.userId(), cursor);
+        SearchPostResult result = searchFacadeService.searchPosts(request.keyword(), targetChannel, userDetails.userId(), sort, cursor);
         return ResponseEntity.ok(SearchPostResponse.from(result));
     }
 

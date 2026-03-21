@@ -64,7 +64,7 @@ class SearchFacadeServiceTest {
         SearchCursor cursor = SearchCursor.first();
 
         Hit<PostDocument> mockHit = createMockHit(100L, "테스트 내용입니다");
-        when(searchPostService.searchInChannel(anyString(), anyString(), any(), anyInt()))
+        when(searchPostService.searchInChannel(anyString(), anyString(), any(), any(), anyInt()))
                 .thenReturn(List.of(mockHit));
 
         PostInfo postInfo = PostInfo.builder()
@@ -102,7 +102,7 @@ class SearchFacadeServiceTest {
 
         Hit<PostDocument> mockHit1 = createMockHit(100L, "존재하는 게시글");
         Hit<PostDocument> mockHit2 = createMockHit(999L, "삭제된 게시글");
-        when(searchPostService.searchInChannel(anyString(), anyString(), any(), anyInt()))
+        when(searchPostService.searchInChannel(anyString(), anyString(), any(), any(), anyInt()))
                 .thenReturn(List.of(mockHit1, mockHit2));
 
         PostInfo postInfo = PostInfo.builder()
@@ -138,7 +138,7 @@ class SearchFacadeServiceTest {
         Long userId = 1L;
         SearchCursor cursor = SearchCursor.first();
 
-        when(searchPostService.searchInChannel(anyString(), anyString(), any(), anyInt()))
+        when(searchPostService.searchInChannel(anyString(), anyString(), any(), any(), anyInt()))
                 .thenReturn(List.of());
         when(postPort.findPostsByIds(anyList(), anyLong())).thenReturn(Map.of());
 
@@ -181,7 +181,7 @@ class SearchFacadeServiceTest {
         Long userId = 1L;
         SearchCursor cursor = SearchCursor.first();
 
-        when(searchPostService.searchInChannel(anyString(), anyString(), any(), anyInt()))
+        when(searchPostService.searchInChannel(anyString(), anyString(), any(), any(), anyInt()))
                 .thenThrow(new SearchFailedException());
 
         // when & then

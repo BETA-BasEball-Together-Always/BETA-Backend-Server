@@ -1,6 +1,7 @@
 package com.beta.search.application;
 
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import com.beta.core.port.PostPort;
 import com.beta.core.port.dto.PostInfo;
 import com.beta.search.application.dto.*;
@@ -8,6 +9,7 @@ import com.beta.search.domain.cursor.SearchCursor;
 import com.beta.search.domain.document.HashtagDocument;
 import com.beta.search.domain.document.PostDocument;
 import com.beta.search.domain.document.UserDocument;
+import com.beta.search.domain.sort.SearchPostSort;
 import com.beta.search.domain.service.SearchHashtagService;
 import com.beta.search.domain.service.SearchLogService;
 import com.beta.search.domain.service.SearchPostService;
@@ -48,8 +50,18 @@ public class SearchFacadeService {
     }
 
     public SearchPostResult searchPosts(String keyword, String channel, Long userId, SearchCursor cursor) {
+        return searchPosts(keyword, channel, userId, SearchPostSort.RECOMMENDED, cursor);
+    }
+
+    public SearchPostResult searchPosts(
+            String keyword,
+            String channel,
+            Long userId,
+            SearchPostSort sort,
+            SearchCursor cursor
+    ) {
         List<Hit<PostDocument>> hits = new ArrayList<>(
-                searchPostService.searchInChannel(keyword, channel, cursor, PAGE_SIZE + 1)
+                searchPostService.searchInChannel(keyword, channel, sort, cursor, PAGE_SIZE + 1)
         );
 
         boolean hasNext = trimToPageSize(hits);
@@ -126,11 +138,49 @@ public class SearchFacadeService {
         }
 
         Hit<PostDocument> lastHit = hits.getLast();
-        if (lastHit.score() == null || lastHit.source() == null || lastHit.source().getId() == null) {
+        if (lastHit.sort() == null || lastHit.sort().size() < 2) {
             return null;
         }
 
-        return SearchCursor.of(lastHit.score().floatValue(), lastHit.source().getId());
+        Double sortValue = extractDouble(lastHit.sort().getFirst());
+        Long id = extractLong(lastHit.sort().get(1));
+        if (sortValue == null || id == null) {
+            return null;
+        }
+
+        return SearchCursor.of(sortValue, id);
+    }
+
+    private Double extractDouble(FieldValue fieldValue) {
+        if (fieldValue == null || fieldValue.isNull()) {
+            return null;
+        }
+        if (fieldValue.isDouble()) {
+            return fieldValue.doubleValue();
+        }
+        if (fieldValue.isLong()) {
+            return (double) fieldValue.longValue();
+        }
+        if (fieldValue.isString()) {
+            return Double.parseDouble(fieldValue.stringValue());
+        }
+        return null;
+    }
+
+    private Long extractLong(FieldValue fieldValue) {
+        if (fieldValue == null || fieldValue.isNull()) {
+            return null;
+        }
+        if (fieldValue.isLong()) {
+            return fieldValue.longValue();
+        }
+        if (fieldValue.isDouble()) {
+            return (long) fieldValue.doubleValue();
+        }
+        if (fieldValue.isString()) {
+            return Long.parseLong(fieldValue.stringValue());
+        }
+        return null;
     }
 
     private SearchCursor extractNextCursorFromUserHits(
@@ -146,7 +196,7 @@ public class SearchFacadeService {
             return null;
         }
 
-        return SearchCursor.of(lastHit.getScore(), lastHit.getContent().getId());
+        return SearchCursor.of((double) lastHit.getScore(), lastHit.getContent().getId());
     }
 
     private SearchCursor extractNextCursorFromHashtagHits(
@@ -162,7 +212,7 @@ public class SearchFacadeService {
             return null;
         }
 
-        return SearchCursor.of(lastHit.getScore(), lastHit.getContent().getId());
+        return SearchCursor.of((double) lastHit.getScore(), lastHit.getContent().getId());
     }
 
 }
