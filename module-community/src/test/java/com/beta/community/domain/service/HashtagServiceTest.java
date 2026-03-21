@@ -2,7 +2,9 @@ package com.beta.community.domain.service;
 
 import com.beta.community.domain.entity.Hashtag;
 import com.beta.community.domain.entity.Post;
+import com.beta.community.domain.entity.PostHashtag;
 import com.beta.community.infra.repository.HashtagJpaRepository;
+import com.beta.community.infra.repository.PostJpaRepository;
 import com.beta.community.infra.repository.PostHashtagJpaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,6 +38,9 @@ class HashtagServiceTest {
 
     @Mock
     private PostHashtagJpaRepository postHashtagJpaRepository;
+
+    @Mock
+    private PostJpaRepository postJpaRepository;
 
     @Nested
     @DisplayName("decrementUsageCounts")
@@ -124,6 +129,26 @@ class HashtagServiceTest {
 
             assertThat(result).hasSize(2).containsExactly("야구", "축구");
             verify(hashtagJpaRepository, times(2)).insertIgnore(anyString());
+        }
+
+        @Test
+        @DisplayName("해시태그 제거 시 usageCount 감소 후 post.updatedAt을 갱신")
+        void touchPostUpdatedAt_whenHashtagRemoved() {
+            Post post = mock(Post.class);
+            given(post.getId()).willReturn(1L);
+
+            Hashtag existingHashtag = createHashtag(1L, "야구");
+            PostHashtag existingPostHashtag = mock(PostHashtag.class);
+            given(existingPostHashtag.getHashtag()).willReturn(existingHashtag);
+            given(postHashtagJpaRepository.findByPostId(1L)).willReturn(List.of(existingPostHashtag));
+            given(hashtagJpaRepository.findByTagNameIn(List.of("야구"))).willReturn(List.of(existingHashtag));
+
+            List<String> result = hashtagService.updateHashtags(post, List.of());
+
+            assertThat(result).isEmpty();
+            verify(postHashtagJpaRepository).deleteAllByPostIdAndHashtagIn(1L, List.of(existingHashtag));
+            verify(hashtagJpaRepository).decrementUsageCountByTagNames(List.of("야구"));
+            verify(postJpaRepository).touchUpdatedAt(1L);
         }
     }
 

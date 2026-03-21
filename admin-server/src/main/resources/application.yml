@@ -1,0 +1,107 @@
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  config:
+    import:
+      - classpath:application-core.yml
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:3306/${DB_SCHEMA}?serverTimezone=Asia/Seoul
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  transaction:
+    default-timeout: 30
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      username: ${REDIS_USERNAME}
+      password: ${REDIS_PASSWORD}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+oracle:
+  cloud:
+    storage:
+      namespace: ${OCI_NAMESPACE}
+      bucket-name: ${OCI_BUCKET_NAME}
+      region: ${OCI_REGION:ap-seoul-1}
+      auth:
+        tenancy-ocid: ${OCI_TENANCY_OCID}
+        user-ocid: ${OCI_USER_OCID}
+        fingerprint: ${OCI_FINGERPRINT}
+        private-key-path: ${OCI_PRIVATE_KEY_PATH}
+
+oauth:
+  apple:
+    client-id: ${APPLE_CLIENT_ID:com.example.app}
+    jwks-url: https://appleid.apple.com/auth/keys
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: ${JWT_EXPIRATION}
+
+springdoc:
+  swagger-ui:
+    path: /api/swagger-ui
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /api/v3/api-docs
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+logging:
+  level:
+    com.beta: DEBUG
+    org.springframework.security: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    health:
+      show-details: never
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: beta-admin-server
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      sla:
+        http.server.requests: 50ms, 100ms, 200ms, 500ms, 1s

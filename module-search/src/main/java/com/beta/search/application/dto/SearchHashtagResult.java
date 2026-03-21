@@ -1,12 +1,14 @@
 package com.beta.search.application.dto;
 
+import com.beta.search.domain.cursor.SearchCursor;
 import com.beta.search.domain.document.HashtagDocument;
 
 import java.util.List;
 
 public record SearchHashtagResult(
         List<SearchHashtagItem> hashtags,
-        boolean hasNext
+        boolean hasNext,
+        SearchCursor nextCursor
 ) {
     public record SearchHashtagItem(
             Long id,

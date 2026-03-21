@@ -12,7 +12,9 @@ public record SearchPostResponse(
         @Schema(description = "검색된 게시글 목록")
         List<PostItem> posts,
         @Schema(description = "다음 페이지 존재 여부")
-        boolean hasNext
+        boolean hasNext,
+        @Schema(description = "다음 페이지 조회용 커서")
+        SearchCursorResponse nextCursor
 ) {
 
     public static SearchPostResponse from(SearchPostResult result) {
@@ -20,7 +22,7 @@ public record SearchPostResponse(
                 .map(PostItem::from)
                 .toList();
 
-        return new SearchPostResponse(items, result.hasNext());
+        return new SearchPostResponse(items, result.hasNext(), SearchCursorResponse.from(result.nextCursor()));
     }
 
     @Schema(description = "게시글 항목")

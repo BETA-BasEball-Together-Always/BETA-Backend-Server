@@ -4,6 +4,8 @@ import com.beta.account.domain.entity.SignupStep;
 import com.beta.account.domain.entity.User;
 import com.beta.account.infra.repository.UserJpaRepository;
 import com.beta.core.exception.account.*;
+import com.beta.core.exception.admin.InvalidAdminActionException;
+import com.beta.core.exception.admin.NotAdminException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -62,4 +64,32 @@ public class UserStatusService {
                     String.format("닉네임은 %d~%d자 사이여야 합니다", MIN_NICKNAME_LENGTH, MAX_NICKNAME_LENGTH));
         }
     }
+
+    public void validateAdminUser(User user) {
+        if (user == null || user.getRole() != User.UserRole.ADMIN) {
+            throw new NotAdminException();
+        }
+        validateUserStatus(user);
+    }
+
+    public void validateSuspend(User user) {
+        if (user.getStatus() == User.UserStatus.WITHDRAWN) {
+            throw new InvalidAdminActionException("탈퇴한 사용자는 정지할 수 없습니다.");
+        }
+
+        if (user.getStatus() == User.UserStatus.SUSPENDED) {
+            throw new InvalidAdminActionException("이미 정지된 사용자입니다.");
+        }
+    }
+
+    public void validateUnsuspend(User user) {
+        if (user.getStatus() == User.UserStatus.WITHDRAWN) {
+            throw new InvalidAdminActionException("탈퇴한 사용자는 정지 해제할 수 없습니다.");
+        }
+
+        if (user.getStatus() != User.UserStatus.SUSPENDED) {
+            throw new InvalidAdminActionException("정지된 사용자만 정지 해제할 수 있습니다.");
+        }
+    }
+
 }

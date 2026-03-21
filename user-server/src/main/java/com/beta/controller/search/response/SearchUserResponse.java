@@ -10,7 +10,9 @@ public record SearchUserResponse(
         @Schema(description = "검색된 계정 목록")
         List<UserItem> users,
         @Schema(description = "다음 페이지 존재 여부")
-        boolean hasNext
+        boolean hasNext,
+        @Schema(description = "다음 페이지 조회용 커서")
+        SearchCursorResponse nextCursor
 ) {
 
     @Schema(description = "계정 항목")
@@ -38,7 +40,7 @@ public record SearchUserResponse(
                 ))
                 .toList();
 
-        return new SearchUserResponse(items, result.hasNext());
+        return new SearchUserResponse(items, result.hasNext(), SearchCursorResponse.from(result.nextCursor()));
     }
 
 }

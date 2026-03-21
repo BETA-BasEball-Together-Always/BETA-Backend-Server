@@ -10,7 +10,9 @@ public record SearchHashtagResponse(
         @Schema(description = "검색된 해시태그 목록")
         List<HashtagItem> hashtags,
         @Schema(description = "다음 페이지 존재 여부")
-        boolean hasNext
+        boolean hasNext,
+        @Schema(description = "다음 페이지 조회용 커서")
+        SearchCursorResponse nextCursor
 ) {
 
     @Schema(description = "해시태그 항목")
@@ -32,7 +34,7 @@ public record SearchHashtagResponse(
                 ))
                 .toList();
 
-        return new SearchHashtagResponse(items, result.hasNext());
+        return new SearchHashtagResponse(items, result.hasNext(), SearchCursorResponse.from(result.nextCursor()));
     }
 
 }

@@ -66,4 +66,12 @@ public class Comment extends BaseEntity {
     public boolean isOwnedBy(Long userId) {
         return this.userId.equals(userId);
     }
+
+    public void hide() {
+        this.status = Status.HIDDEN;
+    }
+
+    public void unhide() {
+        this.status = Status.ACTIVE;
+    }
 }

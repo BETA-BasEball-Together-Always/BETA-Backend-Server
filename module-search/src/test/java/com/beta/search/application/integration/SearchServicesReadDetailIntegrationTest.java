@@ -17,6 +17,7 @@ import com.beta.search.domain.document.HashtagDocument;
 import com.beta.search.domain.document.PostDocument;
 import com.beta.search.domain.document.SearchLogDocument;
 import com.beta.search.domain.document.UserDocument;
+import com.beta.search.domain.sort.SearchPostSort;
 import com.beta.search.infra.repository.SearchPostRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -182,6 +183,36 @@ class SearchServicesReadDetailIntegrationTest extends MysqlEsTestContainer {
     }
 
     @Test
+    void search_posts_호출시_latest_정렬은_매칭된_게시글중_최신순으로_반환된다() {
+        // given
+        index_post_document(21L, "ALL", "야구 리뷰 A", "작성자A", List.of("야구"), "2026-02-20T11:00:00", 10);
+        index_post_document(22L, "ALL", "야구 리뷰 B", "작성자B", List.of("야구"), "2026-02-20T11:10:00", 5);
+        index_post_document(23L, "ALL", "야구 리뷰 C", "작성자C", List.of("야구"), "2026-02-20T11:20:00", 1);
+
+        // when
+        SearchPostResult result = searchFacadeService.searchPosts("야구", "ALL", 1L, SearchPostSort.LATEST, SearchCursor.first());
+
+        // then
+        assertThat(result.posts().stream().map(SearchPostResult.SearchPostItem::postId).toList())
+                .containsExactly(23L, 22L, 21L);
+    }
+
+    @Test
+    void search_posts_호출시_popular_정렬은_매칭된_게시글중_인기점수순으로_반환된다() {
+        // given
+        index_post_document(31L, "ALL", "야구 인기글 A", "작성자A", List.of("야구"), "2026-02-20T11:00:00", 5);
+        index_post_document(32L, "ALL", "야구 인기글 B", "작성자B", List.of("야구"), "2026-02-20T11:10:00", 20);
+        index_post_document(33L, "ALL", "야구 인기글 C", "작성자C", List.of("야구"), "2026-02-20T11:20:00", 10);
+
+        // when
+        SearchPostResult result = searchFacadeService.searchPosts("야구", "ALL", 1L, SearchPostSort.POPULAR, SearchCursor.first());
+
+        // then
+        assertThat(result.posts().stream().map(SearchPostResult.SearchPostItem::postId).toList())
+                .containsExactly(32L, 33L, 31L);
+    }
+
+    @Test
     void search_posts_호출시_커서로_다음_페이지를_조회하면_중복없이_이어진다() {
         // given
         for (long id = 1; id <= 12; id++) {
@@ -193,7 +224,7 @@ class SearchServicesReadDetailIntegrationTest extends MysqlEsTestContainer {
         List<Hit<PostDocument>> firstPageHitsForCursor =
                 searchPostRepository.searchInChannel("커서", "ALL", SearchCursor.first(), 10);
         Hit<PostDocument> lastHit = firstPageHitsForCursor.getLast();
-        SearchCursor nextCursor = SearchCursor.of(lastHit.score().floatValue(), lastHit.source().getId());
+        SearchCursor nextCursor = SearchCursor.of(lastHit.score(), lastHit.source().getId());
         SearchPostResult secondPage = searchFacadeService.searchPosts("커서", "ALL", 1L, nextCursor);
 
         // then
@@ -259,6 +290,18 @@ class SearchServicesReadDetailIntegrationTest extends MysqlEsTestContainer {
             List<String> hashtags,
             String createdAt
     ) {
+        index_post_document(id, channel, content, authorNickname, hashtags, createdAt, 0);
+    }
+
+    private void index_post_document(
+            Long id,
+            String channel,
+            String content,
+            String authorNickname,
+            List<String> hashtags,
+            String createdAt,
+            Integer popularityScore
+    ) {
         try {
             elasticsearchClient.index(i -> i
                     .index("posts")
@@ -269,7 +312,8 @@ class SearchServicesReadDetailIntegrationTest extends MysqlEsTestContainer {
                             "content", content,
                             "authorNickname", authorNickname,
                             "hashtags", hashtags,
-                            "createdAt", createdAt
+                            "createdAt", createdAt,
+                            "popularityScore", popularityScore
                     )));
             elasticsearchOperations.indexOps(PostDocument.class).refresh();
         } catch (IOException e) {

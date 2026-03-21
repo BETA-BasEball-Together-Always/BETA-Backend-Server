@@ -11,7 +11,7 @@ public record SearchHashtagRequest(
         @Size(max = 30, message = "검색어는 30자 이하여야 합니다.")
         String keyword,
         @Schema(description = "커서 점수 (다음 페이지 조회 시)")
-        Float cursorScore,
+        Double cursorScore,
         @Schema(description = "커서 ID (다음 페이지 조회 시)")
         Long cursorId
 ) {

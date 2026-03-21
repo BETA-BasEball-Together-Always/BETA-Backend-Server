@@ -9,6 +9,7 @@ import com.beta.core.exception.account.NameDuplicateException;
 import com.beta.core.exception.account.PersonalInfoAgreementRequiredException;
 import com.beta.core.exception.account.UserSuspendedException;
 import com.beta.core.exception.account.UserWithdrawnException;
+import com.beta.core.exception.admin.InvalidAdminActionException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,10 +29,10 @@ import static org.mockito.Mockito.*;
 class UserStatusServiceTest {
 
     @Mock
-    private UserJpaRepository userJpaRepository;
+    UserJpaRepository userJpaRepository;
 
     @InjectMocks
-    private UserStatusService userStatusService;
+    UserStatusService userStatusService;
 
     @Test
     @DisplayName("정상 상태의 사용자는 검증을 통과한다")
@@ -193,4 +194,59 @@ class UserStatusServiceTest {
         verify(userJpaRepository).existsByNickname(nickname);
     }
 
+    @Test
+    @DisplayName("정상 회원은 정지 검증을 통과한다")
+    void validate_suspend_allows_active_member() {
+        // given
+        User user = mock(User.class);
+        when(user.getStatus()).thenReturn(User.UserStatus.ACTIVE);
+
+        // when & then
+        assertDoesNotThrow(() -> userStatusService.validateSuspend(user));
+    }
+
+    @Test
+    @DisplayName("이미 정지된 사용자는 다시 정지할 수 없다")
+    void validate_suspend_throws_exception_when_member_is_suspended() {
+        // given
+        User user = mock(User.class);
+        when(user.getStatus()).thenReturn(User.UserStatus.SUSPENDED);
+
+        // when & then
+        assertThatThrownBy(() -> userStatusService.validateSuspend(user))
+                .isInstanceOf(InvalidAdminActionException.class)
+                .hasMessage("이미 정지된 사용자입니다.")
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_ADMIN_ACTION);
+    }
+
+    @Test
+    @DisplayName("탈퇴한 사용자는 정지 해제할 수 없다")
+    void validate_unsuspend_throws_exception_when_member_is_withdrawn() {
+        // given
+        User user = mock(User.class);
+        when(user.getStatus()).thenReturn(User.UserStatus.WITHDRAWN);
+
+        // when & then
+        assertThatThrownBy(() -> userStatusService.validateUnsuspend(user))
+                .isInstanceOf(InvalidAdminActionException.class)
+                .hasMessage("탈퇴한 사용자는 정지 해제할 수 없습니다.")
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_ADMIN_ACTION);
+    }
+
+    @Test
+    @DisplayName("정지 상태가 아닌 사용자는 정지 해제할 수 없다")
+    void validate_unsuspend_throws_exception_when_member_is_not_suspended() {
+        // given
+        User user = mock(User.class);
+        when(user.getStatus()).thenReturn(User.UserStatus.ACTIVE);
+
+        // when & then
+        assertThatThrownBy(() -> userStatusService.validateUnsuspend(user))
+                .isInstanceOf(InvalidAdminActionException.class)
+                .hasMessage("정지된 사용자만 정지 해제할 수 있습니다.")
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_ADMIN_ACTION);
+    }
 }

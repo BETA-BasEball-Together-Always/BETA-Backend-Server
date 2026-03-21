@@ -80,6 +80,14 @@ public class Post extends BaseEntity {
         this.deletedAt = LocalDateTime.now();
     }
 
+    public void hide() {
+        this.status = Status.HIDDEN;
+    }
+
+    public void unhide() {
+        this.status = Status.ACTIVE;
+    }
+
     public enum Channel {
         DOOSAN,
         LG,

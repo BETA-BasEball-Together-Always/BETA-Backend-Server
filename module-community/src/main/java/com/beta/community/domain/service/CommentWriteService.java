@@ -19,6 +19,14 @@ public class CommentWriteService {
         comment.softDelete();
     }
 
+    public void hide(Comment comment) {
+        comment.hide();
+    }
+
+    public void unhide(Comment comment) {
+        comment.unhide();
+    }
+
     public void incrementLikeCount(Long commentId) {
         commentJpaRepository.incrementLikeCount(commentId);
     }

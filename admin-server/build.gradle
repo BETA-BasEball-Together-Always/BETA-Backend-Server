@@ -1,0 +1,28 @@
+plugins {
+    id 'BETA-Backend-Server.java-conventions'
+}
+
+dependencies {
+    implementation project(':module-core')
+    implementation project(':module-account')
+    implementation project(':module-community')
+    implementation project(':module-search')
+
+    // Monitoring
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    testImplementation testFixtures(project(':module-core'))
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.named('bootJar') {
+    enabled = true
+}
+
+tasks.named('jar') {
+    enabled = false
+}

@@ -21,10 +21,20 @@ public interface HashtagJpaRepository extends JpaRepository<Hashtag, Long> {
     void insertIgnore(@Param("tagName") String tagName);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Hashtag h SET h.usageCount = h.usageCount + 1 WHERE h.tagName IN :tagNames")
+    @Query("""
+            UPDATE Hashtag h
+            SET h.usageCount = h.usageCount + 1,
+                h.updatedAt = CURRENT_TIMESTAMP
+            WHERE h.tagName IN :tagNames
+            """)
     void incrementUsageCountByTagNames(@Param("tagNames") List<String> tagNames);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Hashtag h SET h.usageCount = CASE WHEN h.usageCount > 0 THEN h.usageCount - 1 ELSE 0 END WHERE h.tagName IN :tagNames")
+    @Query("""
+            UPDATE Hashtag h
+            SET h.usageCount = CASE WHEN h.usageCount > 0 THEN h.usageCount - 1 ELSE 0 END,
+                h.updatedAt = CURRENT_TIMESTAMP
+            WHERE h.tagName IN :tagNames
+            """)
     void decrementUsageCountByTagNames(@Param("tagNames") List<String> tagNames);
 }
