@@ -15,10 +15,7 @@ public class SearchHashtagService {
 
     private final SearchHashtagRepository searchHashtagRepository;
 
-    public List<HashtagDocument> search(String keyword, SearchCursor cursor, int size) {
-        return searchHashtagRepository.searchByKeyword(keyword, cursor, size)
-                .stream()
-                .map(SearchHit::getContent)
-                .toList();
+    public List<SearchHit<HashtagDocument>> search(String keyword, SearchCursor cursor, int size) {
+        return searchHashtagRepository.searchByKeyword(keyword, cursor, size);
     }
 }

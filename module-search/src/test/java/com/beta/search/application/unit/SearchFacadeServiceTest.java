@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.elasticsearch.core.SearchHit;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -63,7 +64,7 @@ class SearchFacadeServiceTest {
         SearchCursor cursor = SearchCursor.first();
 
         Hit<PostDocument> mockHit = createMockHit(100L, "테스트 내용입니다");
-        when(searchPostService.searchInChannel(anyString(), anyString(), any(), anyInt()))
+        when(searchPostService.searchInChannel(anyString(), anyString(), any(), any(), anyInt()))
                 .thenReturn(List.of(mockHit));
 
         PostInfo postInfo = PostInfo.builder()
@@ -101,7 +102,7 @@ class SearchFacadeServiceTest {
 
         Hit<PostDocument> mockHit1 = createMockHit(100L, "존재하는 게시글");
         Hit<PostDocument> mockHit2 = createMockHit(999L, "삭제된 게시글");
-        when(searchPostService.searchInChannel(anyString(), anyString(), any(), anyInt()))
+        when(searchPostService.searchInChannel(anyString(), anyString(), any(), any(), anyInt()))
                 .thenReturn(List.of(mockHit1, mockHit2));
 
         PostInfo postInfo = PostInfo.builder()
@@ -137,7 +138,7 @@ class SearchFacadeServiceTest {
         Long userId = 1L;
         SearchCursor cursor = SearchCursor.first();
 
-        when(searchPostService.searchInChannel(anyString(), anyString(), any(), anyInt()))
+        when(searchPostService.searchInChannel(anyString(), anyString(), any(), any(), anyInt()))
                 .thenReturn(List.of());
         when(postPort.findPostsByIds(anyList(), anyLong())).thenReturn(Map.of());
 
@@ -162,7 +163,7 @@ class SearchFacadeServiceTest {
                 .teamCode("LG")
                 .teamNameKr("LG 트윈스")
                 .build();
-        when(searchUserService.search(anyString(), any(), anyInt())).thenReturn(List.of(userDoc));
+        when(searchUserService.search(anyString(), any(), anyInt())).thenReturn(List.of(createMockUserHit(userDoc)));
 
         // when
         SearchUserResult result = searchFacadeService.searchUsers(keyword, userId, cursor);
@@ -180,7 +181,7 @@ class SearchFacadeServiceTest {
         Long userId = 1L;
         SearchCursor cursor = SearchCursor.first();
 
-        when(searchPostService.searchInChannel(anyString(), anyString(), any(), anyInt()))
+        when(searchPostService.searchInChannel(anyString(), anyString(), any(), any(), anyInt()))
                 .thenThrow(new SearchFailedException());
 
         // when & then
@@ -204,5 +205,22 @@ class SearchFacadeServiceTest {
         when(hit.source()).thenReturn(doc);
         when(hit.highlight()).thenReturn(Map.of("content", List.of("<em>테스트</em> 내용")));
         return hit;
+    }
+
+    @SuppressWarnings("unchecked")
+    private SearchHit<UserDocument> createMockUserHit(UserDocument userDocument) {
+        return new SearchHit<>(
+                "users",
+                String.valueOf(userDocument.getId()),
+                null,
+                1.0f,
+                new Object[0],
+                Map.of(),
+                Map.of(),
+                null,
+                null,
+                List.of(),
+                userDocument
+        );
     }
 }

@@ -4,6 +4,7 @@ import com.beta.community.domain.entity.Hashtag;
 import com.beta.community.domain.entity.Post;
 import com.beta.community.domain.entity.PostHashtag;
 import com.beta.community.infra.repository.HashtagJpaRepository;
+import com.beta.community.infra.repository.PostJpaRepository;
 import com.beta.community.infra.repository.PostHashtagJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class HashtagService {
 
     private final HashtagJpaRepository hashtagJpaRepository;
     private final PostHashtagJpaRepository postHashtagJpaRepository;
+    private final PostJpaRepository postJpaRepository;
 
     public List<String> processHashtags(Post post, List<String> hashtagNames) {
         if (hashtagNames == null || hashtagNames.isEmpty()) {
@@ -75,6 +77,7 @@ public class HashtagService {
             List<Hashtag> removeHashtags = hashtagJpaRepository.findByTagNameIn(toRemove);
             postHashtagJpaRepository.deleteAllByPostIdAndHashtagIn(post.getId(), removeHashtags);
             hashtagJpaRepository.decrementUsageCountByTagNames(toRemove);
+            postJpaRepository.touchUpdatedAt(post.getId());
         }
 
         if (!toAdd.isEmpty()) {

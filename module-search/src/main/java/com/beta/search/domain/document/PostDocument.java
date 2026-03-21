@@ -40,4 +40,7 @@ public class PostDocument {
     @Field(type = FieldType.Date)
     private LocalDateTime createdAt; // 정렬용
 
+    @Field(type = FieldType.Integer)
+    private Integer popularityScore; // 인기순 정렬용
+
 }

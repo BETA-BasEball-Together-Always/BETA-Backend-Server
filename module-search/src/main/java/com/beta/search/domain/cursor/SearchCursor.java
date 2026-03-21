@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class SearchCursor {
 
-    private Float score; // ES score
+    private Double score; // current sort value
     private Long id; // tiebreaker
 
-    public static SearchCursor of(Float score, Long id) {
+    public static SearchCursor of(Double score, Long id) {
         if ((score == null) != (id == null)) {
             throw new InvalidCursorException();
         }

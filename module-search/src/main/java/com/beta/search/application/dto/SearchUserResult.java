@@ -1,12 +1,14 @@
 package com.beta.search.application.dto;
 
+import com.beta.search.domain.cursor.SearchCursor;
 import com.beta.search.domain.document.UserDocument;
 
 import java.util.List;
 
 public record SearchUserResult(
         List<SearchUserItem> users,
-        boolean hasNext
+        boolean hasNext,
+        SearchCursor nextCursor
 ) {
     public record SearchUserItem(
             Long userId,
