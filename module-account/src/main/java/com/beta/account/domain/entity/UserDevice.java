@@ -21,7 +21,7 @@ public class UserDevice extends BaseEntity {
     @Column(nullable = false)
     private Long userId;
 
-    @Column(nullable = false, unique = true, length = 36)
+    @Column(nullable = false, length = 36)
     private String deviceId;
 
     @Column(length = 500)
