@@ -21,7 +21,7 @@ public class UserDevice extends BaseEntity {
     @Column(nullable = false)
     private Long userId;
 
-    @Column(nullable = false, unique = true, length = 36)
+    @Column(nullable = false, length = 36)
     private String deviceId;
 
     @Column(length = 500)
@@ -54,6 +54,10 @@ public class UserDevice extends BaseEntity {
 
     public void activate() {
         this.isActive = true;
+    }
+
+    public void deactivate() {
+        this.isActive = false;
     }
 
     public void updatePushSettings(String fcmToken, Boolean pushEnabled) {
