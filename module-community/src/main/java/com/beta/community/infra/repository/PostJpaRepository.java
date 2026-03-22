@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface PostJpaRepository extends JpaRepository<Post, Long> {
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE Post p
             SET p.likeCount = p.likeCount + 1,
@@ -19,7 +19,7 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
             """)
     void incrementLikeCount(@Param("postId") Long postId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE Post p
             SET p.likeCount = p.likeCount - 1,
@@ -28,7 +28,7 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
             """)
     void decrementLikeCount(@Param("postId") Long postId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE Post p
             SET p.sadCount = p.sadCount + 1,
@@ -37,7 +37,7 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
             """)
     void incrementSadCount(@Param("postId") Long postId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE Post p
             SET p.sadCount = p.sadCount - 1,
@@ -46,7 +46,7 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
             """)
     void decrementSadCount(@Param("postId") Long postId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE Post p
             SET p.funCount = p.funCount + 1,
@@ -55,7 +55,7 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
             """)
     void incrementFunCount(@Param("postId") Long postId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE Post p
             SET p.funCount = p.funCount - 1,
@@ -64,7 +64,7 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
             """)
     void decrementFunCount(@Param("postId") Long postId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE Post p
             SET p.hypeCount = p.hypeCount + 1,
@@ -73,7 +73,7 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
             """)
     void incrementHypeCount(@Param("postId") Long postId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE Post p
             SET p.hypeCount = p.hypeCount - 1,
@@ -82,7 +82,7 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
             """)
     void decrementHypeCount(@Param("postId") Long postId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE Post p
             SET p.commentCount = p.commentCount + 1,
@@ -91,7 +91,7 @@ public interface PostJpaRepository extends JpaRepository<Post, Long> {
             """)
     void incrementCommentCount(@Param("postId") Long postId);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE Post p
             SET p.commentCount = p.commentCount - 1,

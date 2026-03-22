@@ -21,4 +21,10 @@ public interface UserDeviceJpaRepository extends JpaRepository<UserDevice, Long>
     @Query("SELECT d FROM UserDevice d WHERE d.userId = :userId " +
            "AND d.isActive = true")
     List<UserDevice> findActiveDevicesByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT d FROM UserDevice d WHERE d.deviceId = :deviceId " +
+           "AND d.userId != :userId AND d.isActive = true")
+    List<UserDevice> findActiveDevicesByDeviceIdExcludingUser(
+            @Param("deviceId") String deviceId,
+            @Param("userId") Long userId);
 }

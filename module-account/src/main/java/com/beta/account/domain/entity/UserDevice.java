@@ -56,6 +56,10 @@ public class UserDevice extends BaseEntity {
         this.isActive = true;
     }
 
+    public void deactivate() {
+        this.isActive = false;
+    }
+
     public void updatePushSettings(String fcmToken, Boolean pushEnabled) {
         this.fcmToken = fcmToken;
         this.pushEnabled = pushEnabled;
