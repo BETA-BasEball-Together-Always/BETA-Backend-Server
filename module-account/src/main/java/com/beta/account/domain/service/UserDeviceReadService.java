@@ -19,4 +19,8 @@ public class UserDeviceReadService {
     public Optional<UserDevice> findByUserIdAndDeviceId(Long userId, String deviceId) {
         return userDeviceJpaRepository.findByUserIdAndDeviceId(userId, deviceId);
     }
+
+    public List<UserDevice> findActiveDevicesByDeviceIdExcludingUser(String deviceId, Long userId) {
+        return userDeviceJpaRepository.findActiveDevicesByDeviceIdExcludingUser(deviceId, userId);
+    }
 }

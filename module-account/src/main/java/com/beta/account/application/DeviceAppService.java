@@ -18,6 +18,8 @@ public class DeviceAppService {
 
     @Transactional
     public boolean registerOrUpdateDevice(Long userId, String deviceId, String fcmToken) {
+        deactivateOtherUsersDevices(deviceId, userId);
+
         Optional<UserDevice> existingDevice = userDeviceReadService.findByUserIdAndDeviceId(userId, deviceId);
 
         if (existingDevice.isPresent()) {
@@ -28,6 +30,11 @@ public class DeviceAppService {
             userDeviceWriteService.createNewDevice(userId, deviceId, fcmToken);
             return true;
         }
+    }
+
+    private void deactivateOtherUsersDevices(String deviceId, Long currentUserId) {
+        userDeviceReadService.findActiveDevicesByDeviceIdExcludingUser(deviceId, currentUserId)
+                .forEach(userDeviceWriteService::deactivateDevice);
     }
 
     @Transactional

@@ -59,4 +59,9 @@ public class UserDeviceWriteService {
         device.updatePushEnabled(pushEnabled);
         save(device);
     }
+
+    public void deactivateDevice(UserDevice device) {
+        device.deactivate();
+        save(device);
+    }
 }

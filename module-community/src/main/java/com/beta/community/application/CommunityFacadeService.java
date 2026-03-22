@@ -215,7 +215,7 @@ public class CommunityFacadeService {
                 toggled = false;
             } else {
                 currentEmotion.changeEmotionType(newEmotionType);
-                emotionWriteService.save(currentEmotion);
+                // save() 제거 - 영속 상태 엔티티는 dirty checking으로 자동 반영
                 emotionWriteService.decrementEmotionCount(postId, currentType);
                 emotionWriteService.incrementEmotionCount(postId, newEmotionType);
                 toggled = true;
