@@ -82,7 +82,7 @@ public class PostImageService {
 
                 String originalFilename = image.getOriginalFilename();
                 String extension = extractExtension(originalFilename == null ? "" : originalFilename);
-                String objectName = generateFilename(userId, i, extension);
+                String objectName = generateFilename(postId, userId, i, extension);
 
                 String imageUrl = storageClient.upload(
                         image.getInputStream(),
@@ -172,9 +172,9 @@ public class PostImageService {
         return ".jpg";
     }
 
-    private String generateFilename(Long userId, int index, String extension) {
+    private String generateFilename(Long postId, Long userId, int index, String extension) {
         String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String filename = String.format("BETA_%s_%d_%03d%s", dateStr, userId, index + 1, extension);
+        String filename = String.format("BETA_%s_%d_%d_%03d%s", dateStr, userId, postId, index + 1, extension);
         return String.format("%s/%s", dateStr, filename);
     }
 }
