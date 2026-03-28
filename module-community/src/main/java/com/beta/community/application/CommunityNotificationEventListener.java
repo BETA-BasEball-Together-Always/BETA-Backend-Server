@@ -6,7 +6,6 @@ import com.beta.core.port.PushPort;
 import com.beta.core.port.UserPort;
 import com.beta.core.port.dto.AuthorInfo;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -14,7 +13,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import java.util.List;
 
 @Component
-@ConditionalOnBean(PushPort.class)
 @RequiredArgsConstructor
 public class CommunityNotificationEventListener {
 
