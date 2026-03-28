@@ -33,6 +33,11 @@ CREATE TABLE posts (
     channel VARCHAR(20) NOT NULL,
     content TEXT NOT NULL,
     status VARCHAR(20) NOT NULL,
+    comment_count INT NOT NULL DEFAULT 0,
+    like_count INT NOT NULL DEFAULT 0,
+    sad_count INT NOT NULL DEFAULT 0,
+    fun_count INT NOT NULL DEFAULT 0,
+    hype_count INT NOT NULL DEFAULT 0,
     deleted_at DATETIME(6),
     created_at DATETIME(6) NOT NULL,
     updated_at DATETIME(6) NOT NULL

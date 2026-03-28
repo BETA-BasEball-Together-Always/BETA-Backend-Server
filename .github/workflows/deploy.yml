@@ -76,6 +76,7 @@ jobs:
                 -p 8080:8080 \
                 --env-file /home/ubuntu/env/beta-user.env \
                 -v /home/ubuntu/oci_api_key.pem:/app/keys/oci_api_key.pem:ro \
+                -v /home/ubuntu/keys/firebase-admin.json:/app/keys/firebase-admin.json:ro \
                 -v /home/ubuntu/app-cacerts:/app/certs/app-cacerts:ro \
                 --restart always \
                 --health-cmd="curl -f http://localhost:8080/actuator/health || exit 1" \

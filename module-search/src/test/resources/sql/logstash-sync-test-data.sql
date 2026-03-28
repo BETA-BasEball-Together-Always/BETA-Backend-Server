@@ -13,8 +13,22 @@ INSERT INTO hashtag (id, tag_name, usage_count, created_at, updated_at) VALUES
 (20, '두산', 3, @t2, @t2),
 (21, '야구', 5, @t2, @t2);
 
-INSERT INTO posts (id, user_id, channel, content, status, deleted_at, created_at, updated_at) VALUES
-(100, 10, 'ALL', '두산 야구 경기 직관 후기입니다. 오늘 타선 집중력이 좋았습니다.', 'ACTIVE', NULL, @t3, @t3);
+INSERT INTO posts (
+    id,
+    user_id,
+    channel,
+    content,
+    status,
+    comment_count,
+    like_count,
+    sad_count,
+    fun_count,
+    hype_count,
+    deleted_at,
+    created_at,
+    updated_at
+) VALUES
+(100, 10, 'ALL', '두산 야구 경기 직관 후기입니다. 오늘 타선 집중력이 좋았습니다.', 'ACTIVE', 2, 3, 1, 0, 1, NULL, @t3, @t3);
 
 INSERT INTO post_hashtag (id, post_id, hashtag_id, created_at, updated_at) VALUES
 (30, 100, 20, @t4, @t4),
