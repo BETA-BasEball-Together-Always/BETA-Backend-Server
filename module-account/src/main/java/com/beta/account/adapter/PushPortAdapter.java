@@ -3,6 +3,9 @@ package com.beta.account.adapter;
 import com.beta.account.domain.entity.UserDevice;
 import com.beta.account.domain.service.UserDeviceReadService;
 import com.beta.core.port.PushPort;
+import com.google.firebase.messaging.ApnsConfig;
+import com.google.firebase.messaging.Aps;
+import com.google.firebase.messaging.ApsAlert;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
@@ -69,6 +72,7 @@ public class PushPortAdapter implements PushPort {
                                 .setTitle(title)
                                 .setBody(body)
                                 .build())
+                        .setApnsConfig(buildApnsConfig(title, body))
                         .putAllData(data)
                         .build();
 
@@ -88,5 +92,19 @@ public class PushPortAdapter implements PushPort {
             case "HYPE" -> "신나요";
             default -> "공감";
         };
+    }
+
+    private ApnsConfig buildApnsConfig(String title, String body) {
+        return ApnsConfig.builder()
+                .putHeader("apns-push-type", "alert")
+                .putHeader("apns-priority", "10")
+                .setAps(Aps.builder()
+                        .setAlert(ApsAlert.builder()
+                                .setTitle(title)
+                                .setBody(body)
+                                .build())
+                        .setSound("default")
+                        .build())
+                .build();
     }
 }
