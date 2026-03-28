@@ -1,5 +1,6 @@
 package com.beta.account.application;
 
+import com.beta.account.domain.entity.UserDevice;
 import com.beta.account.domain.service.UserDeviceReadService;
 import com.beta.account.domain.service.UserDeviceWriteService;
 import com.beta.core.exception.account.DeviceNotFoundException;
@@ -64,7 +65,7 @@ class DeviceAppServiceTest {
         // given
         Long userId = 1L;
         String deviceId = "device-1";
-        var device = com.beta.account.domain.entity.UserDevice.builder()
+        UserDevice device = com.beta.account.domain.entity.UserDevice.builder()
                 .userId(userId)
                 .deviceId(deviceId)
                 .fcmToken(null)
@@ -100,7 +101,7 @@ class DeviceAppServiceTest {
         // given
         Long userId = 1L;
         String deviceId = "device-1";
-        var device = com.beta.account.domain.entity.UserDevice.builder()
+        UserDevice device = com.beta.account.domain.entity.UserDevice.builder()
                 .userId(userId)
                 .deviceId(deviceId)
                 .fcmToken(null)

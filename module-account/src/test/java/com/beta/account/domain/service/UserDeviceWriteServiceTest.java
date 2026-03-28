@@ -137,10 +137,11 @@ class UserDeviceWriteServiceTest {
     }
 
     @Test
-    @DisplayName("디바이스 푸시 활성화 상태만 변경한다")
-    void updatePushEnabled_UpdatesOnlyPushEnabled() {
+    @DisplayName("디바이스 전체 푸시 활성화 상태를 변경하면 세부 토글도 함께 변경한다")
+    void updatePushEnabled_UpdatesOverallAndDetailSettings() {
         // given
         UserDevice device = createUserDevice(1L, "token123");
+        device.updatePushDetailSettings(true, false);
         Boolean pushEnabled = false;
 
         when(userDeviceJpaRepository.save(any(UserDevice.class)))
@@ -172,6 +173,26 @@ class UserDeviceWriteServiceTest {
         // then
         assertThat(device.getPostCommentPushEnabled()).isTrue();
         assertThat(device.getPostEmotionPushEnabled()).isFalse();
+        assertThat(device.getPushEnabled()).isFalse();
+        verify(userDeviceJpaRepository, times(1)).save(device);
+    }
+
+    @Test
+    @DisplayName("디바이스 푸시 세부 설정이 모두 활성화되면 전체 상태도 활성화된다")
+    void updatePushDetailSettings_UpdatesOverallState_WhenAllDetailSettingsEnabled() {
+        // given
+        UserDevice device = createUserDevice(1L, "token123");
+
+        when(userDeviceJpaRepository.save(any(UserDevice.class)))
+                .thenReturn(device);
+
+        // when
+        userDeviceWriteService.updatePushDetailSettings(device, true, true);
+
+        // then
+        assertThat(device.getPostCommentPushEnabled()).isTrue();
+        assertThat(device.getPostEmotionPushEnabled()).isTrue();
+        assertThat(device.getPushEnabled()).isTrue();
         verify(userDeviceJpaRepository, times(1)).save(device);
     }
 

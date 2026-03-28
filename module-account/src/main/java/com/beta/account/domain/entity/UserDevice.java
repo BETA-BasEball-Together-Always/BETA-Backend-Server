@@ -77,5 +77,7 @@ public class UserDevice extends BaseEntity {
     public void updatePushDetailSettings(Boolean postCommentPushEnabled, Boolean postEmotionPushEnabled) {
         this.postCommentPushEnabled = postCommentPushEnabled;
         this.postEmotionPushEnabled = postEmotionPushEnabled;
+        this.pushEnabled = Boolean.TRUE.equals(postCommentPushEnabled)
+                && Boolean.TRUE.equals(postEmotionPushEnabled);
     }
 }
