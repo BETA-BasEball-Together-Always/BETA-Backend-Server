@@ -1,5 +1,6 @@
 package com.beta.account.application;
 
+import com.beta.account.application.dto.DevicePushSettingsResult;
 import com.beta.account.domain.entity.UserDevice;
 import com.beta.account.domain.service.UserDeviceReadService;
 import com.beta.account.domain.service.UserDeviceWriteService;
@@ -65,5 +66,17 @@ public class DeviceAppService {
                 postCommentPushEnabled,
                 postEmotionPushEnabled
         );
+    }
+
+    public DevicePushSettingsResult getPushSettings(Long userId, String deviceId) {
+        UserDevice device = userDeviceReadService.findByUserIdAndDeviceId(userId, deviceId)
+                .orElseThrow(DeviceNotFoundException::new);
+
+        return DevicePushSettingsResult.builder()
+                .deviceId(device.getDeviceId())
+                .pushEnabled(device.getPushEnabled())
+                .postCommentPushEnabled(device.getPostCommentPushEnabled())
+                .postEmotionPushEnabled(device.getPostEmotionPushEnabled())
+                .build();
     }
 }
