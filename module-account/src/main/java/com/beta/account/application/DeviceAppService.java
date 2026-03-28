@@ -39,11 +39,11 @@ public class DeviceAppService {
     }
 
     @Transactional
-    public void updatePushSettings(Long userId, String deviceId, String fcmToken, Boolean pushEnabled) {
+    public void updatePushSettings(Long userId, String deviceId, String fcmToken) {
         UserDevice device = userDeviceReadService.findByUserIdAndDeviceId(userId, deviceId)
                 .orElseThrow(DeviceNotFoundException::new);
 
-        userDeviceWriteService.updatePushSettings(device, fcmToken, pushEnabled);
+        userDeviceWriteService.updateDeviceFcmToken(device, fcmToken);
     }
 
     @Transactional
@@ -52,5 +52,18 @@ public class DeviceAppService {
                 .orElseThrow(DeviceNotFoundException::new);
 
         userDeviceWriteService.updatePushEnabled(device, pushEnabled);
+    }
+
+    @Transactional
+    public void updatePushDetailSettings(Long userId, String deviceId,
+                                         Boolean postCommentPushEnabled, Boolean postEmotionPushEnabled) {
+        UserDevice device = userDeviceReadService.findByUserIdAndDeviceId(userId, deviceId)
+                .orElseThrow(DeviceNotFoundException::new);
+
+        userDeviceWriteService.updatePushDetailSettings(
+                device,
+                postCommentPushEnabled,
+                postEmotionPushEnabled
+        );
     }
 }

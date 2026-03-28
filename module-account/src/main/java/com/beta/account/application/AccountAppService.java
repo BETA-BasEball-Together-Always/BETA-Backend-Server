@@ -102,7 +102,7 @@ public class AccountAppService {
 
     public void logout(Long userId, String deviceId) {
         refreshTokenService.deleteByUserId(userId);
-        userDeviceWriteService.deleteByDeviceId(userId, deviceId);
+        userDeviceWriteService.deactivateByDeviceId(userId, deviceId);
     }
 
     public SignupStepResult processConsent(Long userId, Boolean personalInfoRequired, Boolean agreeMarketing) {

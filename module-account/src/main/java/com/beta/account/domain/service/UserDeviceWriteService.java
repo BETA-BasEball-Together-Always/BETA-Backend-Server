@@ -25,6 +25,14 @@ public class UserDeviceWriteService {
         userDeviceJpaRepository.deleteByUserIdAndDeviceId(userId, deviceId);
     }
 
+    public void deactivateByDeviceId(Long userId, String deviceId) {
+        userDeviceJpaRepository.findByUserIdAndDeviceId(userId, deviceId)
+                .ifPresent(device -> {
+                    device.deactivate();
+                    save(device);
+                });
+    }
+
     public UserDevice createNewDevice(Long userId, String deviceId, String fcmToken) {
         UserDevice newDevice = UserDevice.builder()
                 .userId(userId)
@@ -49,14 +57,15 @@ public class UserDeviceWriteService {
         save(device);
     }
 
-    public void updatePushSettings(UserDevice device, String fcmToken, Boolean pushEnabled) {
-        device.updatePushSettings(fcmToken, pushEnabled);
-        device.updateLastUsedAt();
+    public void updatePushEnabled(UserDevice device, Boolean pushEnabled) {
+        device.updatePushEnabled(pushEnabled);
         save(device);
     }
 
-    public void updatePushEnabled(UserDevice device, Boolean pushEnabled) {
-        device.updatePushEnabled(pushEnabled);
+    public void updatePushDetailSettings(UserDevice device,
+                                         Boolean postCommentPushEnabled,
+                                         Boolean postEmotionPushEnabled) {
+        device.updatePushDetailSettings(postCommentPushEnabled, postEmotionPushEnabled);
         save(device);
     }
 
