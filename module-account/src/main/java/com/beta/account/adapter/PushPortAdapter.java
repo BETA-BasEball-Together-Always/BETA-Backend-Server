@@ -11,15 +11,14 @@ import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
-@ConditionalOnBean(FirebaseMessaging.class)
 @RequiredArgsConstructor
 public class PushPortAdapter implements PushPort {
 
@@ -27,7 +26,7 @@ public class PushPortAdapter implements PushPort {
     private static final String EMOTION_TITLE = "내 게시글에 새 공감이 도착했어요";
 
     private final UserDeviceReadService userDeviceReadService;
-    private final FirebaseMessaging firebaseMessaging;
+    private final Optional<FirebaseMessaging> firebaseMessaging;
 
     @Override
     public void sendPostCommentNotification(Long targetUserId, String actorNickname, Long postId, Long commentId) {
@@ -64,6 +63,11 @@ public class PushPortAdapter implements PushPort {
     }
 
     private void sendToDevices(List<UserDevice> devices, String title, String body, Map<String, String> data) {
+        if (firebaseMessaging.isEmpty()) {
+            log.debug("FirebaseMessaging 빈이 없어 푸시 발송을 건너뜁니다.");
+            return;
+        }
+
         for (UserDevice device : devices) {
             try {
                 Message message = Message.builder()
@@ -76,7 +80,7 @@ public class PushPortAdapter implements PushPort {
                         .putAllData(data)
                         .build();
 
-                firebaseMessaging.send(message);
+                firebaseMessaging.orElseThrow().send(message);
             } catch (Exception e) {
                 log.warn("푸시 알림 발송 실패 userId={}, deviceId={}, reason={}",
                         device.getUserId(), device.getDeviceId(), e.getMessage());
