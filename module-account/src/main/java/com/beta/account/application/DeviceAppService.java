@@ -3,6 +3,7 @@ package com.beta.account.application;
 import com.beta.account.domain.entity.UserDevice;
 import com.beta.account.domain.service.UserDeviceReadService;
 import com.beta.account.domain.service.UserDeviceWriteService;
+import com.beta.core.exception.account.DeviceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +41,7 @@ public class DeviceAppService {
     @Transactional
     public void updatePushSettings(Long userId, String deviceId, String fcmToken, Boolean pushEnabled) {
         UserDevice device = userDeviceReadService.findByUserIdAndDeviceId(userId, deviceId)
-                .orElseThrow(() -> new IllegalArgumentException("디바이스를 찾을 수 없습니다"));
+                .orElseThrow(DeviceNotFoundException::new);
 
         userDeviceWriteService.updatePushSettings(device, fcmToken, pushEnabled);
     }
@@ -48,7 +49,7 @@ public class DeviceAppService {
     @Transactional
     public void updatePushEnabled(Long userId, String deviceId, Boolean pushEnabled) {
         UserDevice device = userDeviceReadService.findByUserIdAndDeviceId(userId, deviceId)
-                .orElseThrow(() -> new IllegalArgumentException("디바이스를 찾을 수 없습니다"));
+                .orElseThrow(DeviceNotFoundException::new);
 
         userDeviceWriteService.updatePushEnabled(device, pushEnabled);
     }
