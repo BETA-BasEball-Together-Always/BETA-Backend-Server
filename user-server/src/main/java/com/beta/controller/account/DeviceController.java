@@ -1,9 +1,11 @@
 package com.beta.controller.account;
 
 import com.beta.account.application.DeviceAppService;
+import com.beta.account.application.dto.DevicePushSettingsResult;
 import com.beta.controller.account.request.PushDetailSettingsRequest;
 import com.beta.controller.account.request.PushEnabledRequest;
 import com.beta.controller.account.request.PushSettingsRequest;
+import com.beta.controller.account.response.DevicePushSettingsResponse;
 import com.beta.controller.account.response.PushSettingsResponse;
 import com.beta.core.response.ErrorResponse;
 import com.beta.security.CustomUserDetails;
@@ -27,6 +29,39 @@ import org.springframework.web.bind.annotation.*;
 public class DeviceController {
 
     private final DeviceAppService deviceAppService;
+
+    @Operation(summary = "디바이스 푸시 설정 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = DevicePushSettingsResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            })),
+            @ApiResponse(responseCode = "404", description = "디바이스를 찾을 수 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "DEVICE404", "message": "디바이스 정보를 찾을 수 없습니다", "timestamp": "2025-01-01T00:00:00"}""")))
+    })
+    @GetMapping("/push-settings")
+    public ResponseEntity<DevicePushSettingsResponse> getPushSettings(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam String deviceId) {
+
+        DevicePushSettingsResult devicePushSettings = deviceAppService.getPushSettings(
+                userDetails.userId(),
+                deviceId
+        );
+
+        return ResponseEntity.ok(DevicePushSettingsResponse.from(devicePushSettings));
+    }
 
     @Operation(summary = "푸시 토큰 동기화")
     @ApiResponses({
