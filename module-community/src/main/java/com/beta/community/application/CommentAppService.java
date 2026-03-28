@@ -4,6 +4,7 @@ import com.beta.community.application.dto.CommentCreateDto;
 import com.beta.community.application.dto.CommentLikeToggleDto;
 import com.beta.community.domain.entity.Comment;
 import com.beta.community.domain.entity.CommentLike;
+import com.beta.community.domain.entity.Post;
 import com.beta.community.domain.service.CommentLikeReadService;
 import com.beta.community.domain.service.CommentLikeWriteService;
 import com.beta.community.domain.service.CommentReadService;
@@ -15,8 +16,10 @@ import com.beta.core.exception.community.CommentAccessDeniedException;
 import com.beta.core.exception.community.CommentDepthExceededException;
 import com.beta.core.exception.community.DuplicateCommentException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.beta.core.event.notification.PostCommentNotificationEvent;
 
 @Service
 @RequiredArgsConstructor
@@ -29,10 +32,11 @@ public class CommentAppService {
     private final CommentLikeWriteService commentLikeWriteService;
     private final IdempotencyService idempotencyService;
     private final PostJpaRepository postJpaRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     public CommentCreateDto createComment(Long userId, Long postId, String content, Long parentId) {
-        postReadService.findActiveById(postId);
+        Post post = postReadService.findActiveById(postId);
 
         if (idempotencyService.isDuplicateComment(userId, postId, content)) {
             throw new DuplicateCommentException();
@@ -57,6 +61,12 @@ public class CommentAppService {
 
         Comment savedComment = commentWriteService.save(comment);
         postJpaRepository.incrementCommentCount(postId);
+
+        if (!post.getUserId().equals(userId)) {
+            applicationEventPublisher.publishEvent(
+                    new PostCommentNotificationEvent(userId, post.getUserId(), postId, savedComment.getId())
+            );
+        }
 
         return CommentCreateDto.builder()
                 .commentId(savedComment.getId())

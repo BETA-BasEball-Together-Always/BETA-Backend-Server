@@ -34,6 +34,12 @@ public class UserDevice extends BaseEntity {
 
     private Boolean pushEnabled;
 
+    @Column(name = "post_comment_push_enabled")
+    private Boolean postCommentPushEnabled;
+
+    @Column(name = "post_emotion_push_enabled")
+    private Boolean postEmotionPushEnabled;
+
     @Builder
     public UserDevice(Long userId, String deviceId, String fcmToken) {
         this.userId = userId;
@@ -42,6 +48,8 @@ public class UserDevice extends BaseEntity {
         this.lastUsedAt = LocalDateTime.now();
         this.isActive = true;
         this.pushEnabled = null;
+        this.postCommentPushEnabled = null;
+        this.postEmotionPushEnabled = null;
     }
 
     public void updateFcmToken(String fcmToken) {
@@ -60,12 +68,16 @@ public class UserDevice extends BaseEntity {
         this.isActive = false;
     }
 
-    public void updatePushSettings(String fcmToken, Boolean pushEnabled) {
-        this.fcmToken = fcmToken;
-        this.pushEnabled = pushEnabled;
-    }
-
     public void updatePushEnabled(Boolean pushEnabled) {
         this.pushEnabled = pushEnabled;
+        this.postCommentPushEnabled = pushEnabled;
+        this.postEmotionPushEnabled = pushEnabled;
+    }
+
+    public void updatePushDetailSettings(Boolean postCommentPushEnabled, Boolean postEmotionPushEnabled) {
+        this.postCommentPushEnabled = postCommentPushEnabled;
+        this.postEmotionPushEnabled = postEmotionPushEnabled;
+        this.pushEnabled = Boolean.TRUE.equals(postCommentPushEnabled)
+                && Boolean.TRUE.equals(postEmotionPushEnabled);
     }
 }

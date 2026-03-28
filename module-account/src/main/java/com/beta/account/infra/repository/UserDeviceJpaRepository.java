@@ -27,4 +27,18 @@ public interface UserDeviceJpaRepository extends JpaRepository<UserDevice, Long>
     List<UserDevice> findActiveDevicesByDeviceIdExcludingUser(
             @Param("deviceId") String deviceId,
             @Param("userId") Long userId);
+
+    @Query("SELECT d FROM UserDevice d WHERE d.userId = :userId " +
+           "AND d.isActive = true " +
+           "AND d.fcmToken IS NOT NULL " +
+           "AND d.fcmToken <> '' " +
+           "AND d.postCommentPushEnabled = true")
+    List<UserDevice> findCommentPushEnabledDevicesByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT d FROM UserDevice d WHERE d.userId = :userId " +
+           "AND d.isActive = true " +
+           "AND d.fcmToken IS NOT NULL " +
+           "AND d.fcmToken <> '' " +
+           "AND d.postEmotionPushEnabled = true")
+    List<UserDevice> findEmotionPushEnabledDevicesByUserId(@Param("userId") Long userId);
 }

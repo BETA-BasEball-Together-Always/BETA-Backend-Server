@@ -23,4 +23,12 @@ public class UserDeviceReadService {
     public List<UserDevice> findActiveDevicesByDeviceIdExcludingUser(String deviceId, Long userId) {
         return userDeviceJpaRepository.findActiveDevicesByDeviceIdExcludingUser(deviceId, userId);
     }
+
+    public List<UserDevice> findCommentPushEnabledDevicesByUserId(Long userId) {
+        return userDeviceJpaRepository.findCommentPushEnabledDevicesByUserId(userId);
+    }
+
+    public List<UserDevice> findEmotionPushEnabledDevicesByUserId(Long userId) {
+        return userDeviceJpaRepository.findEmotionPushEnabledDevicesByUserId(userId);
+    }
 }

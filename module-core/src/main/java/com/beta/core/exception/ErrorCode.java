@@ -33,6 +33,7 @@ public enum ErrorCode {
     PERSONAL_INFO_AGREEMENT_REQUIRED(HttpStatus.BAD_REQUEST, "USER007", "개인정보 수집 및 이용에 대한 필수 동의가 필요합니다"),
     INVALID_SIGNUP_STEP(HttpStatus.BAD_REQUEST, "USER008", "잘못된 회원가입 단계입니다"),
     INVALID_NICKNAME_LENGTH(HttpStatus.BAD_REQUEST, "USER009", "닉네임은 2-13자 사이여야 합니다"),
+    DEVICE_NOT_FOUND(HttpStatus.NOT_FOUND, "USER010", "디바이스를 찾을 수 없습니다"),
 
     ADMIN_NOT_ALLOWED(HttpStatus.FORBIDDEN, "ADMIN001", "관리자 권한의 사용자가 아닙니다."),
     INVALID_ADMIN_ACTION(HttpStatus.BAD_REQUEST, "ADMIN002", "수행할 수 없는 관리자 액션입니다."),

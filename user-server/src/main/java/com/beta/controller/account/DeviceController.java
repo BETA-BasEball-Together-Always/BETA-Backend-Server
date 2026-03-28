@@ -1,6 +1,7 @@
 package com.beta.controller.account;
 
 import com.beta.account.application.DeviceAppService;
+import com.beta.controller.account.request.PushDetailSettingsRequest;
 import com.beta.controller.account.request.PushEnabledRequest;
 import com.beta.controller.account.request.PushSettingsRequest;
 import com.beta.controller.account.response.PushSettingsResponse;
@@ -27,7 +28,7 @@ public class DeviceController {
 
     private final DeviceAppService deviceAppService;
 
-    @Operation(summary = "푸시 알림 설정 (FCM 토큰 + 푸시 활성화)")
+    @Operation(summary = "푸시 토큰 동기화")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "설정 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
@@ -53,11 +54,10 @@ public class DeviceController {
         deviceAppService.updatePushSettings(
                 userDetails.userId(),
                 request.getDeviceId(),
-                request.getFcmToken(),
-                request.getPushEnabled()
+                request.getFcmToken()
         );
 
-        return ResponseEntity.ok(PushSettingsResponse.success("푸시 알림 설정이 업데이트되었습니다."));
+        return ResponseEntity.ok(PushSettingsResponse.success("푸시 토큰이 업데이트되었습니다."));
     }
 
     @Operation(summary = "푸시 알림 활성화/비활성화 토글")
@@ -90,5 +90,38 @@ public class DeviceController {
         );
 
         return ResponseEntity.ok(PushSettingsResponse.success("푸시 알림 설정이 변경되었습니다."));
+    }
+
+    @Operation(summary = "푸시 알림 세부 설정 변경")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "설정 성공"),
+            @ApiResponse(responseCode = "400", description = "유효성 검증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "VALIDATION001", "message": "입력값 검증에 실패했습니다", "timestamp": "2025-01-01T00:00:00"}"""))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "토큰 만료", value = """
+                                            {"code": "JWT001", "message": "토큰이 만료되었습니다", "timestamp": "2025-01-01T00:00:00"}"""),
+                                    @ExampleObject(name = "토큰 무효", value = """
+                                            {"code": "JWT002", "message": "유효하지 않은 토큰입니다", "timestamp": "2025-01-01T00:00:00"}""")
+                            }))
+    })
+    @PatchMapping("/push-detail-settings")
+    public ResponseEntity<PushSettingsResponse> updatePushDetailSettings(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody PushDetailSettingsRequest request) {
+
+        deviceAppService.updatePushDetailSettings(
+                userDetails.userId(),
+                request.getDeviceId(),
+                request.getPostCommentPushEnabled(),
+                request.getPostEmotionPushEnabled()
+        );
+
+        return ResponseEntity.ok(PushSettingsResponse.success("푸시 알림 세부 설정이 변경되었습니다."));
     }
 }
