@@ -28,9 +28,11 @@ import com.beta.core.exception.community.DuplicatePostException;
 import com.beta.core.exception.community.InvalidImageException;
 import com.beta.core.exception.community.PostAccessDeniedException;
 import com.beta.core.exception.community.SelfBlockNotAllowedException;
+import com.beta.core.event.notification.PostEmotionNotificationEvent;
 import com.beta.core.port.UserPort;
 import com.beta.core.port.dto.AuthorInfo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +66,7 @@ public class CommunityFacadeService {
     private final PostHashtagJpaRepository postHashtagJpaRepository;
     private final CommentLikeJpaRepository commentLikeJpaRepository;
     private final UserPort userPort;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private static final int PAGE_SIZE = 10;
     private static final int COMMENT_PAGE_SIZE = 20;
@@ -192,6 +195,8 @@ public class CommunityFacadeService {
 
     @Transactional
     public EmotionToggleDto toggleEmotion(Long userId, Long postId, String emotionTypeStr) {
+        Post post = postReadService.findActiveById(postId);
+        Long targetUserId = post.getUserId();
         EmotionType newEmotionType = EmotionType.valueOf(emotionTypeStr);
         Optional<Emotion> existingEmotion = emotionReadService.findByUserIdAndPostId(userId, postId);
 
@@ -222,15 +227,22 @@ public class CommunityFacadeService {
             }
         }
 
-        Post post = postReadService.findActiveById(postId);
+        if (toggled && !targetUserId.equals(userId)) {
+            applicationEventPublisher.publishEvent(
+                    new PostEmotionNotificationEvent(userId, targetUserId, emotionTypeStr, postId)
+            );
+        }
+
+        Post updatedPost = postReadService.findActiveById(postId);
+
         return EmotionToggleDto.builder()
                 .postId(postId)
                 .emotionType(emotionTypeStr)
                 .toggled(toggled)
-                .likeCount(post.getLikeCount())
-                .sadCount(post.getSadCount())
-                .funCount(post.getFunCount())
-                .hypeCount(post.getHypeCount())
+                .likeCount(updatedPost.getLikeCount())
+                .sadCount(updatedPost.getSadCount())
+                .funCount(updatedPost.getFunCount())
+                .hypeCount(updatedPost.getHypeCount())
                 .build();
     }
 
