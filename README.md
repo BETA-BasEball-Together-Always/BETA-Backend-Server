@@ -121,10 +121,10 @@ Prometheus와 Grafana 구성은 Docker Compose 파일로 함께 관리하며, Gr
 `JUnit 5`, `Mockito`, `Testcontainers`를 기반으로 단위 테스트, 통합 테스트, 컨트롤러 API 통합 테스트를 작성했습니다.  
 테스트 환경은 검증 목적에 따라 `MySQL + Redis`, `MySQL + Elasticsearch`, `MySQL + Elasticsearch + Logstash` 조합으로 분리했습니다.
 
-- Unit Test: 도메인 ㄴ서비스와 애플리케이션 서비스의 비즈니스 로직을 단위 수준에서 검증합니다.
+- Unit Test: 도메인 서비스와 애플리케이션 서비스의 비즈니스 로직을 단위 수준에서 검증합니다.
 - Integration Test: MySQL, Redis, Elasticsearch, Logstash 등 실제 인프라 연동이 포함된 흐름을 목적에 따라 검증합니다.
 - Controller API Test: Spring Boot 테스트 환경에서 사용자/관리자 API 흐름을 통합 수준으로 검증합니다.
-- Testcontainersㄹㅇㅁㄹㅁ Split: `MysqlRedisTestContainer`, `MysqlEsTestContainer`, `MysqlEsLogstashTestContainer`로 테스트 환경을 분리했습니다.
+- Testcontainers Split: `MysqlRedisTestContainer`, `MysqlEsTestContainer`, `MysqlEsLogstashTestContainer`로 테스트 환경을 분리했습니다.
 - Search Sync Test: Logstash polling 기반 MySQL → Elasticsearch 동기화 흐름을 별도 통합 테스트로 검증합니다.
 
 
