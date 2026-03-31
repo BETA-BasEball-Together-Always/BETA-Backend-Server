@@ -72,101 +72,17 @@ flowchart LR
 - 기능 제공과 호출 모두 각 도메인 모듈의 `application` 레이어를 중심으로 이루어집니다.
 - 이를 통해 모듈 간 직접 참조를 줄이고, 도메인 책임을 분리해 관리합니다.
 
+
 ## ☁️ Infrastructure
 
 OCI 환경에서 외부 진입 계층, 애플리케이션 계층, 데이터·검색 계층을 분리해 운영합니다.  
 프록시 서버만 외부 요청을 직접 수신하고, 나머지 내부 서버들은 VCN 내부에서 프라이빗 네트워크 기반으로 통신합니다.  
 네트워크는 Subnet과 NSG 기준으로 외부 공개 구간과 내부 서비스 구간을 분리해 관리합니다.
 
+
 ### System Flow
 
-```mermaid
-%%{init: {"theme":"base","themeVariables":{
-  "background":"#ffffff",
-  "primaryColor":"#ffffff",
-  "secondaryColor":"#ffffff",
-  "tertiaryColor":"#ffffff",
-  "primaryTextColor":"#111827",
-  "primaryBorderColor":"#94a3b8",
-  "lineColor":"#64748b",
-  "clusterBkg":"#f8fafc",
-  "clusterBorder":"#cbd5e1",
-  "fontFamily":"Arial, sans-serif"
-}}}%%
-flowchart LR
-  subgraph Clients["Clients"]
-    direction TB
-    UserApp["User App"]
-    AdminUI["Admin Browser"]
-  end
-
-  subgraph OCI["OCI"]
-    direction LR
-
-    subgraph ProxyVM["Proxy VM"]
-      direction TB
-      Nginx["Nginx"]
-      AdminWeb["Admin Web"]
-    end
-
-    subgraph UserVM["User VM"]
-      direction TB
-      UserDocker["Docker"]
-      UserServer["user-server"]
-      Prometheus["Prometheus"]
-      Grafana["Grafana"]
-
-      UserDocker --> UserServer
-      UserDocker --> Prometheus
-      UserDocker --> Grafana
-    end
-
-    subgraph AdminVM["Admin VM"]
-      direction TB
-      AdminDocker["Docker"]
-      AdminServer["admin-server"]
-
-      AdminDocker --> AdminServer
-    end
-
-    subgraph Data["Data"]
-      direction TB
-      MySQL["MySQL"]
-      Redis["Redis"]
-    end
-
-    subgraph SearchVM["Search VM"]
-      direction TB
-      Logstash["Logstash"]
-      Elasticsearch["Elasticsearch"]
-    end
-  end
-
-  UserApp -->|"/api/**"| Nginx
-  AdminUI -->|"/admin"| Nginx
-  AdminUI -->|"/api/v1/admin/**"| Nginx
-
-  Nginx -->|"Serve Web"| AdminWeb
-  Nginx -->|"User API"| UserServer
-  Nginx -->|"Admin API"| AdminServer
-
-  UserServer -->|"Read / Write"| MySQL
-  AdminServer -->|"Read / Write"| MySQL
-
-  UserServer -->|"User Refresh Token"| Redis
-  AdminServer -->|"Admin Refresh Token"| Redis
-
-  UserServer -->|"Search Query"| Elasticsearch
-
-  MySQL -->|"Polling"| Logstash
-  Logstash -->|"Index Sync"| Elasticsearch
-
-  UserServer -.->|"Metrics"| Prometheus
-  AdminServer -.->|"Metrics"| Prometheus
-  Prometheus -->|"Dashboards"| Grafana
-
-  classDef default fill:#ffffff,stroke:#94a3b8,color:#111827,stroke-width:1px;
-```
+![System Flow](./docs/images/system-flow.svg)
 
 - 사용자 앱 요청은 프록시 서버를 통해 `user-server`로 라우팅됩니다.
 - 관리자 웹의 정적 리소스는 프록시 서버에서 제공되며, 관리자 API 요청은 `admin-server`로 라우팅됩니다.
@@ -200,9 +116,9 @@ Prometheus와 Grafana 구성은 Docker Compose 파일로 함께 관리하며, Gr
 
 > Grafana 대시보드를 통해 `beta-user-server`, `beta-admin-server` 두 서버의 JVM, CPU, Load Average, HikariCP, HTTP 지표를 시각적으로 확인할 수 있습니다.
 
-ㄴㄹ
-## 🧪 ㄹㅁㄴㅇㄹㅇㄴㅁㄹ
-ㅁㄴㅇㄹㄹo`, `Testcontainers`를 기반으로 단위 테스트, 통합 테스트, 컨트롤러 API 통합 테스트를 작성했습니다.  
+## 🧪 Testing
+
+`JUnit 5`, `Mockito`, `Testcontainers`를 기반으로 단위 테스트, 통합 테스트, 컨트롤러 API 통합 테스트를 작성했습니다.  
 테스트 환경은 검증 목적에 따라 `MySQL + Redis`, `MySQL + Elasticsearch`, `MySQL + Elasticsearch + Logstash` 조합으로 분리했습니다.
 
 - Unit Test: 도메인 ㄴ서비스와 애플리케이션 서비스의 비즈니스 로직을 단위 수준에서 검증합니다.
@@ -210,4 +126,5 @@ Prometheus와 Grafana 구성은 Docker Compose 파일로 함께 관리하며, Gr
 - Controller API Test: Spring Boot 테스트 환경에서 사용자/관리자 API 흐름을 통합 수준으로 검증합니다.
 - Testcontainersㄹㅇㅁㄹㅁ Split: `MysqlRedisTestContainer`, `MysqlEsTestContainer`, `MysqlEsLogstashTestContainer`로 테스트 환경을 분리했습니다.
 - Search Sync Test: Logstash polling 기반 MySQL → Elasticsearch 동기화 흐름을 별도 통합 테스트로 검증합니다.
+
 
