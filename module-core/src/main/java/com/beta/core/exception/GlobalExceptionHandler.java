@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = e.getErrorCode();
         log.warn("Business exception occurred: code={}, message={}", errorCode.getCode(), e.getMessage());
 
-        ErrorResponse response = ErrorResponse.of(errorCode);
+        ErrorResponse response = ErrorResponse.of(errorCode, e.getMessage());
         return ResponseEntity.status(errorCode.getStatus()).body(response);
     }
 

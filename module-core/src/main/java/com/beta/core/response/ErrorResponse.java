@@ -39,12 +39,22 @@ public class ErrorResponse {
         this.errors = errors;
     }
 
+    private ErrorResponse(ErrorCode errorCode, String message) {
+        this.code = errorCode.getCode();
+        this.message = message;
+        this.timestamp = LocalDateTime.now();
+    }
+
     public static ErrorResponse of(ErrorCode errorCode) {
         return new ErrorResponse(errorCode);
     }
 
     public static ErrorResponse of(ErrorCode errorCode, List<FieldError> errors) {
         return new ErrorResponse(errorCode, errors);
+    }
+
+    public static ErrorResponse of(ErrorCode errorCode, String message) {
+        return new ErrorResponse(errorCode, message);
     }
 
     @Getter

@@ -64,7 +64,7 @@ public class AuthController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = @ExampleObject(value = """
-                                    {"code": "USER006", "message": "이미 KAKAO로 가입된 이메일입니다.", "timestamp": "2025-01-01T00:00:00"}"""))),
+                                    {"code": "USER006", "message": "네이버로 가입된 계정입니다. 네이버 로그인을 이용해주세요.", "timestamp": "2025-01-01T00:00:00"}"""))),
             @ApiResponse(responseCode = "500", description = "소셜 로그인 API 오류",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
