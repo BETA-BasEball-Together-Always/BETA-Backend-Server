@@ -157,7 +157,7 @@ class UserStatusServiceTest {
         // when & then
         assertThatThrownBy(() -> userStatusService.validateEmailDuplicate(email))
                 .isInstanceOf(EmailDuplicateException.class)
-                .hasMessage("이미 KAKAO로 가입된 이메일입니다.")
+                .hasMessage("카카오로 가입된 계정입니다. 카카오 로그인을 이용해주세요.")
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.EMAIL_DUPLICATE);
 

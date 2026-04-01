@@ -25,7 +25,13 @@ public class EmailDuplicateException extends BaseException {
     }
 
     public static EmailDuplicateException withSocialProvider(String socialProvider) {
-        String message = String.format("이미 %s로 가입된 이메일입니다.", socialProvider);
+        String providerName = switch (socialProvider) {
+            case "NAVER" -> "네이버";
+            case "KAKAO" -> "카카오";
+            case "APPLE" -> "애플";
+            default -> socialProvider;
+        };
+        String message = String.format("%s로 가입된 계정입니다. %s 로그인을 이용해주세요.", providerName, providerName);
         return new EmailDuplicateException(message, socialProvider);
     }
 }
