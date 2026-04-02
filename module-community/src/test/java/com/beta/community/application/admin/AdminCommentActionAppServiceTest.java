@@ -4,6 +4,7 @@ import com.beta.community.domain.entity.Comment;
 import com.beta.community.domain.service.CommentReadService;
 import com.beta.community.domain.service.CommentStatusService;
 import com.beta.community.domain.service.CommentWriteService;
+import com.beta.community.domain.service.PostWriteService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +29,9 @@ class AdminCommentActionAppServiceTest {
     @Mock
     CommentWriteService commentWriteService;
 
+    @Mock
+    PostWriteService postWriteService;
+
     @InjectMocks
     AdminCommentActionAppService adminCommentActionAppService;
 
@@ -38,6 +42,7 @@ class AdminCommentActionAppServiceTest {
         Long commentId = 1L;
         Comment comment = mock(Comment.class);
         when(commentReadService.findById(commentId)).thenReturn(comment);
+        when(comment.getPostId()).thenReturn(101L);
 
         // when
         adminCommentActionAppService.hideComment(commentId);
@@ -46,6 +51,7 @@ class AdminCommentActionAppServiceTest {
         verify(commentReadService).findById(commentId);
         verify(commentStatusService).validateHide(comment);
         verify(commentWriteService).hide(comment);
+        verify(postWriteService).decrementCommentCount(101L);
     }
 
     @Test
@@ -55,6 +61,7 @@ class AdminCommentActionAppServiceTest {
         Long commentId = 1L;
         Comment comment = mock(Comment.class);
         when(commentReadService.findById(commentId)).thenReturn(comment);
+        when(comment.getPostId()).thenReturn(101L);
 
         // when
         adminCommentActionAppService.unhideComment(commentId);
@@ -63,5 +70,6 @@ class AdminCommentActionAppServiceTest {
         verify(commentReadService).findById(commentId);
         verify(commentStatusService).validateUnhide(comment);
         verify(commentWriteService).unhide(comment);
+        verify(postWriteService).incrementCommentCount(101L);
     }
 }
