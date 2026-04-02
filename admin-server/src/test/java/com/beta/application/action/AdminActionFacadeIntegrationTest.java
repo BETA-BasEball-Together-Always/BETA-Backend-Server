@@ -137,6 +137,8 @@ class AdminActionFacadeIntegrationTest extends MysqlRedisTestContainer {
         // then
         Comment comment = commentJpaRepository.findById(targetCommentId).orElseThrow();
         assertThat(comment.getStatus()).isEqualTo(Status.HIDDEN);
+        Post post = postJpaRepository.findById(comment.getPostId()).orElseThrow();
+        assertThat(post.getCommentCount()).isEqualTo(0);
 
         List<AdminLog> adminLogs = adminLogJpaRepository.findAll();
         assertThat(adminLogs).hasSize(1);
@@ -148,6 +150,35 @@ class AdminActionFacadeIntegrationTest extends MysqlRedisTestContainer {
         assertThat(adminLog.getAction()).isEqualTo(AdminLogAction.COMMENT_HIDE);
         assertThat(adminLog.getBeforeStatus()).isEqualTo("ACTIVE");
         assertThat(adminLog.getAfterStatus()).isEqualTo("HIDDEN");
+        assertThat(adminLog.getReason()).isEqualTo(reason);
+    }
+
+    @Test
+    void 댓글_다시노출시_상태가_변경되고_댓글수가_증가한다() {
+        // given
+        Long actorAdminId = 1L;
+        Long targetCommentId = 202L;
+        String reason = "운영자 재노출";
+
+        // when
+        adminActionFacadeService.unhideComment(actorAdminId, targetCommentId, reason);
+
+        // then
+        Comment comment = commentJpaRepository.findById(targetCommentId).orElseThrow();
+        assertThat(comment.getStatus()).isEqualTo(Status.ACTIVE);
+        Post post = postJpaRepository.findById(comment.getPostId()).orElseThrow();
+        assertThat(post.getCommentCount()).isEqualTo(2);
+
+        List<AdminLog> adminLogs = adminLogJpaRepository.findAll();
+        assertThat(adminLogs).hasSize(1);
+
+        AdminLog adminLog = adminLogs.get(0);
+        assertThat(adminLog.getActorAdminId()).isEqualTo(actorAdminId);
+        assertThat(adminLog.getTargetType()).isEqualTo(AdminLogTargetType.COMMENT);
+        assertThat(adminLog.getTargetId()).isEqualTo(targetCommentId);
+        assertThat(adminLog.getAction()).isEqualTo(AdminLogAction.COMMENT_UNHIDE);
+        assertThat(adminLog.getBeforeStatus()).isEqualTo("HIDDEN");
+        assertThat(adminLog.getAfterStatus()).isEqualTo("ACTIVE");
         assertThat(adminLog.getReason()).isEqualTo(reason);
     }
 

@@ -78,4 +78,22 @@ class PostWriteServiceTest {
         assertThat(post.getStatus()).isEqualTo(Status.DELETED);
         assertThat(post.getDeletedAt()).isNotNull();
     }
+
+    @Test
+    void increment_comment_count() {
+        // when
+        postWriteService.incrementCommentCount(1L);
+
+        // then
+        verify(postJpaRepository).incrementCommentCount(1L);
+    }
+
+    @Test
+    void decrement_comment_count() {
+        // when
+        postWriteService.decrementCommentCount(1L);
+
+        // then
+        verify(postJpaRepository).decrementCommentCount(1L);
+    }
 }

@@ -30,4 +30,12 @@ public class PostWriteService {
     public void unhide(Post post) {
         post.unhide();
     }
+
+    public void incrementCommentCount(Long postId) {
+        postJpaRepository.incrementCommentCount(postId);
+    }
+
+    public void decrementCommentCount(Long postId) {
+        postJpaRepository.decrementCommentCount(postId);
+    }
 }
