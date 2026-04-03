@@ -53,8 +53,6 @@ public class UserQueryRepository {
                         user.createdAt,
                         user.socialProvider,
                         user.baseballTeam.teamNameKr,
-                        user.gender,
-                        user.age,
                         user.bio,
                         user.status
                 )
@@ -73,8 +71,6 @@ public class UserQueryRepository {
                         tuple.get(user.createdAt),
                         tuple.get(user.socialProvider),
                         tuple.get(user.baseballTeam.teamNameKr),
-                        tuple.get(user.gender),
-                        tuple.get(user.age),
                         tuple.get(user.bio),
                         tuple.get(user.status)
                 ))
@@ -96,8 +92,6 @@ public class UserQueryRepository {
             LocalDateTime joinedAt,
             SocialProvider socialProvider,
             String favoriteTeamName,
-            User.GenderType gender,
-            Integer age,
             String bio,
             User.UserStatus status
     ) {
