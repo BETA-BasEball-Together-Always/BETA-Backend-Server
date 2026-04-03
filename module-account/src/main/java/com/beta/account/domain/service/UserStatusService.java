@@ -24,7 +24,7 @@ public class UserStatusService {
         }
 
         if (user.getStatus() == User.UserStatus.SUSPENDED) {
-            throw new UserSuspendedException("정지된 사용자입니다. 관리자에게 문의 하세요.");
+            throw new UserSuspendedException("정지된 사용자입니다. 관리자(betaofficial365@gmail.com)로 문의 해주세요.");
         }
     }
 
