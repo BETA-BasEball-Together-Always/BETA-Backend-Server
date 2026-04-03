@@ -13,8 +13,6 @@ public record AdminUserQueryResult(
         LocalDateTime joinedAt,
         SocialProvider socialProvider,
         String favoriteTeamName,
-        User.GenderType gender,
-        Integer age,
         String bio,
         User.UserStatus status
 ) {
@@ -26,8 +24,6 @@ public record AdminUserQueryResult(
                 snapshot.joinedAt(),
                 snapshot.socialProvider(),
                 snapshot.favoriteTeamName(),
-                snapshot.gender(),
-                snapshot.age(),
                 snapshot.bio(),
                 snapshot.status()
         );
