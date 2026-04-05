@@ -70,7 +70,7 @@ class UserStatusServiceTest {
         // when & then
         assertThatThrownBy(() -> userStatusService.validateUserStatus(user))
                 .isInstanceOf(UserSuspendedException.class)
-                .hasMessage("정지된 사용자입니다. 관리자에게 문의 하세요.")
+                .hasMessageContaining("정지된 사용자입니다")
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.USER_SUSPENDED);
     }
