@@ -19,13 +19,9 @@ public record AdminUserItemResponse(
         LocalDateTime joinedAt,
         @Schema(description = "소셜 로그인 제공자", example = "KAKAO")
         SocialProvider socialProvider,
-        @Schema(description = "응원 팀명", example = "LG 트윈스", nullable = true)
+        @Schema(description = "선호 팀명", example = "LG 트윈스", nullable = true)
         String favoriteTeamName,
-        @Schema(description = "성별", example = "M", nullable = true)
-        User.GenderType gender,
-        @Schema(description = "나이", example = "28", nullable = true)
-        Integer age,
-        @Schema(description = "소개글", example = "LG 팬입니다", nullable = true)
+        @Schema(description = "자기소개", example = "LG 팬입니다", nullable = true)
         String bio,
         @Schema(description = "사용자 상태", example = "ACTIVE")
         User.UserStatus status
@@ -38,8 +34,6 @@ public record AdminUserItemResponse(
                 result.joinedAt(),
                 result.socialProvider(),
                 result.favoriteTeamName(),
-                result.gender(),
-                result.age(),
                 result.bio(),
                 result.status()
         );

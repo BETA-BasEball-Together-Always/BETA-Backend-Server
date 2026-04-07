@@ -1,11 +1,15 @@
 package com.beta.controller.user;
 
 import com.beta.account.application.admin.AdminUserQueryAppService;
+import com.beta.account.application.admin.AdminUserStatisticsAppService;
 import com.beta.account.application.admin.dto.AdminUserQueryResult;
+import com.beta.account.application.admin.dto.AdminUserStatisticsResult;
 import com.beta.controller.common.request.AdminPageRequest;
 import com.beta.controller.common.response.AdminPageResponse;
 import com.beta.controller.user.request.AdminUserSearchRequest;
+import com.beta.controller.user.request.AdminUserStatisticsRequest;
 import com.beta.controller.user.response.AdminUserItemResponse;
+import com.beta.controller.user.response.AdminUserStatisticsResponse;
 import com.beta.core.response.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final AdminUserQueryAppService adminUserQueryAppService;
+    private final AdminUserStatisticsAppService adminUserStatisticsAppService;
 
     @Operation(summary = "관리자 사용자 목록 조회")
     @ApiResponses({
@@ -48,7 +53,7 @@ public class UserController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = @ExampleObject(value = """
-                                    {"code": "ADMIN001", "message": "관리자 권한의 사용자가 아닙니다.", "timestamp": "2025-01-01T00:00:00"}""")))
+                                    {"code": "ADMIN001", "message": "관리자 권한이 필요한 요청입니다.", "timestamp": "2025-01-01T00:00:00"}""")))
     })
     @GetMapping
     public ResponseEntity<AdminPageResponse<AdminUserItemResponse>> getUsers(
@@ -64,5 +69,27 @@ public class UserController {
 
         Page<AdminUserItemResponse> responsePage = result.map(AdminUserItemResponse::from);
         return ResponseEntity.ok(AdminPageResponse.from(responsePage));
+    }
+
+    @Operation(summary = "관리자 사용자 통계 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = AdminUserStatisticsResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "관리자 권한 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code": "ADMIN001", "message": "관리자 권한이 필요한 요청입니다.", "timestamp": "2025-01-01T00:00:00"}""")))
+    })
+    @GetMapping("/statistics")
+    public ResponseEntity<AdminUserStatisticsResponse> getUserStatistics(
+            @Valid @ModelAttribute AdminUserStatisticsRequest request
+    ) {
+        AdminUserStatisticsResult result = adminUserStatisticsAppService.getUserStatistics(request.status());
+        return ResponseEntity.ok(AdminUserStatisticsResponse.from(result));
     }
 }

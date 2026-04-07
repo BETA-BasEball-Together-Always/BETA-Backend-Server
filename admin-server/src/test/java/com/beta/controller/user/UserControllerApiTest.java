@@ -23,6 +23,7 @@ import org.springframework.test.context.jdbc.Sql;
 
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,7 +61,7 @@ class UserControllerApiTest extends MysqlRedisTestContainer {
     OracleCloudStorageClient oracleCloudStorageClient;
 
     @Test
-    void 관리자_사용자목록_조회시_200_응답과_검색된_페이지_데이터를_반환한다() {
+    void 관리자_사용자목록_조회시_200_응답과_성별_나이_제외된_페이지_데이터를_반환한다() {
         // given
         String accessToken = jwtTokenProvider.generateAccessToken(1L, null, "ADMIN", AdminAuthConstants.ADMIN_CLIENT);
         HttpHeaders headers = bearerHeaders(accessToken);
@@ -82,19 +83,19 @@ class UserControllerApiTest extends MysqlRedisTestContainer {
 
         List<Map<String, Object>> items = toListOfMap(response.getBody().get("items"));
         assertThat(items).hasSize(2);
+
         assertThat(items.get(0).get("nickname")).isEqualTo("slugger5");
         assertThat(items.get(0).get("email")).isEqualTo("slugger5@test.com");
         assertThat(items.get(0).get("socialProvider")).isEqualTo("KAKAO");
         assertThat(items.get(0).get("favoriteTeamName")).isNull();
-        assertThat(items.get(0).get("gender")).isEqualTo("F");
-        assertThat(toInt(items.get(0).get("age"))).isEqualTo(24);
-        assertThat(items.get(0).get("bio")).isEqualTo("잠실 직관파");
+        assertThat(items.get(0).get("bio")).isNotNull();
         assertThat(items.get(0).get("status")).isEqualTo("ACTIVE");
+        assertThat(items.get(0)).doesNotContainKeys("gender", "age");
+
         assertThat(items.get(1).get("nickname")).isEqualTo("slugger2");
-        assertThat(items.get(1).get("favoriteTeamName")).isEqualTo("LG 트윈스");
-        assertThat(items.get(1).get("gender")).isEqualTo("M");
-        assertThat(toInt(items.get(1).get("age"))).isEqualTo(28);
-        assertThat(items.get(1).get("bio")).isEqualTo("LG 팬입니다");
+        assertThat(String.valueOf(items.get(1).get("favoriteTeamName"))).contains("LG");
+        assertThat(items.get(1).get("bio")).isNotNull();
+        assertThat(items.get(1)).doesNotContainKeys("gender", "age");
     }
 
     @Test
@@ -122,6 +123,46 @@ class UserControllerApiTest extends MysqlRedisTestContainer {
     }
 
     @Test
+    @Sql(
+            scripts = {"/sql/admin-user-test-data.sql", "/sql/admin-user-statistics-test-data.sql"},
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    void 관리자_사용자통계_조회시_상태별_필터가_적용된_성별_나이_집계데이터를_반환한다() {
+        // given
+        String accessToken = jwtTokenProvider.generateAccessToken(1L, null, "ADMIN", AdminAuthConstants.ADMIN_CLIENT);
+        HttpHeaders headers = bearerHeaders(accessToken);
+
+        // when
+        ResponseEntity<Map> response = restTemplate.exchange(
+                "/api/v1/admin/users/statistics?status=ACTIVE",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                Map.class
+        );
+
+        // then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(toLong(response.getBody().get("totalUserCount"))).isEqualTo(9L);
+
+        List<Map<String, Object>> genderStats = toListOfMap(response.getBody().get("genderStats"));
+        assertThat(genderStats).hasSize(3);
+        assertThat(toLong(findItemByKey(genderStats, "gender", "FEMALE").get("count"))).isEqualTo(2L);
+        assertThat(toLong(findItemByKey(genderStats, "gender", "MALE").get("count"))).isEqualTo(4L);
+        assertThat(toLong(findItemByKey(genderStats, "gender", "UNSPECIFIED").get("count"))).isEqualTo(3L);
+
+        List<Map<String, Object>> ageStats = toListOfMap(response.getBody().get("ageStats"));
+        assertThat(ageStats).hasSize(7);
+        assertThat(toLong(findItemByKey(ageStats, "ageGroup", "TEENS").get("count"))).isEqualTo(2L);
+        assertThat(toLong(findItemByKey(ageStats, "ageGroup", "TWENTIES").get("count"))).isEqualTo(2L);
+        assertThat(toLong(findItemByKey(ageStats, "ageGroup", "THIRTIES").get("count"))).isEqualTo(1L);
+        assertThat(toLong(findItemByKey(ageStats, "ageGroup", "FORTIES").get("count"))).isZero();
+        assertThat(toLong(findItemByKey(ageStats, "ageGroup", "FIFTIES").get("count"))).isEqualTo(1L);
+        assertThat(toLong(findItemByKey(ageStats, "ageGroup", "OTHERS").get("count"))).isEqualTo(2L);
+        assertThat(toLong(findItemByKey(ageStats, "ageGroup", "UNSPECIFIED").get("count"))).isEqualTo(1L);
+    }
+
+    @Test
     void 관리자_사용자목록_API를_토큰없이_호출하면_401_JWT002_예외를_반환한다() {
         // when
         ResponseEntity<ErrorResponse> response = restTemplate.getForEntity(
@@ -136,7 +177,7 @@ class UserControllerApiTest extends MysqlRedisTestContainer {
     }
 
     @Test
-    void CLIENT는_ADMIN이고_ROLE이_USER인_토큰으로_사용자목록을_호출하면_403_ADMIN001_예외를_반환한다() {
+    void CLIENT는_ADMIN이고_ROLE은_USER인_토큰으로_사용자목록을_호출하면_403_ADMIN001_예외를_반환한다() {
         // given
         String accessToken = jwtTokenProvider.generateAccessToken(2L, null, "USER", AdminAuthConstants.ADMIN_CLIENT);
         HttpHeaders headers = bearerHeaders(accessToken);
@@ -166,6 +207,17 @@ class UserControllerApiTest extends MysqlRedisTestContainer {
         return ((List<Object>) value).stream()
                 .map(item -> (Map<String, Object>) item)
                 .toList();
+    }
+
+    private Map<String, Object> findItemByKey(
+            List<Map<String, Object>> items,
+            String keyName,
+            String expectedValue
+    ) {
+        return items.stream()
+                .filter(item -> expectedValue.equals(item.get(keyName)))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("item not found key=" + keyName + ", value=" + expectedValue));
     }
 
     private long toLong(Object value) {
