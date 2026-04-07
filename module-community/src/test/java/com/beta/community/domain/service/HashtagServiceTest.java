@@ -150,6 +150,25 @@ class HashtagServiceTest {
             verify(hashtagJpaRepository).decrementUsageCountByTagNames(List.of("야구"));
             verify(postJpaRepository).touchUpdatedAt(1L);
         }
+
+        @Test
+        @DisplayName("해시태그 추가 시 post.updatedAt을 갱신")
+        void touchPostUpdatedAt_whenHashtagAdded() {
+            Post post = mock(Post.class);
+            given(post.getId()).willReturn(1L);
+            given(postHashtagJpaRepository.findByPostId(1L)).willReturn(List.of());
+
+            Hashtag addedHashtag = createHashtag(2L, "두산");
+            given(hashtagJpaRepository.findByTagNameIn(List.of("두산"))).willReturn(List.of(addedHashtag));
+
+            List<String> result = hashtagService.updateHashtags(post, List.of("두산"));
+
+            assertThat(result).containsExactly("두산");
+            verify(hashtagJpaRepository).insertIgnore("두산");
+            verify(hashtagJpaRepository).incrementUsageCountByTagNames(List.of("두산"));
+            verify(postHashtagJpaRepository).saveAll(anyList());
+            verify(postJpaRepository).touchUpdatedAt(1L);
+        }
     }
 
     private Hashtag createHashtag(Long id, String tagName) {
