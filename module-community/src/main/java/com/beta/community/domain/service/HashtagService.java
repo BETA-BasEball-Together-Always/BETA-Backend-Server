@@ -73,11 +73,12 @@ public class HashtagService {
                 .filter(t -> !existingTagNames.contains(t))
                 .toList();
 
+        boolean hashtagsChanged = !toRemove.isEmpty() || !toAdd.isEmpty();
+
         if (!toRemove.isEmpty()) {
             List<Hashtag> removeHashtags = hashtagJpaRepository.findByTagNameIn(toRemove);
             postHashtagJpaRepository.deleteAllByPostIdAndHashtagIn(post.getId(), removeHashtags);
             hashtagJpaRepository.decrementUsageCountByTagNames(toRemove);
-            postJpaRepository.touchUpdatedAt(post.getId());
         }
 
         if (!toAdd.isEmpty()) {
@@ -92,6 +93,10 @@ public class HashtagService {
                             .build())
                     .toList();
             postHashtagJpaRepository.saveAll(newPostHashtags);
+        }
+
+        if (hashtagsChanged) {
+            postJpaRepository.touchUpdatedAt(post.getId());
         }
 
         return newValidNames;
