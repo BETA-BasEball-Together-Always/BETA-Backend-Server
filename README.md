@@ -17,7 +17,7 @@ Gradle 멀티 모듈 기반으로 구성되어 있으며
 | **Core** | <img src="https://img.shields.io/badge/Java-21-007396?style=flat-square&logo=openjdk&logoColor=white" alt="Java" /> <img src="https://img.shields.io/badge/Spring_Boot-3.5.8-6DB33F?style=flat-square&logo=springboot&logoColor=white" alt="Spring Boot" /> <img src="https://img.shields.io/badge/Gradle-Multi--Module-02303A?style=flat-square&logo=gradle&logoColor=white" alt="Gradle" /> |
 | **Security** | <img src="https://img.shields.io/badge/Spring_Security-6DB33F?style=flat-square&logo=springsecurity&logoColor=white" alt="Spring Security" /> <img src="https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white" alt="JWT" /> <img src="https://img.shields.io/badge/OAuth2_Client-4285F4?style=flat-square" alt="OAuth2 Client" /> |
 | **Persistence / Query** | <img src="https://img.shields.io/badge/Spring_Data_JPA-59666C?style=flat-square" alt="Spring Data JPA" /> <img src="https://img.shields.io/badge/QueryDSL-0769AD?style=flat-square" alt="QueryDSL" /> <img src="https://img.shields.io/badge/MySQL-4479A1?style=flat-square&logo=mysql&logoColor=white" alt="MySQL" /> <img src="https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white" alt="Redis" /> <img src="https://img.shields.io/badge/Caffeine_Cache-5D4037?style=flat-square" alt="Caffeine Cache" /> |
-| **Search Engine** | <img src="https://img.shields.io/badge/Elasticsearch-005571?style=flat-square&logo=elasticsearch&logoColor=white" alt="Elasticsearch" /> <img src="https://img.shields.io/badge/Logstash-F3BD19?style=flat-square&logo=logstash&logoColor=white" alt="Logstash" /> |
+| **Search Engine** | <img src="https://img.shields.io/badge/Elasticsearch-005571?style=flat-square&logo=elasticsearch&logoColor=white" alt="Elasticsearch" /> <img src="https://img.shields.io/badge/Logstash-F3BD19?style=flat-square&logo=logstash&logoColor=white" alt="Logstash" /> <img src="https://img.shields.io/badge/Kibana-005571?style=flat-square&logo=kibana&logoColor=white" alt="Kibana" /> |
 | **Infrastructure / Deployment** | <img src="https://img.shields.io/badge/Oracle_Cloud_Infrastructure-F80000?style=flat-square&logo=oracle&logoColor=white" alt="OCI" /> <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" /> <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white" alt="GitHub Actions" /> |
 | **Monitoring / Docs** | <img src="https://img.shields.io/badge/Actuator-6DB33F?style=flat-square&logo=spring&logoColor=white" alt="Actuator" /> <img src="https://img.shields.io/badge/Prometheus-E6522C?style=flat-square&logo=prometheus&logoColor=white" alt="Prometheus" /> <img src="https://img.shields.io/badge/Grafana-F46800?style=flat-square&logo=grafana&logoColor=white" alt="Grafana" /> <img src="https://img.shields.io/badge/Springdoc_OpenAPI-85EA2D?style=flat-square" alt="Springdoc OpenAPI" /> |
 | **External Services** | <img src="https://img.shields.io/badge/Firebase_Admin-FFCA28?style=flat-square&logo=firebase&logoColor=black" alt="Firebase Admin" /> <img src="https://img.shields.io/badge/Gmail_SMTP-EA4335?style=flat-square&logo=gmail&logoColor=white" alt="Gmail SMTP" /> |
@@ -89,6 +89,7 @@ OCI 환경에서 외부 진입 계층, 애플리케이션 계층, 데이터·검
 - `user-server`와 `admin-server`는 MySQL, Redis를 공통 데이터 저장소로 사용합니다.
 - 검색 요청은 `user-server`가 Elasticsearch를 조회하는 방식으로 처리합니다.
 - 검색 인덱스는 MySQL 변경분을 Logstash가 주기적으로 수집해 Elasticsearch에 반영하는 방식으로 동기화합니다.
+- Kibana는 Elasticsearch에 반영된 검색 인덱스와 데이터를 조회·모니터링하는 용도로 사용합니다.
 - 모니터링은 사용자 API 서버의 Docker 환경에서 Prometheus, Grafana를 중심으로 운영하며, 관리자 API 서버도 동일한 흐름에 메트릭을 제공합니다.
 
 
@@ -126,5 +127,3 @@ Prometheus와 Grafana 구성은 Docker Compose 파일로 함께 관리하며, Gr
 - Controller API Test: Spring Boot 테스트 환경에서 사용자/관리자 API 흐름을 통합 수준으로 검증합니다.
 - Testcontainers Split: `MysqlRedisTestContainer`, `MysqlEsTestContainer`, `MysqlEsLogstashTestContainer`로 테스트 환경을 분리했습니다.
 - Search Sync Test: Logstash polling 기반 MySQL → Elasticsearch 동기화 흐름을 별도 통합 테스트로 검증합니다.
-
-
