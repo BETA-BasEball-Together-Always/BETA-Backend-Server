@@ -158,8 +158,8 @@ public class CommunityFacadeService {
         finalImageUrls.removeAll(deletedUrls);
         finalImageUrls.addAll(newImageUrls);
 
-        List<String> hashtags = hashtagService.updateHashtags(post, dto.getHashtags());
         postWriteService.updateContent(post, dto.getContent());
+        List<String> hashtags = hashtagService.updateHashtags(post, dto.getHashtags());
 
         return PostDto.builder()
                 .postId(post.getId())
