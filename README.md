@@ -80,7 +80,7 @@ OCI 환경에서 외부 진입 계층, 애플리케이션 계층, 데이터·검
 네트워크는 Subnet과 NSG 기준으로 외부 공개 구간과 내부 서비스 구간을 분리해 관리합니다.
 
 
-### System Flow
+### System Flow [(전체화면)](https://raw.githubusercontent.com/BETA-BasEball-Together-Always/BETA-Backend-Server/dev/docs/images/system-flow.svg)
 
 ![System Flow](./docs/images/system-flow.svg)
 
