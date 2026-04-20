@@ -58,6 +58,8 @@ public enum ErrorCode {
     INVALID_CURSOR(HttpStatus.BAD_REQUEST, "SEARCH001", "커서의 score, id는 둘다 존재하거나 둘다 비어있어야 합니다."),
     SEARCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SEARCH099", "es 검색 중 오류가 발생했습니다"),
 
+    DATABASE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "DATABASE001", "일시적으로 서비스 이용이 원활하지 않습니다. 잠시 후 다시 시도해주세요."),
+
     KBO_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "KBO001", "현재 순위 정보를 불러올 수 없습니다");
 
     private final HttpStatus status;
