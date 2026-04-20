@@ -124,9 +124,14 @@ class UserControllerApiTest extends MysqlRedisTestContainer {
 
     @Test
     @Sql(
-            scripts = {"/sql/admin-user-test-data.sql", "/sql/admin-user-statistics-test-data.sql"},
+            scripts = {
+                    "/sql/admin-user-cleanup.sql",
+                    "/sql/admin-user-test-data.sql",
+                    "/sql/admin-user-statistics-test-data.sql"
+            },
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
     )
+    @Sql(scripts = "/sql/admin-user-cleanup.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void 관리자_사용자통계_조회시_상태별_필터가_적용된_성별_나이_집계데이터를_반환한다() {
         // given
         String accessToken = jwtTokenProvider.generateAccessToken(1L, null, "ADMIN", AdminAuthConstants.ADMIN_CLIENT);
