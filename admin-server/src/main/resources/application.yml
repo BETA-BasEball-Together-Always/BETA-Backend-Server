@@ -7,10 +7,13 @@ spring:
       - classpath:application-core.yml
 
   datasource:
-    url: jdbc:mysql://${DB_HOST}:3306/${DB_SCHEMA}?serverTimezone=Asia/Seoul
+    url: jdbc:mysql://${DB_HOST}:3306/${DB_SCHEMA}?serverTimezone=Asia/Seoul&connectTimeout=3000
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 5000
+      validation-timeout: 3000
 
   jpa:
     hibernate:

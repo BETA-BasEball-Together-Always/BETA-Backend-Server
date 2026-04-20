@@ -2,8 +2,13 @@ package com.beta.core.exception;
 
 import com.beta.core.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.JDBCConnectionException;
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.QueryTimeoutException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,6 +16,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.sql.SQLNonTransientConnectionException;
+import java.sql.SQLTimeoutException;
+import java.sql.SQLTransientConnectionException;
 import java.util.List;
 
 @Slf4j
@@ -86,6 +94,37 @@ public class GlobalExceptionHandler {
         log.warn("Method not allowed: {}", e.getMethod());
         ErrorResponse response = ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED);
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
+    }
+
+    /**
+     * 데이터베이스 연결 및 리소스 장애 예외 처리
+     */
+    @ExceptionHandler({
+            CannotGetJdbcConnectionException.class,
+            CannotCreateTransactionException.class,
+            DataAccessResourceFailureException.class,
+            JDBCConnectionException.class,
+            SQLTransientConnectionException.class,
+            SQLNonTransientConnectionException.class
+    })
+    public ResponseEntity<ErrorResponse> handleDatabaseUnavailableException(Exception e) {
+        log.error("Database unavailable: exception={}, message={}", e.getClass().getSimpleName(), e.getMessage(), e);
+        ErrorResponse response = ErrorResponse.of(ErrorCode.DATABASE_UNAVAILABLE);
+        return ResponseEntity.status(ErrorCode.DATABASE_UNAVAILABLE.getStatus()).body(response);
+    }
+
+    /**
+     * 데이터베이스 타임아웃 예외 처리
+     */
+    @ExceptionHandler({
+            QueryTimeoutException.class,
+            SQLTimeoutException.class,
+            jakarta.persistence.QueryTimeoutException.class
+    })
+    public ResponseEntity<ErrorResponse> handleDatabaseTimeoutException(Exception e) {
+        log.error("Database timeout: exception={}, message={}", e.getClass().getSimpleName(), e.getMessage(), e);
+        ErrorResponse response = ErrorResponse.of(ErrorCode.DATABASE_UNAVAILABLE);
+        return ResponseEntity.status(ErrorCode.DATABASE_UNAVAILABLE.getStatus()).body(response);
     }
 
     /**
