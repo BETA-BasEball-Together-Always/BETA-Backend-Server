@@ -115,11 +115,13 @@ class HomeApiTest extends ApiTestBase {
                     HomeResponse.class
             );
 
-            // then - 감정 총합 기준 내림차순 (100: 25, 101: 11, 102: 5)
-            assertThat(response.getBody().getPopularPosts()).hasSize(3);
-            assertThat(response.getBody().getPopularPosts().get(0).getPostId()).isEqualTo(100L);
-            assertThat(response.getBody().getPopularPosts().get(1).getPostId()).isEqualTo(101L);
-            assertThat(response.getBody().getPopularPosts().get(2).getPostId()).isEqualTo(102L);
+            // then - 24시간 내 게시글이 5개 미만이므로 전체 인기 게시글 기준 내림차순
+            // 104: 110, 100: 25, 101: 11, 102: 5
+            assertThat(response.getBody().getPopularPosts()).hasSize(4);
+            assertThat(response.getBody().getPopularPosts().get(0).getPostId()).isEqualTo(104L);
+            assertThat(response.getBody().getPopularPosts().get(1).getPostId()).isEqualTo(100L);
+            assertThat(response.getBody().getPopularPosts().get(2).getPostId()).isEqualTo(101L);
+            assertThat(response.getBody().getPopularPosts().get(3).getPostId()).isEqualTo(102L);
         }
 
         @Test
@@ -160,8 +162,8 @@ class HomeApiTest extends ApiTestBase {
         }
 
         @Test
-        @DisplayName("24시간 이전 게시글은 제외된다")
-        void getHome_excludesOldPosts() {
+        @DisplayName("24시간 이내 게시글이 5개 미만이면 24시간 이전 게시글도 포함된다")
+        void getHome_includesOldPostsWhenRecentPostsAreLessThanLimit() {
             // when
             ResponseEntity<HomeResponse> response = restTemplate.exchange(
                     "/api/v1/home",
@@ -170,9 +172,9 @@ class HomeApiTest extends ApiTestBase {
                     HomeResponse.class
             );
 
-            // then - 30시간 전 게시글(id=104)이 없어야 함
+            // then - 최근 게시글이 부족하므로 30시간 전 게시글(id=104)도 포함
             assertThat(response.getBody().getPopularPosts())
-                    .noneMatch(p -> p.getPostId() == 104L);
+                    .anyMatch(p -> p.getPostId() == 104L);
         }
 
         @Test
