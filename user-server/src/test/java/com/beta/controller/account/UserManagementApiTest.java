@@ -253,57 +253,38 @@ class UserManagementApiTest extends ApiTestBase {
     class DataCleanup {
 
         @Test
-        @DisplayName("사용자 데이터 삭제 - 게시글/댓글/좋아요/감정표현/이미지/해시태그/차단 모두 삭제")
-        void deleteAllUserCommunityData_deletesAllRelatedData() {
+        @DisplayName("회원탈퇴 시 차단 관계만 삭제되고 커뮤니티 데이터는 보존됨")
+        void deleteUserBlockRelationships_onlyDeletesBlocks() {
             // given - 삭제 전 데이터 확인
             assertThat(postJpaRepository.findById(100L)).isPresent();
             assertThat(postImageJpaRepository.findById(1L)).isPresent();
-            assertThat(commentJpaRepository.findById(1L)).isPresent(); // 다른 유저가 쓴 댓글
-            assertThat(commentJpaRepository.findById(2L)).isPresent(); // 본인이 쓴 댓글
-            assertThat(commentJpaRepository.findById(3L)).isPresent(); // 다른 게시글에 쓴 댓글
-            assertThat(commentLikeJpaRepository.findById(1L)).isPresent(); // user4가 누른 좋아요
-            assertThat(commentLikeJpaRepository.findById(2L)).isPresent(); // user2가 댓글1에 누른 좋아요
-            assertThat(emotionJpaRepository.findById(1L)).isPresent(); // user2가 게시글100에 누른 감정
-            assertThat(emotionJpaRepository.findById(2L)).isPresent(); // user4가 게시글200에 누른 감정
+            assertThat(commentJpaRepository.findById(1L)).isPresent();
+            assertThat(commentJpaRepository.findById(2L)).isPresent();
+            assertThat(commentJpaRepository.findById(3L)).isPresent();
+            assertThat(commentLikeJpaRepository.findById(1L)).isPresent();
+            assertThat(commentLikeJpaRepository.findById(2L)).isPresent();
+            assertThat(emotionJpaRepository.findById(1L)).isPresent();
+            assertThat(emotionJpaRepository.findById(2L)).isPresent();
             assertThat(postHashtagJpaRepository.findById(1L)).isPresent();
             assertThat(userBlockJpaRepository.findById(1L)).isPresent();
 
-            // when - user4 커뮤니티 데이터 삭제
-            communityDataCleanupPort.deleteAllUserCommunityData(CLEANUP_TEST_USER);
+            // when - user4 차단 관계 삭제
+            communityDataCleanupPort.deleteUserBlockRelationships(CLEANUP_TEST_USER);
 
-            // then - user4 관련 데이터 삭제 확인
-            // 1. user4의 게시글(100) 삭제됨
-            assertThat(postJpaRepository.findById(100L)).isEmpty();
-
-            // 2. 게시글100의 이미지 삭제됨
-            assertThat(postImageJpaRepository.findById(1L)).isEmpty();
-
-            // 3. 게시글100에 달린 모든 댓글 삭제됨 (다른 유저가 쓴 것 포함)
-            assertThat(commentJpaRepository.findById(1L)).isEmpty();
-            assertThat(commentJpaRepository.findById(2L)).isEmpty();
-
-            // 4. user4가 다른 게시글에 쓴 댓글 삭제됨
-            assertThat(commentJpaRepository.findById(3L)).isEmpty();
-
-            // 5. 게시글100의 댓글에 달린 좋아요 삭제됨 (다른 유저 것 포함)
-            assertThat(commentLikeJpaRepository.findById(2L)).isEmpty();
-
-            // 6. user4가 누른 댓글 좋아요 삭제됨
-            assertThat(commentLikeJpaRepository.findById(1L)).isEmpty();
-
-            // 7. 게시글100에 달린 감정표현 삭제됨 (다른 유저 것 포함)
-            assertThat(emotionJpaRepository.findById(1L)).isEmpty();
-
-            // 8. user4가 다른 게시글에 누른 감정표현 삭제됨
-            assertThat(emotionJpaRepository.findById(2L)).isEmpty();
-
-            // 9. 게시글100의 해시태그 연결 삭제됨
-            assertThat(postHashtagJpaRepository.findById(1L)).isEmpty();
-
-            // 10. user4의 차단 관계 삭제됨
+            // then - 차단 관계만 삭제됨
             assertThat(userBlockJpaRepository.findById(1L)).isEmpty();
 
-            // 11. 다른 유저의 게시글(200)은 유지됨
+            // 커뮤니티 데이터는 모두 보존됨
+            assertThat(postJpaRepository.findById(100L)).isPresent();
+            assertThat(postImageJpaRepository.findById(1L)).isPresent();
+            assertThat(commentJpaRepository.findById(1L)).isPresent();
+            assertThat(commentJpaRepository.findById(2L)).isPresent();
+            assertThat(commentJpaRepository.findById(3L)).isPresent();
+            assertThat(commentLikeJpaRepository.findById(1L)).isPresent();
+            assertThat(commentLikeJpaRepository.findById(2L)).isPresent();
+            assertThat(emotionJpaRepository.findById(1L)).isPresent();
+            assertThat(emotionJpaRepository.findById(2L)).isPresent();
+            assertThat(postHashtagJpaRepository.findById(1L)).isPresent();
             assertThat(postJpaRepository.findById(200L)).isPresent();
         }
     }
