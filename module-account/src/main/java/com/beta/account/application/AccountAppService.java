@@ -1,6 +1,7 @@
 package com.beta.account.application;
 
 import com.beta.account.application.dto.*;
+import com.beta.account.application.port.CommunityDataCleanupPort;
 import com.beta.account.domain.entity.BaseballTeam;
 import com.beta.account.domain.entity.SignupStep;
 import com.beta.account.domain.entity.User;
@@ -29,6 +30,7 @@ public class AccountAppService {
     private final WelcomeEmailService welcomeEmailService;
     private final UserDeviceWriteService userDeviceWriteService;
     private final DeviceAppService deviceAppService;
+    private final CommunityDataCleanupPort communityDataCleanupPort;
 
     public LoginResult processSocialLogin(String token, SocialProvider socialProvider, String deviceId) {
         SocialUserInfo socialUserInfo = socialUserInfoService.fetchSocialUserInfo(token, socialProvider);
@@ -204,6 +206,7 @@ public class AccountAppService {
         User user = userWriteService.withdraw(userId);
         userDeviceWriteService.deleteAllByUserId(userId);
         refreshTokenService.deleteByUserId(userId);
+        communityDataCleanupPort.deleteUserBlockRelationships(userId);
         return user.getWithdrawnAt();
     }
 }

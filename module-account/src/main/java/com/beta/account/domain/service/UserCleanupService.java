@@ -1,6 +1,5 @@
 package com.beta.account.domain.service;
 
-import com.beta.account.application.port.CommunityDataCleanupPort;
 import com.beta.account.domain.entity.User;
 import com.beta.account.infra.repository.UserConsentJpaRepository;
 import com.beta.account.infra.repository.UserDeviceJpaRepository;
@@ -21,7 +20,6 @@ public class UserCleanupService {
     private final UserJpaRepository userJpaRepository;
     private final UserConsentJpaRepository userConsentJpaRepository;
     private final UserDeviceJpaRepository userDeviceJpaRepository;
-    private final CommunityDataCleanupPort communityDataCleanupPort;
 
     private static final int WITHDRAWAL_RETENTION_DAYS = 30;
 
@@ -50,7 +48,6 @@ public class UserCleanupService {
     }
 
     private void deleteUserData(Long userId) {
-        communityDataCleanupPort.deleteAllUserCommunityData(userId);
         userDeviceJpaRepository.deleteAllByUserId(userId);
         userConsentJpaRepository.deleteByUserId(userId);
         userJpaRepository.deleteById(userId);
