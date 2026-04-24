@@ -5,7 +5,6 @@ import com.beta.core.event.notification.PostEmotionNotificationEvent;
 import com.beta.core.port.PushPort;
 import com.beta.core.port.UserPort;
 import com.beta.core.port.dto.AuthorInfo;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,11 +14,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Map;
 
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("CommunityNotificationEventListener 단위 테스트")
 class CommunityNotificationEventListenerTest {
 
     @Mock
@@ -28,18 +27,21 @@ class CommunityNotificationEventListenerTest {
     @Mock
     private PushPort pushPort;
 
+    @Mock
+    private NotificationThrottleService notificationThrottleService;
+
     @InjectMocks
     private CommunityNotificationEventListener communityNotificationEventListener;
 
     @Test
-    @DisplayName("댓글 알림 이벤트를 수신하면 게시글 작성자에게 푸시를 보낸다")
-    void handle_sendsCommentPush_whenPostCommentNotificationEventReceived() {
+    void 댓글_알림_이벤트를_수신하고_허용되면_게시글_작성자에게_푸시를_보낸다() {
         // given
         Long actorUserId = 1L;
         Long targetUserId = 2L;
         Long postId = 10L;
         Long commentId = 100L;
 
+        when(notificationThrottleService.canSendPostComment(actorUserId, targetUserId, postId)).thenReturn(true);
         when(userPort.findAuthorsByIds(List.of(actorUserId))).thenReturn(
                 Map.of(actorUserId, AuthorInfo.builder()
                         .userId(actorUserId)
@@ -58,13 +60,33 @@ class CommunityNotificationEventListenerTest {
     }
 
     @Test
-    @DisplayName("공감 알림 이벤트를 수신하면 게시글 작성자에게 푸시를 보낸다")
-    void handle_sendsEmotionPush_whenPostEmotionNotificationEventReceived() {
+    void 댓글_알림_이벤트를_수신하고_차단되면_게시글_작성자에게_푸시를_보내지_않는다() {
+        // given
+        Long actorUserId = 1L;
+        Long targetUserId = 2L;
+        Long postId = 10L;
+        Long commentId = 100L;
+
+        when(notificationThrottleService.canSendPostComment(actorUserId, targetUserId, postId)).thenReturn(false);
+
+        // when
+        communityNotificationEventListener.handle(
+                new PostCommentNotificationEvent(actorUserId, targetUserId, postId, commentId)
+        );
+
+        // then
+        verify(userPort, never()).findAuthorsByIds(List.of(actorUserId));
+        verify(pushPort, never()).sendPostCommentNotification(targetUserId, "작성자A", postId, commentId);
+    }
+
+    @Test
+    void 공감_알림_이벤트를_수신하고_허용되면_게시글_작성자에게_푸시를_보낸다() {
         // given
         Long actorUserId = 1L;
         Long targetUserId = 2L;
         Long postId = 10L;
 
+        when(notificationThrottleService.canSendPostEmotion(actorUserId, targetUserId, postId)).thenReturn(true);
         when(userPort.findAuthorsByIds(List.of(actorUserId))).thenReturn(
                 Map.of(actorUserId, AuthorInfo.builder()
                         .userId(actorUserId)
@@ -80,5 +102,24 @@ class CommunityNotificationEventListenerTest {
 
         // then
         verify(pushPort).sendPostEmotionNotification(targetUserId, "작성자A", "LIKE", postId);
+    }
+
+    @Test
+    void 공감_알림_이벤트를_수신하고_차단되면_게시글_작성자에게_푸시를_보내지_않는다() {
+        // given
+        Long actorUserId = 1L;
+        Long targetUserId = 2L;
+        Long postId = 10L;
+
+        when(notificationThrottleService.canSendPostEmotion(actorUserId, targetUserId, postId)).thenReturn(false);
+
+        // when
+        communityNotificationEventListener.handle(
+                new PostEmotionNotificationEvent(actorUserId, targetUserId, "LIKE", postId)
+        );
+
+        // then
+        verify(userPort, never()).findAuthorsByIds(List.of(actorUserId));
+        verify(pushPort, never()).sendPostEmotionNotification(targetUserId, "작성자A", "LIKE", postId);
     }
 }
