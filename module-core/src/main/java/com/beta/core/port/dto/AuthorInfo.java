@@ -18,4 +18,12 @@ public class AuthorInfo {
                 .teamCode(null)
                 .build();
     }
+
+    public static AuthorInfo withdrawn(Long userId) {
+        return AuthorInfo.builder()
+                .userId(userId)
+                .nickname("탈퇴한 사용자")
+                .teamCode(null)
+                .build();
+    }
 }
