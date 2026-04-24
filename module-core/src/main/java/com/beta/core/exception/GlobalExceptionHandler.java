@@ -1,6 +1,7 @@
 package com.beta.core.exception;
 
 import com.beta.core.response.ErrorResponse;
+import com.beta.core.notification.DiscordWebhookService;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.JDBCConnectionException;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLTimeoutException;
 import java.sql.SQLTransientConnectionException;
@@ -24,6 +26,12 @@ import java.util.List;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private final DiscordWebhookService discordWebhookService;
+
+    public GlobalExceptionHandler(DiscordWebhookService discordWebhookService) {
+        this.discordWebhookService = discordWebhookService;
+    }
 
     /**
      * 비즈니스 로직 예외 처리
@@ -107,8 +115,9 @@ public class GlobalExceptionHandler {
             SQLTransientConnectionException.class,
             SQLNonTransientConnectionException.class
     })
-    public ResponseEntity<ErrorResponse> handleDatabaseUnavailableException(Exception e) {
+    public ResponseEntity<ErrorResponse> handleDatabaseUnavailableException(Exception e, HttpServletRequest request) {
         log.error("Database unavailable: exception={}, message={}", e.getClass().getSimpleName(), e.getMessage(), e);
+        discordWebhookService.sendErrorAlert("Database Unavailable", 503, request.getMethod(), request.getRequestURI(), e);
         ErrorResponse response = ErrorResponse.of(ErrorCode.DATABASE_UNAVAILABLE);
         return ResponseEntity.status(ErrorCode.DATABASE_UNAVAILABLE.getStatus()).body(response);
     }
@@ -121,8 +130,9 @@ public class GlobalExceptionHandler {
             SQLTimeoutException.class,
             jakarta.persistence.QueryTimeoutException.class
     })
-    public ResponseEntity<ErrorResponse> handleDatabaseTimeoutException(Exception e) {
+    public ResponseEntity<ErrorResponse> handleDatabaseTimeoutException(Exception e, HttpServletRequest request) {
         log.error("Database timeout: exception={}, message={}", e.getClass().getSimpleName(), e.getMessage(), e);
+        discordWebhookService.sendErrorAlert("Database Timeout", 503, request.getMethod(), request.getRequestURI(), e);
         ErrorResponse response = ErrorResponse.of(ErrorCode.DATABASE_UNAVAILABLE);
         return ResponseEntity.status(ErrorCode.DATABASE_UNAVAILABLE.getStatus()).body(response);
     }
@@ -131,8 +141,9 @@ public class GlobalExceptionHandler {
      * 예상하지 못한 예외 처리 (Fallback)
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+    public ResponseEntity<ErrorResponse> handleException(Exception e, HttpServletRequest request) {
         log.error("Unexpected exception occurred", e);
+        discordWebhookService.sendErrorAlert("Unexpected Server Error", 500, request.getMethod(), request.getRequestURI(), e);
         ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
