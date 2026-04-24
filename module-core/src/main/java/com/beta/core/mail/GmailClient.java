@@ -30,6 +30,7 @@ public class GmailClient implements MailClient {
             log.info("메일 발송 성공: to={}", to);
         } catch (MessagingException | MailException e) {
             log.error("메일 발송 실패: to={}, error={}", to, e.getMessage());
+            throw new IllegalStateException("메일 발송에 실패했습니다.", e);
         }
     }
 }
