@@ -1,0 +1,97 @@
+name: Deploy BETA Dev Server
+
+on:
+  push:
+    branches: [ "dev" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build JAR
+        run: ./gradlew :user-server:bootJar -x test
+
+      - name: Docker Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & Push Dev Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.user
+          push: true
+          platforms: linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            yeongo05/beta-user:dev
+            yeongo05/beta-user:dev-${{ github.sha }}
+
+      - name: Dev 서버 배포
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROXY_HOST }}
+          username: ubuntu
+          key: ${{ secrets.PROXY_SSH_KEY }}
+          script: |
+            ssh -i /home/ubuntu/.ssh/beta_user_key \
+                -o StrictHostKeyChecking=no \
+                ubuntu@10.0.1.240 << 'EOF'
+              set -e
+
+              echo ">>> pull dev image"
+              docker pull yeongo05/beta-user:dev
+
+              echo ">>> stop & remove dev container"
+              docker stop beta-user-dev || true
+              docker rm beta-user-dev || true
+
+              echo ">>> run dev container"
+              docker run -d \
+                --name beta-user-dev \
+                -p 8082:8080 \
+                --env-file /home/ubuntu/env/beta-user-dev.env \
+                -v /home/ubuntu/oci_api_key.pem:/app/keys/oci_api_key.pem:ro \
+                -v /home/ubuntu/keys/firebase-admin.json:/app/keys/firebase-admin.json:ro \
+                -v /home/ubuntu/app-cacerts:/app/certs/app-cacerts:ro \
+                --restart always \
+                --health-cmd="curl -f http://localhost:8080/actuator/health || exit 1" \
+                --health-interval=30s \
+                --health-timeout=10s \
+                --health-retries=3 \
+                yeongo05/beta-user:dev
+
+              echo ">>> health check 대기"
+              for i in $(seq 1 30); do
+                if curl -sf http://localhost:8082/actuator/health > /dev/null 2>&1; then
+                  echo ">>> dev health OK (${i}s)"
+                  break
+                fi
+                if [ "$i" -eq 30 ]; then
+                  echo ">>> dev health check 실패"
+                  exit 1
+                fi
+                sleep 2
+              done
+
+              echo ">>> dev 배포 완료"
+            EOF
