@@ -44,11 +44,14 @@ public class HomeAppService {
                 .toList();
 
         List<Long> blockedUserIds = userBlockReadService.findBlockedUserIds(userId);
-        List<Post> popularPosts = postQueryRepository.findPopularPostsWithinHours(
+        List<Post> recentPopularPosts = postQueryRepository.findPopularPostsWithinHours(
                 POPULAR_POSTS_HOURS,
                 POPULAR_POSTS_LIMIT,
                 blockedUserIds
         );
+        List<Post> popularPosts = recentPopularPosts.size() < POPULAR_POSTS_LIMIT
+                ? postQueryRepository.findPopularPosts(blockedUserIds, POPULAR_POSTS_LIMIT)
+                : recentPopularPosts;
 
         List<Long> postIds = popularPosts.stream().map(Post::getId).toList();
         List<Long> userIds = popularPosts.stream().map(Post::getUserId).distinct().toList();
