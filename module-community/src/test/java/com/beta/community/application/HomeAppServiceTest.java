@@ -23,6 +23,8 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -134,7 +136,6 @@ class HomeAppServiceTest {
             when(userBlockReadService.findBlockedUserIds(USER_ID)).thenReturn(List.of());
             when(postQueryRepository.findPopularPostsWithinHours(eq(24), eq(5), anyList()))
                     .thenReturn(List.of());
-
             // when
             HomeDto result = homeAppService.getHomeData(USER_ID);
 
@@ -189,6 +190,115 @@ class HomeAppServiceTest {
             assertThat(result.getPopularPosts()).hasSize(1);
             assertThat(result.getPopularPosts().get(0).getAuthor().getUserId()).isEqualTo(999L);
             assertThat(result.getPopularPosts().get(0).getAuthor().getNickname()).isEqualTo("알 수 없음");
+        }
+
+        @Test
+        @DisplayName("24시간 이내 인기 게시글이 5개 미만이면 전체 인기 게시글로 다시 조회한다")
+        void fallsBackToOverallPopularPostsWhenRecentPostsAreLessThanLimit() {
+            // given
+            when(kboRankingClient.getRankings()).thenReturn(List.of());
+            when(userBlockReadService.findBlockedUserIds(USER_ID)).thenReturn(List.of());
+
+            Post recentPost = Post.builder()
+                    .userId(USER_ID)
+                    .content("최근 게시글")
+                    .channel("ALL")
+                    .build();
+            recentPost.activate();
+
+            Post olderPost = Post.builder()
+                    .userId(USER_ID)
+                    .content("전체 인기 게시글")
+                    .channel("ALL")
+                    .build();
+            olderPost.activate();
+
+            when(postQueryRepository.findPopularPostsWithinHours(eq(24), eq(5), anyList()))
+                    .thenReturn(List.of(recentPost));
+            when(postQueryRepository.findPopularPosts(anyList(), eq(5)))
+                    .thenReturn(List.of(olderPost));
+            when(postImageJpaRepository.findByPostIdInAndStatusOrderByPostIdAscSortAsc(anyList(), any()))
+                    .thenReturn(List.of());
+            when(postHashtagJpaRepository.findByPost_IdIn(anyList()))
+                    .thenReturn(List.of());
+            when(userPort.findAuthorsByIds(anyList()))
+                    .thenReturn(Map.of(USER_ID, AuthorInfo.builder()
+                            .userId(USER_ID)
+                            .nickname("테스트유저")
+                            .teamCode("DOOSAN")
+                            .build()));
+
+            // when
+            HomeDto result = homeAppService.getHomeData(USER_ID);
+
+            // then
+            assertThat(result.getPopularPosts()).hasSize(1);
+            assertThat(result.getPopularPosts().get(0).getContent()).isEqualTo("전체 인기 게시글");
+        }
+
+        @Test
+        @DisplayName("24시간 이내 인기 게시글이 5개면 전체 인기 게시글을 다시 조회하지 않는다")
+        void doesNotFallbackWhenRecentPostsMeetLimit() {
+            // given
+            when(kboRankingClient.getRankings()).thenReturn(List.of());
+            when(userBlockReadService.findBlockedUserIds(USER_ID)).thenReturn(List.of());
+
+            Post firstPost = Post.builder()
+                    .userId(USER_ID)
+                    .content("게시글1")
+                    .channel("ALL")
+                    .build();
+            firstPost.activate();
+
+            Post secondPost = Post.builder()
+                    .userId(USER_ID)
+                    .content("게시글2")
+                    .channel("ALL")
+                    .build();
+            secondPost.activate();
+
+            Post thirdPost = Post.builder()
+                    .userId(USER_ID)
+                    .content("게시글3")
+                    .channel("ALL")
+                    .build();
+            thirdPost.activate();
+
+            Post fourthPost = Post.builder()
+                    .userId(USER_ID)
+                    .content("게시글4")
+                    .channel("ALL")
+                    .build();
+            fourthPost.activate();
+
+            Post fifthPost = Post.builder()
+                    .userId(USER_ID)
+                    .content("게시글5")
+                    .channel("ALL")
+                    .build();
+            fifthPost.activate();
+
+            List<Post> recentPosts = List.of(firstPost, secondPost, thirdPost, fourthPost, fifthPost);
+
+            when(postQueryRepository.findPopularPostsWithinHours(eq(24), eq(5), anyList()))
+                    .thenReturn(recentPosts);
+            when(postImageJpaRepository.findByPostIdInAndStatusOrderByPostIdAscSortAsc(anyList(), any()))
+                    .thenReturn(List.of());
+            when(postHashtagJpaRepository.findByPost_IdIn(anyList()))
+                    .thenReturn(List.of());
+            when(userPort.findAuthorsByIds(anyList()))
+                    .thenReturn(Map.of(USER_ID, AuthorInfo.builder()
+                            .userId(USER_ID)
+                            .nickname("테스트유저")
+                            .teamCode("DOOSAN")
+                            .build()));
+
+            // when
+            HomeDto result = homeAppService.getHomeData(USER_ID);
+
+            // then
+            assertThat(result.getPopularPosts()).hasSize(5);
+            verify(postQueryRepository, never()).findPopularPosts(anyList(), anyInt());
         }
     }
 }

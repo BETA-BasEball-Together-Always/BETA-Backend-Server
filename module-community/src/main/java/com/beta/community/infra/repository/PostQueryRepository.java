@@ -154,4 +154,24 @@ public class PostQueryRepository {
                 .limit(limit)
                 .fetch();
     }
+
+    public List<Post> findPopularPosts(List<Long> blockedUserIds, int limit) {
+        QPost post = QPost.post;
+
+        NumberExpression<Integer> totalEmotions = post.likeCount
+                .add(post.sadCount)
+                .add(post.funCount)
+                .add(post.hypeCount);
+
+        return queryFactory
+                .selectFrom(post)
+                .where(
+                        post.status.eq(Status.ACTIVE),
+                        post.channel.eq(Post.Channel.ALL),
+                        blockedUserCondition(blockedUserIds)
+                )
+                .orderBy(totalEmotions.desc(), post.id.desc())
+                .limit(limit)
+                .fetch();
+    }
 }
