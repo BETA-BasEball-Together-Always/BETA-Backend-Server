@@ -57,7 +57,7 @@ public class AdminPostDetailFacadeService {
                 authorMap
         );
 
-        AuthorInfo postAuthor = authorMap.getOrDefault(post.getUserId(), AuthorInfo.unknown(post.getUserId()));
+        AuthorInfo postAuthor = authorMap.getOrDefault(post.getUserId(), AuthorInfo.withdrawn(post.getUserId()));
 
         return new AdminPostDetailResult(
                 post.getId(),
@@ -158,7 +158,7 @@ public class AdminPostDetailFacadeService {
             boolean deleted,
             List<AdminPostDetailResult.ReplyResult> replies
     ) {
-        AuthorInfo author = authorMap.getOrDefault(comment.getUserId(), AuthorInfo.unknown(comment.getUserId()));
+        AuthorInfo author = authorMap.getOrDefault(comment.getUserId(), AuthorInfo.withdrawn(comment.getUserId()));
 
         return new AdminPostDetailResult.CommentResult(
                 comment.getId(),
@@ -180,7 +180,7 @@ public class AdminPostDetailFacadeService {
             Map<Long, AuthorInfo> authorMap,
             boolean deleted
     ) {
-        AuthorInfo author = authorMap.getOrDefault(comment.getUserId(), AuthorInfo.unknown(comment.getUserId()));
+        AuthorInfo author = authorMap.getOrDefault(comment.getUserId(), AuthorInfo.withdrawn(comment.getUserId()));
 
         return new AdminPostDetailResult.ReplyResult(
                 comment.getId(),

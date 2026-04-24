@@ -29,7 +29,7 @@ public record AdminCommunityDashboardMetricsResult(
         List<RealtimeFeedItem> realtimeFeeds = realtimeFeedPosts.stream()
                 .map(post -> RealtimeFeedItem.from(
                         post,
-                        authorMap.getOrDefault(post.getUserId(), AuthorInfo.unknown(post.getUserId())),
+                        authorMap.getOrDefault(post.getUserId(), AuthorInfo.withdrawn(post.getUserId())),
                         thumbnailUrlMap.get(post.getId())
                 ))
                 .toList();

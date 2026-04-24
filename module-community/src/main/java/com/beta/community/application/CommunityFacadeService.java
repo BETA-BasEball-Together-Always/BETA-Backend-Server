@@ -61,7 +61,6 @@ public class CommunityFacadeService {
     private final EmotionReadService emotionReadService;
     private final EmotionWriteService emotionWriteService;
     private final PostQueryRepository postQueryRepository;
-    private final PostJpaRepository postJpaRepository;
     private final PostImageJpaRepository postImageJpaRepository;
     private final PostHashtagJpaRepository postHashtagJpaRepository;
     private final CommentLikeJpaRepository commentLikeJpaRepository;
@@ -277,7 +276,7 @@ public class CommunityFacadeService {
         List<PostListDto.PostSummaryDto> postSummaries = posts.stream()
                 .map(post -> PostListDto.PostSummaryDto.builder()
                         .postId(post.getId())
-                        .author(authorMap.getOrDefault(post.getUserId(), AuthorInfo.unknown(post.getUserId())))
+                        .author(authorMap.getOrDefault(post.getUserId(), AuthorInfo.withdrawn(post.getUserId())))
                         .content(post.getContent())
                         .channel(post.getChannel().name())
                         .images(imagesMap.getOrDefault(post.getId(), List.of()))
@@ -349,7 +348,7 @@ public class CommunityFacadeService {
                 blockedUserIds
         );
 
-        AuthorInfo postAuthor = authorMap.getOrDefault(post.getUserId(), AuthorInfo.unknown(post.getUserId()));
+        AuthorInfo postAuthor = authorMap.getOrDefault(post.getUserId(), AuthorInfo.withdrawn(post.getUserId()));
 
         return PostDetailDto.builder()
                 .postId(post.getId())
@@ -474,7 +473,7 @@ public class CommunityFacadeService {
             boolean deleted,
             List<PostDetailDto.CommentDto> replies) {
 
-        AuthorInfo author = authorMap.getOrDefault(comment.getUserId(), AuthorInfo.unknown(comment.getUserId()));
+        AuthorInfo author = authorMap.getOrDefault(comment.getUserId(), AuthorInfo.withdrawn(comment.getUserId()));
 
         return PostDetailDto.CommentDto.builder()
                 .commentId(comment.getId())
