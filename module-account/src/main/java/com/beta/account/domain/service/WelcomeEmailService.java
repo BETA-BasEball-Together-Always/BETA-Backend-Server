@@ -1,26 +1,115 @@
 package com.beta.account.domain.service;
 
+import com.beta.account.domain.entity.EmailOutbox;
+import com.beta.account.domain.entity.EmailOutbox.EmailOutboxStatus;
+import com.beta.account.domain.entity.User;
+import com.beta.account.infra.repository.EmailOutboxJpaRepository;
 import com.beta.core.mail.MailClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class WelcomeEmailService {
 
+    private static final int MAX_RETRY_COUNT = 5;
+
     private final MailClient mailClient;
+    private final EmailOutboxJpaRepository emailOutboxJpaRepository;
+    private final UserReadService userReadService;
 
     @Async("mailExecutor")
-    public void sendWelcomeEmail(String email, String nickName) {
-        log.info("회원가입 환영 메일 발송 시작: email={}, nickName={}", email, nickName);
+    public void sendWelcomeEmail(Long userId, String email, String nickName) {
+        log.info("회원가입 환영 메일 발송 시작: userId={}, email={}, nickName={}", userId, email, nickName);
 
+        try {
+            deliverWelcomeEmail(email, nickName);
+        } catch (RuntimeException e) {
+            saveOutboxFailure(userId, e);
+        }
+    }
+
+    @Transactional
+    public int retryFailedWelcomeEmails() {
+        LocalDateTime now = LocalDateTime.now();
+        List<EmailOutbox> outboxes = emailOutboxJpaRepository
+                .findTop20ByStatusInAndNextRetryAtLessThanEqualOrderByNextRetryAtAsc(
+                        List.of(EmailOutboxStatus.PENDING, EmailOutboxStatus.RETRYING),
+                        now
+                );
+
+        if (outboxes.isEmpty()) {
+            return 0;
+        }
+
+        for (EmailOutbox outbox : outboxes) {
+            try {
+                User user = userReadService.findUserById(outbox.getUserId());
+                deliverWelcomeEmail(user.getEmail(), user.getNickname());
+                outbox.markSent();
+            } catch (RuntimeException e) {
+                handleRetryFailure(outbox, e);
+            }
+        }
+
+        return outboxes.size();
+    }
+
+    public void deliverWelcomeEmail(String email, String nickName) {
         String subject = "[BETA] 회원가입이 완료되었습니다!";
         String content = buildWelcomeEmailContent(nickName);
 
         mailClient.send(email, subject, content);
+    }
+
+    public void saveOutboxFailure(Long userId, RuntimeException e) {
+        try {
+            emailOutboxJpaRepository.save(EmailOutbox.createWelcomeMailFailure(
+                    userId,
+                    truncateErrorMessage(e.getMessage()),
+                    LocalDateTime.now().plusMinutes(1)
+            ));
+        } catch (RuntimeException saveException) {
+            log.error("이메일 아웃박스 저장 실패: userId={}, error={}", userId, saveException.getMessage(), saveException);
+        }
+    }
+
+    public void handleRetryFailure(EmailOutbox outbox, RuntimeException e) {
+        String errorMessage = truncateErrorMessage(e.getMessage());
+        int nextRetryCount = outbox.getRetryCount() + 1;
+
+        if (nextRetryCount >= MAX_RETRY_COUNT) {
+            outbox.markDead(errorMessage);
+            return;
+        }
+
+        outbox.markRetrying(errorMessage, calculateNextRetryAt(nextRetryCount));
+    }
+
+    public LocalDateTime calculateNextRetryAt(int retryCount) {
+        return switch (retryCount) {
+            case 1 -> LocalDateTime.now().plusMinutes(5);
+            case 2 -> LocalDateTime.now().plusMinutes(30);
+            case 3 -> LocalDateTime.now().plusHours(2);
+            default -> LocalDateTime.now().plusHours(6);
+        };
+    }
+
+    public String truncateErrorMessage(String errorMessage) {
+        if (errorMessage == null || errorMessage.isBlank()) {
+            return "메일 발송 실패";
+        }
+        if (errorMessage.length() <= 1000) {
+            return errorMessage;
+        }
+        return errorMessage.substring(0, 1000);
     }
 
     private String buildWelcomeEmailContent(String nickName) {

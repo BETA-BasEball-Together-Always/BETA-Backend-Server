@@ -154,7 +154,7 @@ public class AccountAppService {
         userStatusService.validateSignupStep(user, SignupStep.TEAM_SELECTED);
 
         User completedUser = userWriteService.completeSignup(userId);
-        welcomeEmailService.sendWelcomeEmail(completedUser.getEmail(), completedUser.getNickname());
+        welcomeEmailService.sendWelcomeEmail(completedUser.getId(), completedUser.getEmail(), completedUser.getNickname());
 
         return createSignupCompleteResult(completedUser);
     }
@@ -165,7 +165,7 @@ public class AccountAppService {
 
         User.GenderType genderType = gender != null ? User.GenderType.valueOf(gender) : null;
         User completedUser = userWriteService.completeSignupWithInfo(userId, genderType, age);
-        welcomeEmailService.sendWelcomeEmail(completedUser.getEmail(), completedUser.getNickname());
+        welcomeEmailService.sendWelcomeEmail(completedUser.getId(), completedUser.getEmail(), completedUser.getNickname());
 
         return createSignupCompleteResult(completedUser);
     }
