@@ -50,47 +50,28 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Blue-Green 무중단 배포
+      - name: Blue(active) 무중단 배포
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.PROXY_HOST }}
           username: ubuntu
           key: ${{ secrets.PROXY_SSH_KEY }}
           script: |
-            set -e
-
-            # 현재 active 포트 확인
-            ACTIVE_PORT=$(grep -m1 'server 10.0.1.240' /etc/nginx/sites-enabled/beta-app.kr | grep -v backup | grep -oP ':\K[0-9]+')
-            echo ">>> 현재 active 포트: $ACTIVE_PORT"
-
-            if [ "$ACTIVE_PORT" = "8080" ]; then
-              NEW_PORT=8081
-              NEW_NAME=beta-user-green
-              NEW_ENV=/home/ubuntu/env/beta-user-backup.env
-            else
-              NEW_PORT=8080
-              NEW_NAME=beta-user-blue
-              NEW_ENV=/home/ubuntu/env/beta-user.env
-            fi
-            echo ">>> 새 배포 대상: $NEW_NAME ($NEW_PORT)"
-
             ssh -i /home/ubuntu/.ssh/beta_user_key \
                 -o StrictHostKeyChecking=no \
-                ubuntu@10.0.1.240 << INNER_EOF
+                ubuntu@10.0.1.240 << 'INNER_EOF'
               set -e
 
               echo ">>> pull image"
               docker pull yeongo05/beta-user:latest
 
-              echo ">>> stop & remove standby container"
-              docker stop $NEW_NAME || true
-              docker rm $NEW_NAME || true
-
-              echo ">>> run new container on port $NEW_PORT"
+              echo ">>> green(backup) 새 버전으로 먼저 갱신"
+              docker stop beta-user-green || true
+              docker rm beta-user-green || true
               docker run -d \
-                --name $NEW_NAME \
-                -p $NEW_PORT:8080 \
-                --env-file $NEW_ENV \
+                --name beta-user-green \
+                -p 8081:8080 \
+                --env-file /home/ubuntu/env/beta-user-backup.env \
                 -v /home/ubuntu/oci_api_key.pem:/app/keys/oci_api_key.pem:ro \
                 -v /home/ubuntu/keys/firebase-admin.json:/app/keys/firebase-admin.json:ro \
                 -v /home/ubuntu/app-cacerts:/app/certs/app-cacerts:ro \
@@ -101,93 +82,44 @@ jobs:
                 --health-retries=6 \
                 yeongo05/beta-user:latest
 
-              echo ">>> health check 대기 (최대 60초)"
-              for i in \$(seq 1 30); do
-                if curl -sf http://localhost:$NEW_PORT/actuator/health > /dev/null 2>&1; then
-                  echo ">>> health OK (\${i}s)"
+              echo ">>> green health check 대기 (최대 60초)"
+              for i in $(seq 1 30); do
+                if curl -sf http://localhost:8081/actuator/health > /dev/null 2>&1; then
+                  echo ">>> green health OK (${i}s)"
                   break
                 fi
-                if [ "\$i" -eq 30 ]; then
-                  echo ">>> health check 실패. 컨테이너 제거."
-                  docker stop $NEW_NAME || true
-                  docker rm $NEW_NAME || true
+                if [ "$i" -eq 30 ]; then
+                  echo ">>> green health 실패. 중단."
                   exit 1
                 fi
                 sleep 2
               done
-            INNER_EOF
 
-            echo ">>> nginx upstream 전환: active=$NEW_PORT"
-            if [ "$NEW_PORT" = "8081" ]; then
-              sudo sed -i 's/server 10.0.1.240:8080 max_fails=2 fail_timeout=5s;$/server 10.0.1.240:8081 max_fails=2 fail_timeout=5s;/' /etc/nginx/sites-enabled/beta-app.kr
-              sudo sed -i 's/server 10.0.1.240:8081 backup max_fails=2 fail_timeout=5s;$/server 10.0.1.240:8080 backup max_fails=2 fail_timeout=5s;/' /etc/nginx/sites-enabled/beta-app.kr
-            else
-              sudo sed -i 's/server 10.0.1.240:8081 max_fails=2 fail_timeout=5s;$/server 10.0.1.240:8080 max_fails=2 fail_timeout=5s;/' /etc/nginx/sites-enabled/beta-app.kr
-              sudo sed -i 's/server 10.0.1.240:8080 backup max_fails=2 fail_timeout=5s;$/server 10.0.1.240:8081 backup max_fails=2 fail_timeout=5s;/' /etc/nginx/sites-enabled/beta-app.kr
-            fi
-            sudo nginx -t && sudo nginx -s reload
-
-            echo ">>> primary 배포 완료. active=$NEW_PORT"
-
-  deploy-backup:
-    needs: deploy-primary
-    runs-on: ubuntu-latest
-    environment: production-backup
-    steps:
-      - name: Backup 컨테이너 갱신 (수동 승인 후)
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.PROXY_HOST }}
-          username: ubuntu
-          key: ${{ secrets.PROXY_SSH_KEY }}
-          script: |
-            set -e
-
-            # 현재 backup 포트 확인
-            BACKUP_PORT=$(grep 'backup;' /etc/nginx/sites-enabled/beta-app.kr | grep -oP ':\K[0-9]+')
-            echo ">>> backup 포트: $BACKUP_PORT"
-
-            if [ "$BACKUP_PORT" = "8080" ]; then
-              BACKUP_NAME=beta-user-blue
-              BACKUP_ENV=/home/ubuntu/env/beta-user.env
-            else
-              BACKUP_NAME=beta-user-green
-              BACKUP_ENV=/home/ubuntu/env/beta-user-backup.env
-            fi
-            echo ">>> backup 갱신 대상: $BACKUP_NAME ($BACKUP_PORT)"
-
-            ssh -i /home/ubuntu/.ssh/beta_user_key \
-                -o StrictHostKeyChecking=no \
-                ubuntu@10.0.1.240 << INNER_EOF
-              set -e
-
-              echo ">>> stop & remove old backup"
-              docker stop $BACKUP_NAME || true
-              docker rm $BACKUP_NAME || true
-
-              echo ">>> run updated backup on port $BACKUP_PORT"
+              echo ">>> blue(active) 새 버전으로 교체 (green이 backup으로 커버)"
+              docker stop beta-user-blue || true
+              docker rm beta-user-blue || true
               docker run -d \
-                --name $BACKUP_NAME \
-                -p $BACKUP_PORT:8080 \
-                --env-file $BACKUP_ENV \
+                --name beta-user-blue \
+                -p 8080:8080 \
+                --env-file /home/ubuntu/env/beta-user.env \
                 -v /home/ubuntu/oci_api_key.pem:/app/keys/oci_api_key.pem:ro \
                 -v /home/ubuntu/keys/firebase-admin.json:/app/keys/firebase-admin.json:ro \
                 -v /home/ubuntu/app-cacerts:/app/certs/app-cacerts:ro \
                 --restart always \
                 --health-cmd="curl -f http://localhost:8080/actuator/health || exit 1" \
-                --health-interval=30s \
-                --health-timeout=10s \
-                --health-retries=3 \
+                --health-interval=10s \
+                --health-timeout=5s \
+                --health-retries=6 \
                 yeongo05/beta-user:latest
 
-              echo ">>> health check 대기"
-              for i in \$(seq 1 30); do
-                if curl -sf http://localhost:$BACKUP_PORT/actuator/health > /dev/null 2>&1; then
-                  echo ">>> backup health OK (\${i}s)"
+              echo ">>> blue health check 대기 (최대 60초)"
+              for i in $(seq 1 30); do
+                if curl -sf http://localhost:8080/actuator/health > /dev/null 2>&1; then
+                  echo ">>> blue health OK (${i}s)"
                   break
                 fi
-                if [ "\$i" -eq 30 ]; then
-                  echo ">>> backup health 실패"
+                if [ "$i" -eq 30 ]; then
+                  echo ">>> blue health 실패"
                   exit 1
                 fi
                 sleep 2
@@ -196,5 +128,5 @@ jobs:
               echo ">>> dangling 이미지 정리"
               docker image prune -f
 
-              echo ">>> backup 갱신 완료"
+              echo ">>> 배포 완료 (blue=active, green=backup)"
             INNER_EOF
