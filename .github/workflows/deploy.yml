@@ -119,11 +119,11 @@ jobs:
 
             echo ">>> nginx upstream 전환: active=$NEW_PORT"
             if [ "$NEW_PORT" = "8081" ]; then
-              sudo sed -i 's/server 10.0.1.240:8080;$/server 10.0.1.240:8081;/' /etc/nginx/sites-enabled/beta-app.kr
-              sudo sed -i 's/server 10.0.1.240:8081 backup;$/server 10.0.1.240:8080 backup;/' /etc/nginx/sites-enabled/beta-app.kr
+              sudo sed -i 's/server 10.0.1.240:8080 max_fails=2 fail_timeout=5s;$/server 10.0.1.240:8081 max_fails=2 fail_timeout=5s;/' /etc/nginx/sites-enabled/beta-app.kr
+              sudo sed -i 's/server 10.0.1.240:8081 backup max_fails=2 fail_timeout=5s;$/server 10.0.1.240:8080 backup max_fails=2 fail_timeout=5s;/' /etc/nginx/sites-enabled/beta-app.kr
             else
-              sudo sed -i 's/server 10.0.1.240:8081;$/server 10.0.1.240:8080;/' /etc/nginx/sites-enabled/beta-app.kr
-              sudo sed -i 's/server 10.0.1.240:8080 backup;$/server 10.0.1.240:8081 backup;/' /etc/nginx/sites-enabled/beta-app.kr
+              sudo sed -i 's/server 10.0.1.240:8081 max_fails=2 fail_timeout=5s;$/server 10.0.1.240:8080 max_fails=2 fail_timeout=5s;/' /etc/nginx/sites-enabled/beta-app.kr
+              sudo sed -i 's/server 10.0.1.240:8080 backup max_fails=2 fail_timeout=5s;$/server 10.0.1.240:8081 backup max_fails=2 fail_timeout=5s;/' /etc/nginx/sites-enabled/beta-app.kr
             fi
             sudo nginx -t && sudo nginx -s reload
 
