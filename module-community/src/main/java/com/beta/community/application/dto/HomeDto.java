@@ -70,7 +70,7 @@ public class HomeDto {
         ) {
             return PopularPostDto.builder()
                     .postId(post.getId())
-                    .author(authorMap.getOrDefault(post.getUserId(), AuthorInfo.unknown(post.getUserId())))
+                    .author(authorMap.getOrDefault(post.getUserId(), AuthorInfo.withdrawn(post.getUserId())))
                     .content(post.getContent())
                     .channel(post.getChannel().name())
                     .images(imagesMap.getOrDefault(post.getId(), List.of()))

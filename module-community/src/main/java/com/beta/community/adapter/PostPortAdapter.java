@@ -49,7 +49,7 @@ public class PostPortAdapter implements PostPort {
                         Post::getId,
                         post -> PostInfo.builder()
                                 .id(post.getId())
-                                .author(authorMap.getOrDefault(post.getUserId(), AuthorInfo.unknown(post.getUserId())))
+                                .author(authorMap.getOrDefault(post.getUserId(), AuthorInfo.withdrawn(post.getUserId())))
                                 .channel(post.getChannel().name())
                                 .imageUrls(imageUrlsMap.getOrDefault(post.getId(), List.of()))
                                 .hashtags(hashtagsMap.getOrDefault(post.getId(), List.of()))

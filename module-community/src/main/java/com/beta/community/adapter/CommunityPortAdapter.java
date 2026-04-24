@@ -72,7 +72,7 @@ public class CommunityPortAdapter implements CommunityPort {
         return posts.stream()
                 .map(post -> MyPostInfo.builder()
                         .postId(post.getId())
-                        .author(authorMap.getOrDefault(post.getUserId(), AuthorInfo.unknown(post.getUserId())))
+                        .author(authorMap.getOrDefault(post.getUserId(), AuthorInfo.withdrawn(post.getUserId())))
                         .content(post.getContent())
                         .channel(post.getChannel().name())
                         .images(imagesMap.getOrDefault(post.getId(), List.of()))

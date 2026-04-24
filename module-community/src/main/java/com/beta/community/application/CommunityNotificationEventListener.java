@@ -61,7 +61,7 @@ public class CommunityNotificationEventListener {
 
     private String resolveActorNickname(Long actorUserId) {
         AuthorInfo actor = userPort.findAuthorsByIds(List.of(actorUserId))
-                .getOrDefault(actorUserId, AuthorInfo.unknown(actorUserId));
+                .getOrDefault(actorUserId, AuthorInfo.withdrawn(actorUserId));
         return actor.getNickname();
     }
 }

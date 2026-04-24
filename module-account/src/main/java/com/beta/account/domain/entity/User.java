@@ -133,6 +133,13 @@ public class User extends BaseEntity {
     public void withdraw() {
         this.status = UserStatus.WITHDRAWN;
         this.withdrawnAt = java.time.LocalDateTime.now();
+        this.nickname = "탈퇴한 사용자";
+        this.email = null;
+        this.socialId = null;
+        this.bio = null;
+        this.gender = null;
+        this.age = null;
+        this.baseballTeam = null;
     }
 
     public void suspend() {

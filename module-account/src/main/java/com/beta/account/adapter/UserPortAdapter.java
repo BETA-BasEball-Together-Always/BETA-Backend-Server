@@ -35,6 +35,9 @@ public class UserPortAdapter implements UserPort {
     }
 
     private AuthorInfo toAuthorInfo(User user) {
+        if (user.getStatus() == User.UserStatus.WITHDRAWN) {
+            return AuthorInfo.withdrawn(user.getId());
+        }
         return AuthorInfo.builder()
                 .userId(user.getId())
                 .nickname(user.getNickname())
